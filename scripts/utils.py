@@ -43,11 +43,16 @@ def load_data():
     import pandas as pd
     import numpy as np
     from astropy.coordinates import Angle
+    import warnings
+    
     # load the data files
     datafile = 'data/confirmed-planets.csv'
     k2file = 'data/k2-candidates-table.csv'
     koifile = 'data/kepler-kois-full.csv'
     toifile = 'data/tess-candidates.csv'
+    
+    k2distfile = 'data/k2oi_distances.txt'
+    koidistfile = 'data/koi_distances.txt'
 
     # the dtype is to silence a pandas warning
     dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string'})
@@ -101,6 +106,13 @@ def load_data():
 
     nojup = (np.isfinite(dfk2['pl_rade']) & (~np.isfinite(dfk2['pl_radj'])))
     dfk2.loc[nojup, 'pl_radj'] = dfk2.loc[nojup, 'pl_rade'] / radratio
+
+    # make an int column of EPICs
+    epics = []
+    for iep in dfk2['epic_name']:
+        epics.append(int(iep[4:]))
+    epics = np.array(epics)
+    dfk2['epic'] = epics
 
     # set the appropriate discover facility for candidates
     dfkoi['pl_facility'] = 'Kepler'
@@ -159,7 +171,42 @@ def load_data():
     for ival in dftoi['Date TOI Alerted (UTC)']:
         yrs.append(int(ival[:4]))
     dftoi['year'] = yrs
-
+    
+    # set up a distance field that is the same in all 4 groups
+    dftoi['distance_pc'] = dftoi['Stellar Distance (pc)']
+    
+    condists = dfcon['gaia_dist'].values * 1
+    condists[~np.isfinite(condists)] = dfcon['st_dist'][~np.isfinite(condists)]
+    dfcon['distance_pc'] = condists
+    
+    k2dists = np.zeros(dfk2['epic'].size)
+    epics, epdists = np.loadtxt(k2distfile, unpack=True)
+    epics = epics.astype(int)
+    for ii, ik2 in enumerate(dfk2['epic']):
+        srch = np.where(epics == ik2)[0]
+        if len(srch) == 1:
+            k2dists[ii] = epdists[srch[0]]
+        elif len(srch) == 0:
+            warnings.warn(f'Can not find distance for EPIC {ik2}')
+            k2dists[ii] = np.nan
+        else:
+            raise Exception('Multiple distances for EPIC {ik2}?')
+    dfk2['distance_pc'] = k2dists
+    
+    koidists = np.zeros(dfkoi['kepid'].size)
+    kics, k1dists = np.loadtxt(koidistfile, unpack=True)
+    kics = kics.astype(int)
+    for ii, ikoi in enumerate(dfkoi['kepid']):
+        srch = np.where(kics == ikoi)[0]
+        if len(srch) == 1:
+            koidists[ii] = k1dists[srch[0]]
+        elif len(srch) == 0:
+            warnings.warn(f'Can not find distance for KIC {ikoi}')
+            koidists[ii] = np.nan
+        else:
+            raise Exception('Multiple distances for KIC {ikoi}?')
+    dfkoi['distance_pc'] = koidists
+    
     return dfcon, dfkoi, dfk2, dftoi
 
 

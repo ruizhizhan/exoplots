@@ -44,7 +44,7 @@ def get_discovery_year():
                  'EPIC 206348688.02', 'EPIC 210968143.01', 'EPIC 212394689.02',
                  'EPIC 212672300.01']
 
-    # XXX: until this is fixed (the Kruse and Helller .03 are different planets)
+    # XXX: until this is fixed (the Kruse and Heller .03 are different planets)
     k2exclude.append('EPIC 201497682.03')
 
     # make sure all confirmed K2 planets are in the confirmed table exactly once
