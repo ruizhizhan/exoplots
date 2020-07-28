@@ -13,14 +13,14 @@ theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
 # what order to plot things and what the legend labels will say
-missions = ['Kepler', 'K2', 'TESS', 'Other']
+missions = ['Kepler', 'K2', 'Other', 'TESS']
 
 # markers and colors in the same order as the missions above
-markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
+markers = ['circle', 'square', 'diamond', 'triangle', 'inverted_triangle']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
+colors = ['#228833', '#ee6677', '#aa3377', '#ccbb44', '#4477aa',
           '#aaaaaa', '#66ccee']
 
 # output files
@@ -123,6 +123,11 @@ fig.xaxis.formatter = FuncTickFormatter(code=log_axis_labels(max_tick=5))
 
 # add the second y-axis's label
 fig.right[0].axis_label = 'Radius (Jupiter Radii)'
+
+# put TESS before Other in the legend
+missions[-2], missions[-1] = missions[-1], missions[-2]
+glyphs[-2], glyphs[-1] = glyphs[-1], glyphs[-2]
+counts[-2], counts[-1] = counts[-1], counts[-2]
 
 # set up all the legend objects
 items = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
