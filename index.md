@@ -24,4 +24,6 @@ For more plots, choose your parameters:
 
 [Planet Discoveries Over Time](./planets-over-time.md)
 
-[Transiting Planet Radius vs Distance](./distance-radius.md)
+[Transiting Planet Distance vs Radius](./distance-radius.md)
+
+[Transiting Planet Insolation vs Radius & the Radius Gap](./insolation-radius.md)
