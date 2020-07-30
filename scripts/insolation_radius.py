@@ -252,7 +252,7 @@ for ifig in np.arange(2):
         if ifig == 0:
             legend.location = (-70, 5)
         else:
-            legend.location = (-20, 5)
+            legend.location = (-50, 5)
         legend.label_text_align = 'left'
         legend.margin = 0
 
@@ -286,23 +286,23 @@ for ifig in np.arange(2):
         )
     else:
         label_opts1 = dict(
-            x=-35, y=42,
+            x=-65, y=42,
             x_units='screen', y_units='screen'
         )
 
         label_opts2 = dict(
-            x=-35, y=47,
+            x=-65, y=47,
             x_units='screen', y_units='screen'
         )
 
         label_opts3 = dict(
-            x=662, y=79,
+            x=632, y=79,
             x_units='screen', y_units='screen', text_align='right',
             text_font_size='9pt'
         )
 
         label_opts4 = dict(
-            x=662, y=83,
+            x=632, y=83,
             x_units='screen', y_units='screen', text_align='right',
             text_font_size='9pt'
         )
