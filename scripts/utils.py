@@ -23,6 +23,83 @@ def get_update_time():
     return datetime.datetime.strptime(lines[0], '%Y-%m-%d %H:%M:%S.%f')
 
 
+def set_insolations(dfcon, dfkoi, dfk2, dftoi):
+    import numpy as np
+    import warnings
+
+    # work out insolation for all the planets
+
+    # Earth insolations = L/Ls * (a/AU)**-2
+
+    # if L is not given, get it from (R/Rs)**2 * (Teff/Tsun)**4
+    # if a is not given, get it from a/Rs * Rs
+    # or if a/Rs is not given, get it from stellar mass and period with
+    # Kepler's third law
+    # a/AU = ((P/yr)**2 * M/Msun)**1/3
+
+    # TOI list doesn't give stellar mass or a/R* so I can't calculate my own
+    # insolations for any missing values
+    dftoi['insol'] = dftoi['Planet Insolation (Earth Flux)'].values * 1
+
+    # KOIs already do this calculation for all possible planets (only omitting
+    # the ones without a stellar radius)
+    dfkoi['insol'] = dfkoi['koi_insol'].values * 1
+
+    # Confirmed planets
+    insolcon = dfcon['pl_insol'].values * 1
+    lumcon = 10.**(dfcon['st_lum'].values * 1)
+    teffcon = dfcon['st_teff'].values * 1
+    rstarcon = dfcon['st_rad'].values * 1
+
+    # fill in any missing luminosities with our own calculation
+    tmplums = (rstarcon**2) * ((teffcon/5772)**4)
+    lumcon[~np.isfinite(lumcon)] = tmplums[~np.isfinite(lumcon)]
+
+    # fill in any missing semi-major axes with a/R* * R* first
+    aucon = dfcon['pl_orbsmax'].values * 1
+    arstarcon = dfcon['pl_ratdor'].values * 1
+    tmpau = arstarcon * rstarcon / 215  # convert to AU; 1 AU = 215 Rsun
+    aucon[~np.isfinite(aucon)] = tmpau[~np.isfinite(aucon)]
+
+    # next fill in any further missing semi-major axes from Kepler's third law
+    pdcon = dfcon['pl_orbper'].values * 1
+    mstarcon = dfcon['st_mass'].values * 1
+    tmpau2 = ((pdcon/365.256)**2 * mstarcon)**(1./3.)
+    aucon[~np.isfinite(aucon)] = tmpau2[~np.isfinite(aucon)]
+
+    # calculate insolations ourselves and fill in any missing that we can
+    tmpinsol = lumcon * (aucon**-2)
+    insolcon[~np.isfinite(insolcon)] = tmpinsol[~np.isfinite(insolcon)]
+    dfcon['insol'] = insolcon
+
+    # K2
+
+    # not every group reports all needed parameters, so take averages and apply
+    # them to all rows for that planet
+    k2names = dfk2['epic_candname'].values * 1
+    rstark2 = dfk2['st_rad'].values * 1
+    teffk2 = dfk2['st_teff'].values * 1
+    arstark2 = dfk2['pl_ratdor'].values * 1
+
+    ids = np.unique(dfk2['epic_candname'])
+    insolk2 = np.zeros(k2names.size) * np.nan
+
+    for iid in ids:
+        srch = np.where(k2names == iid)[0]
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            rstar = np.nanmean(rstark2[srch])
+            teff = np.nanmean(teffk2[srch])
+            arstar = np.nanmean(arstark2[srch])
+
+        lum = (rstar**2) * ((teff/5772)**4)
+        au = arstar * rstar / 215  # convert to AU; 1 AU = 215 Rsun
+
+        insolk2[srch] = lum * (au**-2)
+
+    dfk2['insol'] = insolk2
+
+
 def load_data():
     """
     Load our data tables and perform some data cleansing/updating to make them
@@ -44,13 +121,13 @@ def load_data():
     import numpy as np
     from astropy.coordinates import Angle
     import warnings
-    
+
     # load the data files
     datafile = 'data/confirmed-planets.csv'
     k2file = 'data/k2-candidates-table.csv'
     koifile = 'data/kepler-kois-full.csv'
     toifile = 'data/tess-candidates.csv'
-    
+
     k2distfile = 'data/k2oi_distances.txt'
     koidistfile = 'data/koi_distances.txt'
 
@@ -171,14 +248,14 @@ def load_data():
     for ival in dftoi['Date TOI Alerted (UTC)']:
         yrs.append(int(ival[:4]))
     dftoi['year'] = yrs
-    
+
     # set up a distance field that is the same in all 4 groups
     dftoi['distance_pc'] = dftoi['Stellar Distance (pc)']
-    
+
     condists = dfcon['gaia_dist'].values * 1
     condists[~np.isfinite(condists)] = dfcon['st_dist'][~np.isfinite(condists)]
     dfcon['distance_pc'] = condists
-    
+
     k2dists = np.zeros(dfk2['epic'].size)
     epics, epdists = np.loadtxt(k2distfile, unpack=True)
     epics = epics.astype(int)
@@ -192,7 +269,7 @@ def load_data():
         else:
             raise Exception('Multiple distances for EPIC {ik2}?')
     dfk2['distance_pc'] = k2dists
-    
+
     koidists = np.zeros(dfkoi['kepid'].size)
     kics, k1dists = np.loadtxt(koidistfile, unpack=True)
     kics = kics.astype(int)
@@ -206,7 +283,10 @@ def load_data():
         else:
             raise Exception('Multiple distances for KIC {ikoi}?')
     dfkoi['distance_pc'] = koidists
-    
+
+    # work out insolation for all the planets
+    set_insolations(dfcon, dfkoi, dfk2, dftoi)
+
     return dfcon, dfkoi, dfk2, dftoi
 
 
