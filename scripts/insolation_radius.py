@@ -186,7 +186,7 @@ for ifig in np.arange(2):
         yend = 10.**(np.log10(ymax) + 0.05*ydiff)
     else:
         ystart = 0
-        yend = 4.2
+        yend = 3.6
 
     # jupiter/earth radius ratio
     radratio = 11.21
@@ -199,6 +199,8 @@ for ifig in np.arange(2):
     else:
         fig.y_range.start = ystart
         fig.y_range.end = yend
+        fig.x_range.start = 40000
+        fig.x_range.end = 0.1
 
     # add the first y-axis's label and use our custom log formatting
     fig.yaxis.axis_label = 'Radius (Earth Radii)'
