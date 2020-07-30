@@ -15,7 +15,6 @@ details page on either Exoplanet Archive or ExoFOP-TESS. Clicking on the
 labels in the legend allows you to turn on and off individual collections of
 planets.
 
-
 For more plots, choose your parameters:
 
 [Period vs Radius](./period-radius.md)
