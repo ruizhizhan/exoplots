@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from astropy.io import fits
 
 from utils import load_data
@@ -12,12 +13,23 @@ from utils import load_data
 run = False
 
 if run:
-    dfcon, dfkoi, dfk2, dftoi = load_data()
+    dfcon, dfkoi, dfk2, dftoi = load_data(updated_koi_params=False,
+                                          updated_k2_params=False)
 
     gkep = fits.open('data/kepler_dr2_1arcsec.fits')
 
     dists = []
     ukics = np.unique(dfkoi['kepid'])
+    
+    # these are KICs of confirmed planets in the Kepler field but not KOIs
+    fillkics = [5446285, 8435766, 12644769, 8572936, 9837578, 6762829, 10020423,
+                10020423, 4862625, 5807616, 5807616, 5473556, 12351927, 9472174,
+                9632895, 8410697, 6504534, 5812701, 5446285, 10020423, 10748390,
+                11442793]
+    # these are confirmed only planets with planet names KIC ##### b
+    morekics = [5951458, 10001893, 7917485]
+
+    ukics = np.unique(np.concatenate((ukics, fillkics, morekics)))
 
     for ikoi in ukics:
         srch = np.where(gkep[1].data['kepid'] == ikoi)[0]
@@ -36,6 +48,33 @@ if run:
     np.savetxt('data/koi_distances.txt', np.vstack((ukics, dists)).T,
                fmt='%d  %f')
     gkep.close()
+
+    newkep = pd.read_csv('data/kepler_berger2020_full.txt', delimiter='&')
+
+    kepmass = np.zeros(ukics.size) + np.nan
+    kepteff = np.zeros(ukics.size) + np.nan
+    keprad = np.zeros(ukics.size) + np.nan
+    keplum = np.zeros(ukics.size) + np.nan
+    kepdist = np.zeros(ukics.size) + np.nan
+
+    for ii, ikoi in enumerate(ukics):
+        srch = np.where(newkep['KIC'] == ikoi)[0]
+        if len(srch) == 0:
+            continue
+        elif len(srch) > 1:
+            raise Exception('Multiple KICs?')
+
+        ind = srch[0]
+        kepmass[ii] = newkep['iso_mass'][ind]
+        kepteff[ii] = newkep['iso_teff'][ind]
+        keprad[ii] = newkep['iso_rad'][ind]
+        keplum[ii] = newkep['iso_lum'][ind]
+        kepdist[ii] = newkep['iso_dis'][ind]
+
+    out = np.vstack((ukics, kepmass, keprad, kepteff, keplum, kepdist)).T
+    head = 'KIC, Mass, Rad, Teff, Log(Lum), Dist (pc)'
+    np.savetxt('data/koi_params_berger2020.txt', out, header=head,
+               fmt='%d  %f  %f  %f  %f  %f')
 
     gk2 = fits.open('data/k2_dr2_1arcsec.fits')
     k2dists = []
@@ -59,3 +98,30 @@ if run:
                fmt='%d  %f')
 
     gk2.close()
+
+    newk2 = pd.read_csv('data/k2_hardegree-ullman2020_full.txt', skiprows=93,
+                        delimiter='\t')
+
+    k2mass = np.zeros(uepics.size) + np.nan
+    k2teff = np.zeros(uepics.size) + np.nan
+    k2rad = np.zeros(uepics.size) + np.nan
+    k2lum = np.zeros(uepics.size) + np.nan
+    k2dist = np.zeros(uepics.size) + np.nan
+
+    for ii, ik2 in enumerate(uepics):
+        srch = np.where(newk2['EPIC'] == ik2)[0]
+        if len(srch) == 0:
+            continue
+
+        ind = srch[0]
+        k2mass[ii] = newk2['Mstar'][ind]
+        k2teff[ii] = newk2['Teff'][ind]
+        k2rad[ii] = newk2['Rstar'][ind]
+        lum = (k2rad[ii]**2) * ((k2teff[ii]/5772)**4)
+        k2lum[ii] = np.log10(lum)
+        k2dist[ii] = newk2['Dist'][ind]
+
+    out = np.vstack((uepics, k2mass, k2rad, k2teff, k2lum, k2dist)).T
+    head = 'EPIC, Mass, Rad, Teff, Log(Lum), Dist (pc)'
+    np.savetxt('data/k2_params_hardegree-ullman2020.txt', out, header=head,
+               fmt='%d  %f  %f  %f  %f  %f')

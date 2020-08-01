@@ -7,8 +7,7 @@ from bokeh.io import curdoc
 from bokeh.models import FuncTickFormatter, Label, NumeralTickFormatter
 from bokeh.themes import Theme
 
-from test_data import get_discovery_year
-from utils import get_update_time, log_axis_labels
+from utils import get_update_time, log_axis_labels, load_data
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -42,7 +41,7 @@ embedfilecumlog_name = '_includes/per_year_{0}_cumul_log_embed.html'
 fullfilecumlog_name = '_includes/per_year_{0}_cumul_log.html'
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = get_discovery_year()
+dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True)
 
 years = range(dfcon['pl_disc'].min(), datetime.now().year+1)
 
