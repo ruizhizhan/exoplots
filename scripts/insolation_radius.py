@@ -27,7 +27,7 @@ colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377',
           '#ccbb44']
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = load_data(updated_koi_params=False)
+dfcon, dfkoi, dfk2, dftoi = load_data(updated_koi_params=True)
 
 # what to display when hovering over a data point
 TOOLTIPS = [
