@@ -851,6 +851,18 @@ def load_data(discovery_year=False, updated_koi_params=True,
         else:
             raise Exception('Multiple distances for KIC {ikoi}?')
     dfkoi['distance_pc'] = koidists
+    
+    koicon = dfkoi['koi_disposition'] == 'Confirmed'
+    koican = dfkoi['koi_disposition'] == 'Candidate'
+    # candidates where the planet is bigger than the star shouldn't exist
+    badfit = (dfkoi['koi_ror'] > 1) & (koicon | koican)
+    # use depth instead of r/R for radius
+    sunearth = 109.1
+    rr = np.sqrt(dfkoi['koi_depth']/1e6) * dfkoi['koi_srad'] * sunearth
+    badfit = badfit & np.isfinite(rr)
+    dfkoi.loc[badfit, 'koi_prad'] = rr[badfit]
+    dfkoi.loc[badfit, 'koi_pradj'] = rr[badfit] / radratio
+    
 
     #################
     # K2 LIST PREP #
