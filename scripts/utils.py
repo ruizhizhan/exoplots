@@ -1076,8 +1076,8 @@ csv_creation = """
     };
 
     var link = document.createElement('a');
-    link.setAttribute('download', 'exoplots_download.txt');
-    // link.setAttribute('target', '_blank');
+    // link.setAttribute('download', 'exoplots_download.txt');
+    link.setAttribute('target', '_blank');
     link.href = makeTextFile(makeCSV(sources, keys, header));
     document.body.appendChild(link);
 
