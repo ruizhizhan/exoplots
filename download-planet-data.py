@@ -5,7 +5,7 @@ import pandas as pd
 
 NEXSCI_API = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph' \
              '-nstedAPI'
-
+NEW_API = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query='
 # The "exoplanets" table includes all confirmed planets and hosts in the
 # archive with parameters derived from a single, published reference
 
@@ -13,6 +13,11 @@ NEXSCI_API = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph' \
 print('Downloading all confirmed planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*')
 df.to_csv('data/confirmed-planets.csv')
+
+# New confirmed planets
+print("Downloading all confirmed planets from NExSci's new table...")
+df = pd.read_csv(NEW_API + 'select+*+from+pscomppars&format=csv')
+df.to_csv('data/new-confirmed-planets.csv')
 
 # full KOI table
 print('Downloading full KOI table from NExSci...')

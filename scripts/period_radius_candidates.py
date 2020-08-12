@@ -2,11 +2,13 @@ import numpy as np
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.io import curdoc
-from bokeh.models import FuncTickFormatter, OpenURL, TapTool
-from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d
+from bokeh.models import FuncTickFormatter, OpenURL, TapTool, BoxSelectTool
+from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d, LassoSelectTool, CustomJS
 from bokeh.themes import Theme
+from bokeh.models.widgets import Button
+from bokeh.layouts import column
 
-from utils import get_update_time, load_data, log_axis_labels
+from utils import get_update_time, load_data, log_axis_labels, csv_creation
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -51,6 +53,9 @@ fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS,
                       plot_height=700)
 # allow for something to happen when you click on data points
 fig.add_tools(TapTool())
+# select multiple points to download
+fig.add_tools(BoxSelectTool())
+fig.add_tools(LassoSelectTool())
 
 # need to store min and max radius values to create the second axis
 ymin = 1
@@ -58,6 +63,7 @@ ymax = 1
 # save the output plots to rearrange them in the legend
 glyphs = []
 counts = []
+sources = []
 
 for ii, imiss in enumerate(missions):
     # candidates get these default values
@@ -149,9 +155,10 @@ for ii, imiss in enumerate(missions):
     # disappearing when you click on a data point ("select" it)
     glyph = fig.scatter('period', 'radius', color=colors[ii], source=source,
                         size=size, alpha=alpha, marker=markers[ii],
-                        nonselection_alpha=alpha,
+                        nonselection_alpha=alpha/3,
                         nonselection_color=colors[ii])
     glyphs.append(glyph)
+    sources.append(source)
     # save the global min/max
     ymin = min(ymin, source.data['radius'].min())
     ymax = max(ymax, source.data['radius'].max())
@@ -264,11 +271,20 @@ fig.add_layout(caption2, 'below')
 fig.add_layout(caption3, 'below')
 fig.add_layout(caption4, 'below')
 
-plotting.save(fig)
+# add the download button
+button = Button(label="Download CSV of Selected Data", button_type="primary")
+# what is the header and what keys correspond to those columns for output CSV files
+csvhead = '# Planet Name, Status, Period (days), Radius (Earths), Radius (Jupiters), Discovered by'
+keys = ['planet', 'status', 'period', 'radius', 'jupradius', 'discovery']
+button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys, header=csvhead), code=csv_creation))
+
+layout = column(fig, button)
+
+plotting.save(layout)
 
 # save the individual pieces so we can just embed the figure without the whole
 # html page
-script, div = components(fig, theme=theme)
+script, div = components(layout, theme=theme)
 with open(embedfile, 'w') as ff:
     ff.write(script)
     ff.write(div)

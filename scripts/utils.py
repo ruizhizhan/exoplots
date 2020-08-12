@@ -668,7 +668,7 @@ def set_insolations(dfcon, dfkoi, dfk2, dftoi, updated_koi_params=True,
 
 
 def load_data(discovery_year=False, updated_koi_params=True,
-              updated_k2_params=True):
+              updated_k2_params=True, new=False):
     """
     Load our data tables and perform some data cleansing/updating to make them
     ready for use in our interactive figures.
@@ -705,7 +705,10 @@ def load_data(discovery_year=False, updated_koi_params=True,
     import warnings
 
     # load the data files
-    datafile = 'data/confirmed-planets.csv'
+    if new:
+        datafile = 'data/new-confirmed-planets.csv'
+    else:
+        datafile = 'data/confirmed-planets.csv'
     k2file = 'data/k2-candidates-table.csv'
     koifile = 'data/kepler-kois-full.csv'
     toifile = 'data/tess-candidates.csv'
@@ -714,7 +717,15 @@ def load_data(discovery_year=False, updated_koi_params=True,
     koidistfile = 'data/koi_distances.txt'
 
     # the dtype is to silence a pandas warning
-    dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string'})
+    if new:
+        ignore_warns = {'hd_name': 'string',  'hip_name': 'string',
+                        'pl_orbtperstr': 'string', 'pl_occdepstr': 'string',
+                        'pl_projobliqstr': 'string', 'sy_icmagstr': 'string',
+                        'pl_trueobliqstr': 'string', 'pl_msinijstr': 'string',
+                        'pl_msiniestr': 'string'}
+        dfcon = pd.read_csv(datafile, dtype=ignore_warns)
+    else:
+        dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string'})
     dfk2 = pd.read_csv(k2file)
     dfkoi = pd.read_csv(koifile)
     dftoi = pd.read_csv(toifile)
@@ -725,19 +736,29 @@ def load_data(discovery_year=False, updated_koi_params=True,
 
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
-    dfcon['pl_facility'].replace(full, 'TESS', inplace=True)
+    if new:
+        dfcon['disc_facility'].replace(full, 'TESS', inplace=True)
+    else:
+        dfcon['pl_facility'].replace(full, 'TESS', inplace=True)
     # set all of these planets as confirmed
     dfcon['status'] = 'Confirmed'
 
     # where do we want to point people to on clicking?
-    dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' +
-                    dfcon['pl_hostname'])
+    if new:
+        dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' +
+                        dfcon['hostname'])
+    else:
+        dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' +
+                        dfcon['pl_hostname'])
 
     # set up a distance field that is the same in all 4 groups
-    # for confirmed planets, trust Gaia over published values if possible
-    condists = dfcon['gaia_dist'].values * 1
-    condists[~np.isfinite(condists)] = dfcon['st_dist'][~np.isfinite(condists)]
-    dfcon['distance_pc'] = condists
+    if new:
+        dfcon['distance_pc'] = dfcon['sy_dist'].values * 1
+    else:
+        # for confirmed planets, trust Gaia over published values if possible
+        condists = dfcon['gaia_dist'].values * 1
+        condists[~np.isfinite(condists)] = dfcon['st_dist'][~np.isfinite(condists)]
+        dfcon['distance_pc'] = condists
 
     #################
     # TOI LIST PREP #
@@ -1000,4 +1021,64 @@ if ((logtick > {min_tick}) && (logtick < {max_tick})){{
     
     return front + 'x' + retval
 }}
+    """
+
+"""
+    JavaScript code to create a CSV file from selected data points in a plot
+
+    Parameters
+    ----------
+
+"""
+csv_creation = """
+    function makeCSV(sources, keys, header) {
+        const nsources = sources.length;
+        const ncolumns = keys.length;
+        const lines = [header];
+        for (let nn = 0; nn < nsources; nn++) {
+            var source = sources[nn];
+            const nrows = source.selected.indices.length;
+            
+            for (let ii = 0; ii < nrows; ii++) {
+                let row = [];
+                for (let jj = 0; jj < ncolumns; jj++) {
+                    const column = keys[jj];
+                    var ind = source.selected.indices[ii];
+                    row.push(source.data[column][ind].toString());
+                }
+                lines.push(row.join(', '));
+            }
+        }
+        return lines.join('\\n').concat('\\n');
+    };
+
+    // adapted from:
+    // https://stackoverflow.com/questions/21012580/is-it-possible-to-write-data-to-file-using-only-javascript
+    var textFile = null;
+    function makeTextFile(text) {
+      var data = new Blob([text], {type: 'text/plain'});
+
+      // If we are replacing a previously generated file we need to
+      // manually revoke the object URL to avoid memory leaks.
+      if (textFile !== null) {
+        window.URL.revokeObjectURL(textFile);
+      }
+
+      textFile = window.URL.createObjectURL(data);
+
+      return textFile;
+    };
+
+    var link = document.createElement('a');
+    //link.setAttribute('download', 'exoplots_download.txt');
+    link.setAttribute('target', '_blank');
+    link.href = makeTextFile(makeCSV(sources, keys, header));
+    document.body.appendChild(link);
+
+    // wait for the link to be added to the document
+    window.requestAnimationFrame(function() {
+      var event = new MouseEvent('click');
+      link.dispatchEvent(event);
+      document.body.removeChild(link);
+    });
     """
