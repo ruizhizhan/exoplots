@@ -687,6 +687,10 @@ def load_data(discovery_year=False, updated_koi_params=True,
         If True, for all stars in the K2 fields, use the updated stellar
         parameters from Hardegree-Ullman 2020. Recalculate planet radii,
         insolations, etc using these new Gaia assisted stellar parameters.
+    new : bool
+        Whether we're using the new planetary systems composite table instead
+        of the old/deprecated confirmed planets table
+
     Returns
     -------
     dfcon : DataFrame
@@ -757,7 +761,8 @@ def load_data(discovery_year=False, updated_koi_params=True,
     else:
         # for confirmed planets, trust Gaia over published values if possible
         condists = dfcon['gaia_dist'].values * 1
-        condists[~np.isfinite(condists)] = dfcon['st_dist'][~np.isfinite(condists)]
+        ncd = ~np.isfinite(condists)
+        condists[~np.isfinite(condists)] = dfcon['st_dist'][ncd]
         dfcon['distance_pc'] = condists
 
     #################
@@ -872,7 +877,7 @@ def load_data(discovery_year=False, updated_koi_params=True,
         else:
             raise Exception('Multiple distances for KIC {ikoi}?')
     dfkoi['distance_pc'] = koidists
-    
+
     koicon = dfkoi['koi_disposition'] == 'Confirmed'
     koican = dfkoi['koi_disposition'] == 'Candidate'
     # candidates where the planet is bigger than the star shouldn't exist
@@ -883,7 +888,6 @@ def load_data(discovery_year=False, updated_koi_params=True,
     badfit = badfit & np.isfinite(rr)
     dfkoi.loc[badfit, 'koi_prad'] = rr[badfit]
     dfkoi.loc[badfit, 'koi_pradj'] = rr[badfit] / radratio
-    
 
     #################
     # K2 LIST PREP #
@@ -1023,6 +1027,7 @@ if ((logtick > {min_tick}) && (logtick < {max_tick})){{
 }}
     """
 
+
 """
     JavaScript code to create a CSV file from selected data points in a plot
 
@@ -1053,7 +1058,8 @@ csv_creation = """
     };
 
     // adapted from:
-    // https://stackoverflow.com/questions/21012580/is-it-possible-to-write-data-to-file-using-only-javascript
+    // https://stackoverflow.com/questions/21012580/is-it-possible-to-write-
+    // data-to-file-using-only-javascript
     var textFile = null;
     function makeTextFile(text) {
       var data = new Blob([text], {type: 'text/plain'});

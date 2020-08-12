@@ -2,13 +2,14 @@ import numpy as np
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.io import curdoc
-from bokeh.models import FuncTickFormatter, OpenURL, TapTool, BoxSelectTool
-from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d, LassoSelectTool, CustomJS
-from bokeh.themes import Theme
-from bokeh.models.widgets import Button
 from bokeh.layouts import column
+from bokeh.models import BoxSelectTool, FuncTickFormatter, OpenURL, TapTool
+from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
+from bokeh.models import LogAxis, Range1d
+from bokeh.models.widgets import Button
+from bokeh.themes import Theme
 
-from utils import get_update_time, load_data, log_axis_labels, csv_creation
+from utils import csv_creation, get_update_time, load_data, log_axis_labels
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -273,10 +274,13 @@ fig.add_layout(caption4, 'below')
 
 # add the download button
 button = Button(label="Download CSV of Selected Data", button_type="primary")
-# what is the header and what keys correspond to those columns for output CSV files
-csvhead = '# Planet Name, Status, Period (days), Radius (Earths), Radius (Jupiters), Discovered by'
+# what is the header and what keys correspond to those columns for
+# output CSV files
+csvhead = '# Planet Name, Status, Period (days), Radius (Earths), ' \
+          'Radius (Jupiters), Discovered by'
 keys = ['planet', 'status', 'period', 'radius', 'jupradius', 'discovery']
-button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys, header=csvhead), code=csv_creation))
+button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
+                                      header=csvhead), code=csv_creation))
 
 layout = column(fig, button)
 
