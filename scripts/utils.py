@@ -730,7 +730,7 @@ def load_data(discovery_year=False, updated_koi_params=True,
                         'pl_msiniestr': 'string'}
         dfcon = pd.read_csv(datafile, dtype=ignore_warns)
     else:
-        dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string', 
+        dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string',
                                              'swasp_id': 'string'})
     dfk2 = pd.read_csv(k2file)
     dfkoi = pd.read_csv(koifile)
@@ -1090,3 +1090,45 @@ csv_creation = """
       document.body.removeChild(link);
     });
     """
+
+deselect = """
+const nglyphs = glyphs.length;
+var some = 0;
+for (let nn = 0; nn < nglyphs; nn++) {
+    var glyph = glyphs[nn];
+    var source = glyph.data_source;
+
+    if (source.selected.indices.length == 0){
+        // source.selected.indices.push(0);
+        // source.change.emit();
+        glyph.glyph.line_alpha = glyph.nonselection_glyph.line_alpha;
+        glyph.glyph.fill_alpha = glyph.nonselection_glyph.fill_alpha;
+        glyph.change.emit();
+    }
+    else {
+        glyph.glyph.line_alpha = alphas[nn];
+        glyph.glyph.fill_alpha = alphas[nn];
+        glyph.change.emit();
+        some = 1;
+    }
+}
+if (some == 0){
+    for (let nn = 0; nn < nglyphs; nn++) {
+        var glyph = glyphs[nn];
+        glyph.glyph.line_alpha = alphas[nn];
+        glyph.glyph.fill_alpha = alphas[nn];
+        glyph.change.emit();
+    }
+}
+
+"""
+
+reset = """
+const nglyphs = glyphs.length;
+for (let nn = 0; nn < nglyphs; nn++) {
+    var glyph = glyphs[nn];
+    glyph.glyph.line_alpha = alphas[nn];
+    glyph.glyph.fill_alpha = alphas[nn];
+    glyph.change.emit();
+}
+"""

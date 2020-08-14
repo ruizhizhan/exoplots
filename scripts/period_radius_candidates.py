@@ -10,6 +10,7 @@ from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
 from utils import csv_creation, get_update_time, load_data, log_axis_labels
+from utils import deselect, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -54,11 +55,6 @@ fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS,
                       plot_height=700)
 # allow for something to happen when you click on data points
 fig.add_tools(TapTool())
-# select multiple points to download
-box = BoxSelectTool()
-fig.add_tools(box)
-lasso = LassoSelectTool()
-fig.add_tools(lasso)
 
 # need to store min and max radius values to create the second axis
 ymin = 1
@@ -67,6 +63,7 @@ ymax = 1
 glyphs = []
 counts = []
 sources = []
+alphas = []
 
 for ii, imiss in enumerate(missions):
     # candidates get these default values
@@ -156,12 +153,15 @@ for ii, imiss in enumerate(missions):
     # plot the planets
     # nonselection stuff is needed to prevent planets in that category from
     # disappearing when you click on a data point ("select" it)
+    # selection_alpha is just requiring it to make its own selection glyph
+    # so we can better control that later
     glyph = fig.scatter('period', 'radius', color=colors[ii], source=source,
                         size=size, alpha=alpha, marker=markers[ii],
-                        nonselection_alpha=alpha/3,
+                        nonselection_alpha=0.07, selection_alpha=0.8,
                         nonselection_color=colors[ii])
     glyphs.append(glyph)
     sources.append(source)
+    alphas.append(alpha)
     # save the global min/max
     ymin = min(ymin, source.data['radius'].min())
     ymax = max(ymax, source.data['radius'].max())
@@ -283,6 +283,18 @@ csvhead = '# Planet Name, Status, Period (days), Radius (Earths), ' \
 keys = ['planet', 'status', 'period', 'radius', 'jupradius', 'discovery']
 button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
                                       header=csvhead), code=csv_creation))
+
+from bokeh.events import SelectionGeometry
+
+# select multiple points to download
+box = BoxSelectTool()
+#box.js_on_event(SelectionGeometry, CustomJS(args=dict(sources=sources), code=deselect))
+fig.add_tools(box)
+lasso = LassoSelectTool()
+fig.add_tools(lasso)
+
+fig.js_on_event(SelectionGeometry, CustomJS(args=dict(glyphs=glyphs, alphas=alphas), code=deselect))
+fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas), code=reset))
 
 layout = column(fig, button)
 
