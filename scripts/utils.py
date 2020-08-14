@@ -285,7 +285,8 @@ def get_new_k2_params(dfcon, dfk2):
                'K2-308 b', 'Ross 128 b', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
                'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
                'TRAPPIST-1 h', 'V1298 Tau b', 'V1298 Tau c', 'V1298 Tau d',
-               'V1298 Tau e', 'WASP-151 b', 'WASP-28 b', 'Wolf 503 b']
+               'V1298 Tau e', 'WASP-151 b', 'WASP-28 b', 'Wolf 503 b',
+               'K2-315 b']
     fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
                  60021410, 211311380, 211311380, 211311380, 211311380,
                  211311380, 247887989, 247887989, 247887989, 247887989,
@@ -301,7 +302,7 @@ def get_new_k2_params(dfcon, dfk2):
                  246151543, 246078672, 246865365, 201518346, 246199087,
                  246199087, 246199087, 246199087, 246199087, 246199087,
                  246199087, 210818897, 210818897, 210818897, 210818897,
-                 246441449, 60017806, 212779563]
+                 246441449, 60017806, 212779563, 249631677]
 
     # for K2 planets only on the confirmed list, try to find their EPIC
     # from other KOIs in the system
@@ -729,7 +730,8 @@ def load_data(discovery_year=False, updated_koi_params=True,
                         'pl_msiniestr': 'string'}
         dfcon = pd.read_csv(datafile, dtype=ignore_warns)
     else:
-        dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string'})
+        dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string', 
+                                             'swasp_id': 'string'})
     dfk2 = pd.read_csv(k2file)
     dfkoi = pd.read_csv(koifile)
     dftoi = pd.read_csv(toifile)

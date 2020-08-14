@@ -55,8 +55,10 @@ fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS,
 # allow for something to happen when you click on data points
 fig.add_tools(TapTool())
 # select multiple points to download
-fig.add_tools(BoxSelectTool())
-fig.add_tools(LassoSelectTool())
+box = BoxSelectTool()
+fig.add_tools(box)
+lasso = LassoSelectTool()
+fig.add_tools(lasso)
 
 # need to store min and max radius values to create the second axis
 ymin = 1
@@ -284,6 +286,9 @@ button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
 
 layout = column(fig, button)
 
+plotting.show(layout)
+
+"""
 plotting.save(layout)
 
 # save the individual pieces so we can just embed the figure without the whole
@@ -292,3 +297,6 @@ script, div = components(layout, theme=theme)
 with open(embedfile, 'w') as ff:
     ff.write(script)
     ff.write(div)
+"""
+    
+# for later: https://stackoverflow.com/questions/54973774/bokeh-1-0-4-selection-across-multiple-glyphs-with-an-interactive-legend-does-n
