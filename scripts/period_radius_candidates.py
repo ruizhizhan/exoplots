@@ -65,6 +65,7 @@ glyphs = []
 counts = []
 sources = []
 alphas = []
+legitems = []
 
 for ii, imiss in enumerate(missions):
     # candidates get these default values
@@ -166,6 +167,9 @@ for ii, imiss in enumerate(missions):
     # save the global min/max
     ymin = min(ymin, source.data['radius'].min())
     ymax = max(ymax, source.data['radius'].max())
+    
+    leg = LegendItem(label=imiss + f' ({counts[ii]})', renderers=[glyph])
+    legitems.append(leg)
 
 # set up where to send people when they click on a planet
 url = "@url"
@@ -201,15 +205,9 @@ bottomleg = ['Kepler Candidate', 'K2 Candidate', 'TESS Candidate']
 vbottomleg = ['Other Confirmed']
 
 # set up all the legend objects
-items1 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
-                     renderers=[glyphs[missions.index(ii)]])
-          for ii in topleg]
-items2 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
-                     renderers=[glyphs[missions.index(ii)]])
-          for ii in bottomleg]
-items3 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
-                     renderers=[glyphs[missions.index(ii)]])
-          for ii in vbottomleg]
+items1 = [legitems[missions.index(ii)] for ii in topleg]
+items2 = [legitems[missions.index(ii)] for ii in bottomleg]
+items3 = [legitems[missions.index(ii)] for ii in vbottomleg]
 
 # create the two legends
 for ii in np.arange(3):
@@ -291,12 +289,13 @@ fig.add_tools(box)
 lasso = LassoSelectTool()
 fig.add_tools(lasso)
 
-des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas), code=deselect)
+des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas, legends=legitems),
+               code=deselect)
 fig.js_on_event(SelectionGeometry, des)
-fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas),
-                                  code=reset))
+fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas, 
+                                            legends=legitems), code=reset))
 
-layout = column(fig, button)
+layout = column(button, fig)
 
 plotting.save(layout)
 

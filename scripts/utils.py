@@ -1097,10 +1097,9 @@ var some = 0;
 for (let nn = 0; nn < nglyphs; nn++) {
     var glyph = glyphs[nn];
     var source = glyph.data_source;
+    var legend = legends[nn];
 
     if (source.selected.indices.length == 0){
-        // source.selected.indices.push(0);
-        // source.change.emit();
         glyph.glyph.line_alpha = glyph.nonselection_glyph.line_alpha;
         glyph.glyph.fill_alpha = glyph.nonselection_glyph.fill_alpha;
         glyph.change.emit();
@@ -1111,13 +1110,25 @@ for (let nn = 0; nn < nglyphs; nn++) {
         glyph.change.emit();
         some = 1;
     }
+    var newnum = source.selected.indices.length.toLocaleString('en-US');
+    newnum = '(' + newnum + ')';
+    var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
+    legend.label['value'] = newstr;
 }
 if (some == 0){
     for (let nn = 0; nn < nglyphs; nn++) {
         var glyph = glyphs[nn];
+        var source = glyph.data_source;
+        var legend = legends[nn];
+        
         glyph.glyph.line_alpha = alphas[nn];
         glyph.glyph.fill_alpha = alphas[nn];
         glyph.change.emit();
+        
+        var newnum = source.data['planet'].length.toLocaleString('en-US') ;
+        newnum = '(' + newnum + ')';
+        var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
+        legend.label['value'] = newstr;
     }
 }
 
@@ -1127,8 +1138,16 @@ reset = """
 const nglyphs = glyphs.length;
 for (let nn = 0; nn < nglyphs; nn++) {
     var glyph = glyphs[nn];
+    var source = glyph.data_source;
+    var legend = legends[nn];
+    
     glyph.glyph.line_alpha = alphas[nn];
     glyph.glyph.fill_alpha = alphas[nn];
     glyph.change.emit();
+    
+    var newnum = source.data['planet'].length.toLocaleString('en-US') ;
+    newnum = '(' + newnum + ')';
+    var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
+    legend.label['value'] = newstr;
 }
 """
