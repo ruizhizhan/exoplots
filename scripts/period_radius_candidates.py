@@ -1,6 +1,7 @@
 import numpy as np
 from bokeh import plotting
 from bokeh.embed import components
+from bokeh.events import SelectionGeometry
 from bokeh.io import curdoc
 from bokeh.layouts import column
 from bokeh.models import BoxSelectTool, FuncTickFormatter, OpenURL, TapTool
@@ -284,23 +285,19 @@ keys = ['planet', 'status', 'period', 'radius', 'jupradius', 'discovery']
 button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
                                       header=csvhead), code=csv_creation))
 
-from bokeh.events import SelectionGeometry
-
 # select multiple points to download
 box = BoxSelectTool()
-#box.js_on_event(SelectionGeometry, CustomJS(args=dict(sources=sources), code=deselect))
 fig.add_tools(box)
 lasso = LassoSelectTool()
 fig.add_tools(lasso)
 
-fig.js_on_event(SelectionGeometry, CustomJS(args=dict(glyphs=glyphs, alphas=alphas), code=deselect))
-fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas), code=reset))
+des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas), code=deselect)
+fig.js_on_event(SelectionGeometry, des)
+fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas),
+                                  code=reset))
 
 layout = column(fig, button)
 
-plotting.show(layout)
-
-"""
 plotting.save(layout)
 
 # save the individual pieces so we can just embed the figure without the whole
@@ -309,6 +306,3 @@ script, div = components(layout, theme=theme)
 with open(embedfile, 'w') as ff:
     ff.write(script)
     ff.write(div)
-"""
-    
-# for later: https://stackoverflow.com/questions/54973774/bokeh-1-0-4-selection-across-multiple-glyphs-with-an-interactive-legend-does-n
