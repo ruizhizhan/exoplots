@@ -1,12 +1,17 @@
 import numpy as np
 from bokeh import plotting
 from bokeh.embed import components
+from bokeh.events import SelectionGeometry
 from bokeh.io import curdoc
-from bokeh.models import FuncTickFormatter, OpenURL, TapTool
-from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d
+from bokeh.layouts import column
+from bokeh.models import BoxSelectTool, FuncTickFormatter, OpenURL, TapTool
+from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
+from bokeh.models import LogAxis, Range1d
+from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
-from utils import get_update_time, load_data, log_axis_labels
+from utils import csv_creation, get_update_time, load_data, log_axis_labels
+from utils import deselect, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -71,6 +76,9 @@ for ifig in np.arange(2):
     # save the output plots to rearrange them in the legend
     glyphs = []
     counts = []
+    sources = []
+    alphas = []
+    legitems = []
 
     for ii, imiss in enumerate(missions):
         # candidates get these default values
@@ -168,12 +176,17 @@ for ifig in np.arange(2):
         # disappearing when you click on a data point ("select" it)
         glyph = fig.scatter('insolation', 'radius', color=colors[ii],
                             source=source, size=size, alpha=alpha,
-                            marker=markers[ii], nonselection_alpha=alpha,
-                            nonselection_color=colors[ii])
+                            marker=markers[ii], nonselection_alpha=0.07,
+                            selection_alpha=0.8, nonselection_color=colors[ii])
         glyphs.append(glyph)
+        sources.append(source)
+        alphas.append(alpha)
         # save the global min/max
         ymin = min(ymin, source.data['radius'].min())
         ymax = max(ymax, source.data['radius'].max())
+
+        leg = LegendItem(label=imiss + f' ({counts[ii]})', renderers=[glyph])
+        legitems.append(leg)
 
     # set up where to send people when they click on a planet
     url = "@url"
@@ -224,15 +237,9 @@ for ifig in np.arange(2):
     vbottomleg = ['Other Confirmed']
 
     # set up all the legend objects
-    items1 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
-                         renderers=[glyphs[missions.index(ii)]])
-              for ii in topleg]
-    items2 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
-                         renderers=[glyphs[missions.index(ii)]])
-              for ii in bottomleg]
-    items3 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
-                         renderers=[glyphs[missions.index(ii)]])
-              for ii in vbottomleg]
+    items1 = [legitems[missions.index(ii)] for ii in topleg]
+    items2 = [legitems[missions.index(ii)] for ii in bottomleg]
+    items3 = [legitems[missions.index(ii)] for ii in vbottomleg]
 
     # create the two legends
     for ii in np.arange(3):
@@ -324,11 +331,39 @@ for ifig in np.arange(2):
     fig.add_layout(caption3, 'below')
     fig.add_layout(caption4, 'below')
 
-    plotting.save(fig)
+    # add the download button
+    button = Button(label="Download CSV of Selected Data",
+                    button_type="primary")
+    # what is the header and what keys correspond to those columns for
+    # output CSV files
+    csvhead = '# Planet Name, Status, Period (days), Radius (Earths), ' \
+              'Radius (Jupiters), Insolation (Earths), Discovered by'
+    keys = ['planet', 'status', 'period', 'radius', 'jupradius', 'insolation',
+            'discovery']
+    button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
+                                          header=csvhead), code=csv_creation))
+
+    # select multiple points to download
+    box = BoxSelectTool()
+    fig.add_tools(box)
+    lasso = LassoSelectTool()
+    fig.add_tools(lasso)
+
+    des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas, legends=legitems),
+                   code=deselect)
+    fig.js_on_event(SelectionGeometry, des)
+    fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas,
+                                                legends=legitems), code=reset))
+
+    layout = column(button, fig)
+
+    plotting.save(layout)
+
+    plotting.show(layout)
 
     # save the individual pieces so we can just embed the figure without the
     # whole html page
-    script, div = components(fig, theme=theme)
+    script, div = components(layout, theme=theme)
     with open(embedfile, 'w') as ff:
         ff.write(script)
         ff.write(div)

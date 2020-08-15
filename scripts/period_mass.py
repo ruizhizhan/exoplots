@@ -1,12 +1,17 @@
 import numpy as np
 from bokeh import plotting
 from bokeh.embed import components
+from bokeh.events import SelectionGeometry
 from bokeh.io import curdoc
-from bokeh.models import FuncTickFormatter, OpenURL, TapTool
-from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d
+from bokeh.layouts import column
+from bokeh.models import BoxSelectTool, FuncTickFormatter, OpenURL, TapTool
+from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
+from bokeh.models import LogAxis, Range1d
+from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
-from utils import get_update_time, load_data, log_axis_labels
+from utils import csv_creation, get_update_time, load_data, log_axis_labels
+from utils import deselect, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -43,7 +48,8 @@ TOOLTIPS = [
 ]
 
 # create the figure
-fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS)
+fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS,
+                      plot_height=700)
 # allow for something to happen when you click on data points
 fig.add_tools(TapTool())
 
@@ -53,6 +59,8 @@ ymax = 1
 # save the output plots to rearrange them in the legend
 glyphs = []
 counts = []
+sources = []
+alphas = []
 
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
@@ -92,12 +100,14 @@ for ii, imeth in enumerate(methods):
     # disappearing when you click on a data point ("select" it)
     glyph = fig.scatter('period', 'mass', color=colors[ii], source=source,
                         size=8, alpha=alpha, marker=markers[ii],
-                        nonselection_alpha=alpha,
+                        nonselection_alpha=0.07, selection_alpha=0.8,
                         nonselection_color=colors[ii])
     glyphs.append(glyph)
     # save the global min/max
     ymin = min(ymin, source.data['mass'].min())
     ymax = max(ymax, source.data['mass'].max())
+    sources.append(source)
+    alphas.append(alpha)
 
 # set up where to send people when they click on a planet
 url = "@url"
@@ -172,11 +182,35 @@ fig.add_layout(caption1, 'below')
 fig.add_layout(caption2, 'below')
 fig.add_layout(caption3, 'below')
 
-plotting.save(fig)
+# add the download button
+button = Button(label="Download CSV of Selected Data", button_type="primary")
+# what is the header and what keys correspond to those columns for
+# output CSV files
+csvhead = '# Planet Name, Period (days), Mass (Earths), ' \
+          'Mass (Jupiters), Discovered by'
+keys = ['planet', 'period', 'mass', 'jupmass', 'method']
+button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
+                                      header=csvhead), code=csv_creation))
+
+# select multiple points to download
+box = BoxSelectTool()
+fig.add_tools(box)
+lasso = LassoSelectTool()
+fig.add_tools(lasso)
+
+des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas, legends=items),
+               code=deselect)
+fig.js_on_event(SelectionGeometry, des)
+fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas, 
+                                            legends=items), code=reset))
+
+layout = column(button, fig)
+
+plotting.save(layout)
 
 # save the individual pieces so we can just embed the figure without the whole
 # html page
-script, div = components(fig, theme=theme)
+script, div = components(layout, theme=theme)
 with open(embedfile, 'w') as ff:
     ff.write(script)
     ff.write(div)
