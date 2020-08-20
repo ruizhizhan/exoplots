@@ -252,10 +252,10 @@ for xx in np.arange(4):
         fig.title.text = f'Cumulative Confirmed Planets ({cumtots[-1]:,})'
     elif xx == 2:
         paren = f'({cumtots[-1]:,})'
-        fig.title.text = f'Confirmed + Candidate Planets Per Year ' + paren
+        fig.title.text = 'Confirmed + Candidate Planets Per Year ' + paren
     else:
         paren = f'({cumtots[-1]:,})'
-        fig.title.text = f'Cumulative Confirmed + Candidate Planets ' + paren
+        fig.title.text = 'Cumulative Confirmed + Candidate Planets ' + paren
         fig.title.align = 'right'
     fig.title.text_font_size = '20pt'
 
@@ -406,10 +406,10 @@ for xx in np.arange(4):
         fig2.title.text = f'Cumulative Confirmed Planets ({cumtots[-1]:,})'
     elif xx == 2:
         paren = f'({cumtots[-1]:,})'
-        fig2.title.text = f'Confirmed + Candidate Planets Per Year ' + paren
+        fig2.title.text = 'Confirmed + Candidate Planets Per Year ' + paren
     else:
         paren = f'({cumtots[-1]:,})'
-        fig2.title.text = f'Cumulative Confirmed + Candidate Planets ' + paren
+        fig2.title.text = 'Cumulative Confirmed + Candidate Planets ' + paren
         fig2.title.align = 'right'
     fig2.title.text_font_size = '20pt'
 

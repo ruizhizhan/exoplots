@@ -201,8 +201,11 @@ fig.add_tools(lasso)
 des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas, legends=items),
                code=deselect)
 fig.js_on_event(SelectionGeometry, des)
-fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas, 
+fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas,
                                             legends=items), code=reset))
+
+for iglyph in glyphs:
+    iglyph.js_on_change('visible', des)
 
 layout = column(button, fig)
 

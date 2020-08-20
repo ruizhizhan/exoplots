@@ -203,6 +203,8 @@ des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas, legends=items),
 fig.js_on_event(SelectionGeometry, des)
 fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas,
                                             legends=items), code=reset))
+for iglyph in glyphs:
+    iglyph.js_on_change('visible', des)
 
 layout = column(button, fig)
 

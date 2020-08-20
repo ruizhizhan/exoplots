@@ -355,6 +355,9 @@ for ifig in np.arange(2):
     fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas,
                                                 legends=legitems), code=reset))
 
+    for iglyph in glyphs:
+        iglyph.js_on_change('visible', des)
+
     layout = column(button, fig)
 
     plotting.save(layout)

@@ -1098,6 +1098,10 @@ for (let nn = 0; nn < nglyphs; nn++) {
     var glyph = glyphs[nn];
     var source = glyph.data_source;
     var legend = legends[nn];
+    
+    if (!glyph.visible){
+        source.selected.indices = [];
+    }
 
     if (source.selected.indices.length == 0){
         glyph.glyph.line_alpha = glyph.nonselection_glyph.line_alpha;
@@ -1134,6 +1138,7 @@ if (some == 0){
 
 """
 
+# XXX: reset needs to deal with the slider
 reset = """
 const nglyphs = glyphs.length;
 for (let nn = 0; nn < nglyphs; nn++) {
@@ -1151,3 +1156,31 @@ for (let nn = 0; nn < nglyphs; nn++) {
     legend.label['value'] = newstr;
 }
 """
+
+yearselect = """
+const mglyphs = glyphs.length;
+var minyr = cb_obj.value[0];
+var maxyr = cb_obj.value[1];
+for (let nn = 0; nn < mglyphs; nn++) {
+    var glyph = glyphs[nn];
+    var source = glyph.data_source;
+    var selected = [];
+    for (let ii = 0; ii < source.data['planet'].length; ii++) {
+        if (source.data['year'][ii] >= minyr &&  source.data['year'][ii] <= maxyr){
+            selected.push(ii);
+        }
+    }
+    console.log(legends[nn].label['value']);
+    console.log(glyph.visible);
+    if (glyph.visible){
+        source.selected.indices = selected;
+    }
+    else {
+        source.selected.indices = [];
+    }
+    source.change.emit();
+}
+
+""" + deselect
+
+
