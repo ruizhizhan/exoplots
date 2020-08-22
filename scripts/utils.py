@@ -1129,16 +1129,70 @@ if (some == 0){
         glyph.glyph.fill_alpha = alphas[nn];
         glyph.change.emit();
         
-        var newnum = source.data['planet'].length.toLocaleString('en-US') ;
+        var newnum = source.data['planet'].length.toLocaleString('en-US');
         newnum = '(' + newnum + ')';
         var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
         legend.label['value'] = newstr;
     }
 }
-
 """
 
-# XXX: reset needs to deal with the slider
+sldeselect = """
+const nglyphs = glyphs.length;
+var some = 0;
+var loop = 0;
+while (some == 0 && loop < 3){
+    for (let nn = 0; nn < nglyphs; nn++) {
+        var glyph = glyphs[nn];
+        var source = glyph.data_source;
+        var legend = legends[nn];
+        
+        if (!glyph.visible){
+            source.selected.indices = [];
+        }
+    
+        if (source.selected.indices.length == 0){
+            glyph.glyph.line_alpha = glyph.nonselection_glyph.line_alpha;
+            glyph.glyph.fill_alpha = glyph.nonselection_glyph.fill_alpha;
+            glyph.change.emit();
+        }
+        else {
+            glyph.glyph.line_alpha = alphas[nn];
+            glyph.glyph.fill_alpha = alphas[nn];
+            glyph.change.emit();
+            some = 1;
+        }
+        var newnum = source.selected.indices.length.toLocaleString('en-US');
+        newnum = '(' + newnum + ')';
+        var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
+        legend.label['value'] = newstr;
+    }
+    if (some == 0){
+        var minyr = slider.value[0];
+        var maxyr = slider.value[1];
+        for (let nn = 0; nn < nglyphs; nn++) {
+            var glyph = glyphs[nn];
+            var source = glyph.data_source;
+            var selected = [];
+            for (let ii = 0; ii < source.data['planet'].length; ii++) {
+                if (source.data['year'][ii] >= minyr &&  source.data['year'][ii] <= maxyr){
+                    selected.push(ii);
+                }
+            }
+            if (glyph.visible){
+                source.selected.indices = selected;
+            }
+            else {
+                source.selected.indices = [];
+            }
+            source.change.emit();
+        }
+    }
+    loop = loop + 1;
+}
+"""
+
+
 reset = """
 const nglyphs = glyphs.length;
 for (let nn = 0; nn < nglyphs; nn++) {
@@ -1150,7 +1204,7 @@ for (let nn = 0; nn < nglyphs; nn++) {
     glyph.glyph.fill_alpha = alphas[nn];
     glyph.change.emit();
     
-    var newnum = source.data['planet'].length.toLocaleString('en-US') ;
+    var newnum = source.data['planet'].length.toLocaleString('en-US');
     newnum = '(' + newnum + ')';
     var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
     legend.label['value'] = newstr;
@@ -1159,8 +1213,8 @@ for (let nn = 0; nn < nglyphs; nn++) {
 
 yearselect = """
 const mglyphs = glyphs.length;
-var minyr = cb_obj.value[0];
-var maxyr = cb_obj.value[1];
+var minyr = slider.value[0];
+var maxyr = slider.value[1];
 for (let nn = 0; nn < mglyphs; nn++) {
     var glyph = glyphs[nn];
     var source = glyph.data_source;
@@ -1170,8 +1224,6 @@ for (let nn = 0; nn < mglyphs; nn++) {
             selected.push(ii);
         }
     }
-    console.log(legends[nn].label['value']);
-    console.log(glyph.visible);
     if (glyph.visible){
         source.selected.indices = selected;
     }
@@ -1181,6 +1233,53 @@ for (let nn = 0; nn < mglyphs; nn++) {
     source.change.emit();
 }
 
+label.text = minyr + '\u2013' + maxyr;
+label.change.emit();
+
+""" + sldeselect
+
+unselect = """
+const mglyphs = glyphs.length;
+for (let nn = 0; nn < mglyphs; nn++) {
+    var glyph = glyphs[nn];
+    var source = glyph.data_source;
+    source.selected.indices = [];
+    source.change.emit();
+}
 """ + deselect
 
+sliderselect = """
+const mglyphs = glyphs.length;
+var minyr = slider.value[0];
+var maxyr = slider.value[1];
+for (let nn = 0; nn < mglyphs; nn++) {
+    var glyph = glyphs[nn];
+    var source = glyph.data_source;
+    var legend = legends[nn];
+    
+    if (!glyph.visible){
+        source.selected.indices = [];
+    }
+    else {
+        var selected = [];
+        for (let ii = 0; ii < source.selected.indices.length; ii++) {
+            var iyr = source.data['year'][source.selected.indices[ii]];
+            if (iyr >= minyr &&  iyr <= maxyr){
+                selected.push(source.selected.indices[ii]);
+            }
+        }
+        source.selected.indices = selected;
+    }
+    source.change.emit();
+}
 
+""" + sldeselect
+
+nowvis = """
+var tmp = [];
+for (var i=0;i<cb_obj.data_source.data['year'].length;i++) {
+  tmp.push(i);
+}
+cb_obj.data_source.selected.indices=tmp;
+
+""" + sliderselect
