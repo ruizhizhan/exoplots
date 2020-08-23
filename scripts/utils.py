@@ -1293,8 +1293,6 @@ async function advance(slider, button) {
     var i = 0;
     var mpause = 0;
     while (button.active){
-        console.log(slider.value);
-        console.log(button.active);
         i = i + 1;
         var vals = slider.value;
         var nextval = vals[1] + 1;
@@ -1314,16 +1312,12 @@ async function advance(slider, button) {
 }
 
 async function startloop(slider, button) {
-    console.log('calling');
-    const result = await advance(slider, button);
-    console.log('fin');
-    
+    const result = await advance(slider, button);    
 }
 
 if (cb_obj.active){
     cb_obj.label = "\u2759\u2759 Pause";
     startloop(slider, cb_obj);
-    console.log('returned');
 }
 else {
     cb_obj.label = "\u25b6 Play";
