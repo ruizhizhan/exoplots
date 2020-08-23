@@ -3,8 +3,8 @@ from bokeh import plotting
 from bokeh.embed import components
 from bokeh.events import SelectionGeometry, DoubleTap
 from bokeh.io import curdoc
-from bokeh.layouts import column
-from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool
+from bokeh.layouts import column, row
+from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool, Toggle
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.models import LogAxis, Range1d, RangeSlider, Button, OpenURL
 from bokeh.themes import Theme
@@ -12,6 +12,7 @@ from datetime import datetime
 
 from utils import csv_creation, get_update_time, load_data, log_axis_labels
 from utils import deselect, reset, yearselect, unselect, sliderselect, nowvis
+from utils import playpause
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -335,7 +336,9 @@ for ifig in np.arange(2):
         yrcap = Label(text=yrtxt, **yrlabelopts)
         fig.add_layout(yrcap)
         range_slider = RangeSlider(start=minyr, end=curyr, value=(minyr, curyr),
-                                   step=1, title="Year Discovered")
+                                   step=1, title="Year Discovered", width=600,
+                                   width_policy='fit')
+        
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems,
                      slider=range_slider, label=yrcap)
         yrsel = CustomJS(args=jargs, code=yearselect)
@@ -350,7 +353,14 @@ for ifig in np.arange(2):
         for iglyph in glyphs:
             nw = CustomJS(args=jargs, code=nowvis)
             iglyph.js_on_change('visible', nw)
-        layout = column(button, range_slider, fig)
+        
+        playbutton = Toggle(label="\u25b6 Play", width=200, width_policy='fit',
+                            button_type='success')
+        playbutton.js_on_change('active', CustomJS(args=jargs, code=playpause))
+                
+        anirow = row(range_slider, playbutton)
+        
+        layout = column(button, anirow, fig)
 
     plotting.save(layout)
 

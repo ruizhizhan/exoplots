@@ -1175,7 +1175,8 @@ while (some == 0 && loop < 3){
             var source = glyph.data_source;
             var selected = [];
             for (let ii = 0; ii < source.data['planet'].length; ii++) {
-                if (source.data['year'][ii] >= minyr &&  source.data['year'][ii] <= maxyr){
+                if (source.data['year'][ii] >= minyr && 
+                        source.data['year'][ii] <= maxyr){
                     selected.push(ii);
                 }
             }
@@ -1220,7 +1221,8 @@ for (let nn = 0; nn < mglyphs; nn++) {
     var source = glyph.data_source;
     var selected = [];
     for (let ii = 0; ii < source.data['planet'].length; ii++) {
-        if (source.data['year'][ii] >= minyr &&  source.data['year'][ii] <= maxyr){
+        if (source.data['year'][ii] >= minyr && 
+                source.data['year'][ii] <= maxyr){
             selected.push(ii);
         }
     }
@@ -1283,3 +1285,47 @@ for (var i=0;i<cb_obj.data_source.data['year'].length;i++) {
 cb_obj.data_source.selected.indices=tmp;
 
 """ + sliderselect
+
+
+playpause = """
+
+async function advance(slider, button) {
+    var i = 0;
+    var mpause = 0;
+    while (button.active){
+        console.log(slider.value);
+        console.log(button.active);
+        i = i + 1;
+        var vals = slider.value;
+        var nextval = vals[1] + 1;
+        if (nextval > slider.end){
+            if (mpause > 0){
+                nextval = vals[0];
+                mpause = 0;
+            }
+            else{
+                nextval = nextval - 1;
+                mpause = mpause + 1;
+            }
+        }
+        slider.value = [vals[0], nextval];
+        await new Promise(r => setTimeout(r, 1000));
+    }
+}
+
+async function startloop(slider, button) {
+    console.log('calling');
+    const result = await advance(slider, button);
+    console.log('fin');
+    
+}
+
+if (cb_obj.active){
+    cb_obj.label = "\u2759\u2759 Pause";
+    startloop(slider, cb_obj);
+    console.log('returned');
+}
+else {
+    cb_obj.label = "\u25b6 Play";
+}
+"""

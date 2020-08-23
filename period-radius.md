@@ -10,6 +10,9 @@ labels in the legend allows you to turn on and off individual collections of
 planets.
 
 
+{% include period_radius_candidates_year_embed.html %}
+
+
 ## Confirmed Transiting Planet Period–Radius Distribution
 
 
