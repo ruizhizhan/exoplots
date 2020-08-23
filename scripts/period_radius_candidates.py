@@ -328,7 +328,7 @@ for ifig in np.arange(2):
             iglyph.js_on_change('visible', des)
         layout = column(button, fig)
     else:
-        yrlabelopts = dict(x=520, y=400, x_units='screen', y_units='screen',
+        yrlabelopts = dict(x=520, y=390, x_units='screen', y_units='screen',
                            text_align='right', text_font_size='20pt',
                            text_baseline='top')
         curyr = datetime.now().year
