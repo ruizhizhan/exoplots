@@ -73,6 +73,8 @@ for ifig in np.arange(2):
     # need to store min and max radius values to create the second axis
     ymin = 1
     ymax = 1
+    xmin = 1
+    xmax = 1
     # save the output plots to rearrange them in the legend
     glyphs = []
     counts = []
@@ -194,6 +196,9 @@ for ifig in np.arange(2):
         # save the global min/max
         ymin = min(ymin, source.data['radius'].min())
         ymax = max(ymax, source.data['radius'].max())
+        ab0 = source.data['period'][source.data['period'] > 0]
+        xmin = min(xmin, ab0.min())
+        xmax = max(xmax, source.data['period'].max())
 
         leg = LegendItem(label=imiss + f' ({counts[ii]})', renderers=[glyph])
         legitems.append(leg)
@@ -203,6 +208,12 @@ for ifig in np.arange(2):
     ydiff = np.log10(ymax) - np.log10(ymin)
     ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
     yend = 10.**(np.log10(ymax) + 0.05*ydiff)
+    
+    xdiff = np.log10(xmax) - np.log10(xmin)
+    xstart = 10.**(np.log10(xmin) - 0.05*xdiff)
+    xend = 10.**(np.log10(xmax) + 0.05*xdiff)
+    
+    fig.x_range = Range1d(start=xstart, end=xend)
 
     # jupiter/earth radius ratio
     radratio = 11.21
