@@ -286,7 +286,10 @@ def get_new_k2_params(dfcon, dfk2):
                'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
                'TRAPPIST-1 h', 'V1298 Tau b', 'V1298 Tau c', 'V1298 Tau d',
                'V1298 Tau e', 'WASP-151 b', 'WASP-28 b', 'Wolf 503 b',
-               'K2-315 b']
+               'K2-315 b',
+               'K2-316 b', 'K2-316 c', 'K2-317 b', 'K2-318 b', 'K2-319 b',
+               'K2-320 b', 'K2-321 b', 'K2-322 b', 'K2-323 b', 'K2-324 b',
+               'K2-325 b', 'K2-326 b']
     fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
                  60021410, 211311380, 211311380, 211311380, 211311380,
                  211311380, 247887989, 247887989, 247887989, 247887989,
@@ -302,7 +305,10 @@ def get_new_k2_params(dfcon, dfk2):
                  246151543, 246078672, 246865365, 201518346, 246199087,
                  246199087, 246199087, 246199087, 246199087, 246199087,
                  246199087, 210818897, 210818897, 210818897, 210818897,
-                 246441449, 60017806, 212779563, 249631677]
+                 246441449, 60017806, 212779563, 249631677,
+                 249384674, 249384674, 249557502, 249826231, 201663879,
+                 201796690, 248480671, 248558190, 248616368, 248639308,
+                 246074965, 246472939]
 
     # for K2 planets only on the confirmed list, try to find their EPIC
     # from other KOIs in the system
@@ -581,10 +587,10 @@ def set_insolations(dfcon, dfkoi, dfk2, dftoi, updated_koi_params=True,
 
     # things have changed, so do it ourselves
     if updated_koi_params:
-        lum = 10.**dfkoi['log_lum']
-        tmpau = (((dfkoi['koi_period']/365.256)**2) *
-                 dfkoi['koi_smass'])**(1./3.)
-        outinsol = lum * (tmpau**-2)
+        lum = 10. ** dfkoi['log_lum']
+        tmpau = (((dfkoi['koi_period'] / 365.256) ** 2) *
+                 dfkoi['koi_smass']) ** (1. / 3.)
+        outinsol = lum * (tmpau ** -2)
         isf = np.isfinite(outinsol)
         dfkoi.loc[isf, 'insol'] = outinsol[isf]
 
@@ -604,7 +610,7 @@ def set_insolations(dfcon, dfkoi, dfk2, dftoi, updated_koi_params=True,
     aucon = dfcon['pl_orbsmax'].values * 1
     pdcon = dfcon['pl_orbper'].values * 1
     mstarcon = dfcon['st_mass'].values * 1
-    tmpau2 = (((pdcon / 365.256)**2) * mstarcon)**(1./3.)
+    tmpau2 = (((pdcon / 365.256) ** 2) * mstarcon) ** (1. / 3.)
     aucon[~np.isfinite(aucon)] = tmpau2[~np.isfinite(aucon)]
     if updated_koi_params:
         torep = iskep & np.isfinite(tmpau2)
@@ -639,7 +645,7 @@ def set_insolations(dfcon, dfkoi, dfk2, dftoi, updated_koi_params=True,
     arstark2 = dfk2['pl_ratdor'].values * 1
     mstark2 = dfk2['st_mass'].values * 1
     lumk2 = dfk2['log_lum'].values * 1
-    lumk2 = 10.**lumk2
+    lumk2 = 10. ** lumk2
     pdk2 = dfk2['pl_orbper'].values * 1
 
     ids = np.unique(dfk2['epic_candname'])
@@ -657,13 +663,13 @@ def set_insolations(dfcon, dfkoi, dfk2, dftoi, updated_koi_params=True,
             pd = np.nanmean(pdk2[srch])
 
             if ~np.isfinite(lum):
-                lum = (rstar**2) * ((teff/5772)**4)
+                lum = (rstar ** 2) * ((teff / 5772) ** 4)
 
             au = (((pd / 365.256) ** 2) * mstar) ** (1. / 3.)
             if ~np.isfinite(au):
                 au = arstar * rstar / 215  # convert to AU; 1 AU = 215 Rsun
 
-            insolk2[srch] = lum * (au**-2)
+            insolk2[srch] = lum * (au ** -2)
 
     dfk2['insol'] = insolk2
 
@@ -723,7 +729,7 @@ def load_data(discovery_year=False, updated_koi_params=True,
 
     # the dtype is to silence a pandas warning
     if new:
-        ignore_warns = {'hd_name': 'string',  'hip_name': 'string',
+        ignore_warns = {'hd_name': 'string', 'hip_name': 'string',
                         'pl_orbtperstr': 'string', 'pl_occdepstr': 'string',
                         'pl_projobliqstr': 'string', 'sy_icmagstr': 'string',
                         'pl_trueobliqstr': 'string', 'pl_msinijstr': 'string',
@@ -865,6 +871,45 @@ def load_data(discovery_year=False, updated_koi_params=True,
     # KOI-1101.02 is a known duplicate of 1101.01. Remove it.
     dfkoi.drop(dfkoi[dfkoi['kepoi_name'] == 'KOI-1101.02'].index, inplace=True)
 
+    # these are now confirmed as Kepler-716c but they didn't update it
+    # in the KOI table
+    newconf = ['KOI-892.02', 'KOI-945.01', 'KOI-945.02', 'KOI-1165.01',
+               'KOI-1311.01', 'KOI-1563.03', 'KOI-1738.01', 'KOI-1470.01',
+               'KOI-1475.02', 'KOI-1705.01', 'KOI-1892.01', 'KOI-1984.01',
+               'KOI-2066.01', 'KOI-1928.01', 'KOI-1863.01', 'KOI-1822.01',
+               'KOI-1889.02', 'KOI-2106.01', 'KOI-2120.01', 'KOI-2132.01',
+               'KOI-2293.01', 'KOI-2076.01', 'KOI-2229.01', 'KOI-2559.01',
+               'KOI-2417.01', 'KOI-2504.01', 'KOI-2588.01', 'KOI-252.01',
+               'KOI-2849.01', 'KOI-2871.01', 'KOI-2802.01', 'KOI-2878.01',
+               'KOI-2733.01', 'KOI-2755.01', 'KOI-2757.01', 'KOI-3048.01',
+               'KOI-349.01', 'KOI-555.02', 'KOI-691.01', 'KOI-650.01',
+               'KOI-4054.01', 'KOI-4386.01', 'KOI-2433.03', 'KOI-3361.01',
+               'KOI-3681.02', 'KOI-3864.01', 'KOI-3933.01', 'KOI-4014.01',
+               'KOI-1943.01', 'KOI-3478.01']
+
+    newconf2 = ['Kepler-716 c', 'Kepler-1666 b', 'Kepler-1666 c',
+                'Kepler-783 c', 'Kepler-1667 b', 'Kepler-305 e',
+                'Kepler-1671 b', 'Kepler-1668 b', 'Kepler-1669 b',
+                'Kepler-1670 b', 'Kepler-1674 b', 'Kepler-1677 b',
+                'Kepler-1678 b', 'Kepler-1675 b', 'Kepler-1673 b',
+                'Kepler-1672 b', 'Kepler-1001 c', 'Kepler-1679 b',
+                'Kepler-1680 b', 'Kepler-1681 b', 'Kepler-1683 b',
+                'Kepler-1085 c', 'Kepler-1682 b', 'Kepler-1686 b',
+                'Kepler-1684 b', 'Kepler-1685 b', 'Kepler-1687 b',
+                'Kepler-1663 b', 'Kepler-1692 b', 'Kepler-1693 b',
+                'Kepler-1691 b', 'Kepler-1694 b', 'Kepler-1688 b',
+                'Kepler-1689 b', 'Kepler-1690 b', 'Kepler-1695 b',
+                'Kepler-1664 b', 'Kepler-598 c', 'Kepler-647 c',
+                'Kepler-1665 b', 'Kepler-1701 b', 'Kepler-1702 b',
+                'Kepler-385 d', 'Kepler-1696 b', 'Kepler-1514 c',
+                'Kepler-1698 b', 'Kepler-1699 b', 'Kepler-1700 b',
+                'Kepler-1676 b', 'Kepler-1697 b']
+    
+    for ii in np.arange(len(newconf)):    
+        rep = dfkoi['kepoi_name'] == newconf[ii]
+        dfkoi.loc[rep, 'koi_disposition'] = 'Confirmed'
+        dfkoi.loc[rep, 'kepler_name'] = newconf2[ii]
+
     # set up a distance field that is the same in all 4 groups
     koidists = np.zeros(dfkoi['kepid'].size)
     kics, k1dists = np.loadtxt(koidistfile, unpack=True)
@@ -886,7 +931,7 @@ def load_data(discovery_year=False, updated_koi_params=True,
     badfit = (dfkoi['koi_ror'] > 1) & (koicon | koican)
     # use depth instead of r/R for radius
     sunearth = 109.1
-    rr = np.sqrt(dfkoi['koi_depth']/1e6) * dfkoi['koi_srad'] * sunearth
+    rr = np.sqrt(dfkoi['koi_depth'] / 1e6) * dfkoi['koi_srad'] * sunearth
     badfit = badfit & np.isfinite(rr)
     dfkoi.loc[badfit, 'koi_prad'] = rr[badfit]
     dfkoi.loc[badfit, 'koi_pradj'] = rr[badfit] / radratio
@@ -1193,7 +1238,6 @@ while (some == 0 && loop < 3){
 }
 """
 
-
 reset = """
 const nglyphs = glyphs.length;
 for (let nn = 0; nn < nglyphs; nn++) {
@@ -1285,7 +1329,6 @@ for (var i=0;i<cb_obj.data_source.data['year'].length;i++) {
 cb_obj.data_source.selected.indices=tmp;
 
 """ + sliderselect
-
 
 playpause = """
 
