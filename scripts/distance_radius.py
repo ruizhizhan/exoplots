@@ -39,7 +39,17 @@ fullfile = '_includes/distance_radius_candidates.html'
 plotting.output_file(fullfile, title='Distance Radius Plot')
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = load_data()
+new = True
+dfcon, dfkoi, dfk2, dftoi = load_data(new=new)
+
+if new:
+    fackey = 'disc_facility'
+    trankey = 'tran_flag'
+    hostkey = 'hostname'
+else:
+    fackey = 'pl_facility'
+    trankey = 'pl_tranflag'
+    hostkey = 'pl_hostname'
 
 # what to display when hovering over a data point
 TOOLTIPS = [
@@ -75,17 +85,17 @@ for ii, imiss in enumerate(missions):
     # select the appropriate set of planets for each mission
     # make the confirmed planets more opaque and bigger
     if imiss == 'Other Confirmed':
-        good = ((~np.in1d(dfcon['pl_facility'], ['Kepler', 'K2', 'TESS'])) &
+        good = ((~np.in1d(dfcon[fackey], ['Kepler', 'K2', 'TESS'])) &
                 np.isfinite(dfcon['pl_rade']) &
                 np.isfinite(dfcon['distance_pc']) &
-                dfcon['pl_tranflag'].astype(bool))
+                dfcon[trankey].astype(bool))
         alpha = 0.7
         size = 8
     elif 'Confirmed' in imiss:
         fac = imiss.split()[0]
-        good = ((dfcon['pl_facility'] == fac) & np.isfinite(dfcon['pl_rade']) &
+        good = ((dfcon[fackey] == fac) & np.isfinite(dfcon['pl_rade']) &
                 np.isfinite(dfcon['distance_pc']) &
-                dfcon['pl_tranflag'].astype(bool))
+                dfcon[trankey].astype(bool))
         alpha = 0.7
         if 'TESS' in imiss:
             size = 8
@@ -154,8 +164,8 @@ for ii, imiss in enumerate(missions):
                 radius=dfcon['pl_rade'][good],
                 jupradius=dfcon['pl_radj'][good],
                 period=dfcon['pl_orbper'][good],
-                host=dfcon['pl_hostname'][good],
-                discovery=dfcon['pl_facility'][good],
+                host=dfcon[hostkey][good],
+                discovery=dfcon[fackey][good],
                 status=dfcon['status'][good],
                 url=dfcon['url'][good]
                 ))

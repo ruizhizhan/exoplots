@@ -41,9 +41,17 @@ embedfilecumlog_name = '_includes/per_year_{0}_cumul_log_embed.html'
 fullfilecumlog_name = '_includes/per_year_{0}_cumul_log.html'
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True)
+new = True
+dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True, new=new)
 
-years = range(dfcon['pl_disc'].min(), datetime.now().year+1)
+if new:
+    methodkey = 'discoverymethod'
+    yearkey = 'disc_year'
+else:
+    methodkey = 'pl_discmethod'
+    yearkey = 'pl_disc'
+
+years = range(dfcon[yearkey].min(), datetime.now().year+1)
 
 condata = {'years': years}
 concumul = {'years': years}
@@ -60,9 +68,9 @@ pccumtots = []
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
     if imeth == 'Other':
-        good = ~np.in1d(dfcon['pl_discmethod'], methods)
+        good = ~np.in1d(dfcon[methodkey], methods)
     else:
-        good = dfcon['pl_discmethod'] == imeth
+        good = dfcon[methodkey] == imeth
     ntot = good.sum()
 
     base = []
@@ -71,7 +79,7 @@ for ii, imeth in enumerate(methods):
     pcll = []
     pcisum = [0]
     for iyear in years:
-        ct = (dfcon['pl_disc'][good] == iyear).sum()
+        ct = (dfcon[yearkey][good] == iyear).sum()
         conll.append(ct)
         conisum.append(conisum[-1] + ct)
         base.append(0.01)
@@ -304,6 +312,7 @@ for xx in np.arange(4):
     if xx > 1:
         fig.add_layout(caption4, 'below')
 
+    plotting.show(fig)
     plotting.save(fig)
 
     # save the individual pieces so we can just embed the figure without the
@@ -464,6 +473,7 @@ for xx in np.arange(4):
     if xx > 1:
         fig2.add_layout(caption4, 'below')
 
+    plotting.show(fig2)
     plotting.save(fig2)
 
     # save the individual pieces so we can just embed the figure without the

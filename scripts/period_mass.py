@@ -36,7 +36,16 @@ fullfile = '_includes/period_mass.html'
 plotting.output_file(fullfile, title='Period Mass Plot')
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = load_data()
+new = False
+dfcon, dfkoi, dfk2, dftoi = load_data(new=new)
+
+if new:
+    hostkey = 'hostname'
+    methodkey = 'discoverymethod'
+else:
+    hostkey = 'pl_hostname'
+    methodkey = 'pl_discmethod'
+
 
 # what to display when hovering over a data point
 TOOLTIPS = [
@@ -65,16 +74,16 @@ alphas = []
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
     if imeth == 'Other':
-        good = ((~np.in1d(dfcon['pl_discmethod'], methods)) &
-                (~dfcon['pl_discmethod'].str.contains('Timing')) &
+        good = ((~np.in1d(dfcon[methodkey], methods)) &
+                (~dfcon[methodkey].str.contains('Timing')) &
                 np.isfinite(dfcon['pl_bmasse']) &
                 np.isfinite(dfcon['pl_orbper']))
     elif imeth == 'Timing Variations':
-        good = (dfcon['pl_discmethod'].str.contains('Timing') &
+        good = (dfcon[methodkey].str.contains('Timing') &
                 np.isfinite(dfcon['pl_bmasse']) &
                 np.isfinite(dfcon['pl_orbper']))
     else:
-        good = ((dfcon['pl_discmethod'] == imeth) &
+        good = ((dfcon[methodkey] == imeth) &
                 np.isfinite(dfcon['pl_bmasse']) &
                 np.isfinite(dfcon['pl_orbper']))
 
@@ -86,9 +95,9 @@ for ii, imeth in enumerate(methods):
     source = plotting.ColumnDataSource(data=dict(
             planet=dfcon['pl_name'][good],
             period=dfcon['pl_orbper'][good],
-            host=dfcon['pl_hostname'][good],
+            host=dfcon[hostkey][good],
             mass=dfcon['pl_bmasse'][good],
-            method=dfcon['pl_discmethod'][good],
+            method=dfcon[methodkey][good],
             jupmass=dfcon['pl_bmassj'][good],
             url=dfcon['url'][good]
             ))

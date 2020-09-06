@@ -36,7 +36,17 @@ fullfile = '_includes/period_radius.html'
 plotting.output_file(fullfile, title='Period Radius Plot')
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = load_data()
+new = True
+dfcon, dfkoi, dfk2, dftoi = load_data(new=new)
+
+if new:
+    fackey = 'disc_facility'
+    trankey = 'tran_flag'
+    hostkey = 'hostname'
+else:
+    fackey = 'pl_facility'
+    trankey = 'pl_tranflag'
+    hostkey = 'pl_hostname'
 
 # what to display when hovering over a data point
 TOOLTIPS = [
@@ -65,15 +75,15 @@ alphas = []
 for ii, imiss in enumerate(missions):
     # select the appropriate set of planets for each mission
     if imiss == 'Other':
-        good = ((~np.in1d(dfcon['pl_facility'], missions)) &
+        good = ((~np.in1d(dfcon[fackey], missions)) &
                 np.isfinite(dfcon['pl_rade']) &
                 np.isfinite(dfcon['pl_orbper']) &
-                dfcon['pl_tranflag'].astype(bool))
+                dfcon[trankey].astype(bool))
     else:
-        good = ((dfcon['pl_facility'] == imiss) &
+        good = ((dfcon[fackey] == imiss) &
                 np.isfinite(dfcon['pl_rade']) &
                 np.isfinite(dfcon['pl_orbper']) &
-                dfcon['pl_tranflag'].astype(bool))
+                dfcon[trankey].astype(bool))
 
     # make the alpha of large groups lower so they don't dominate so much
     alpha = 1. - good.sum()/1000.
@@ -85,8 +95,8 @@ for ii, imiss in enumerate(missions):
             period=dfcon['pl_orbper'][good],
             radius=dfcon['pl_rade'][good],
             jupradius=dfcon['pl_radj'][good],
-            host=dfcon['pl_hostname'][good],
-            discovery=dfcon['pl_facility'][good],
+            host=dfcon[hostkey][good],
+            discovery=dfcon[fackey][good],
             url=dfcon['url'][good]
             ))
     print(imiss, ': ', good.sum())

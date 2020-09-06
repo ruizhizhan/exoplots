@@ -33,7 +33,18 @@ colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377',
           '#ccbb44']
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True)
+new = True
+dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True, new=new)
+
+if new:
+    fackey = 'disc_facility'
+    trankey = 'tran_flag'
+    hostkey = 'hostname'
+else:
+    fackey = 'pl_facility'
+    trankey = 'pl_tranflag'
+    hostkey = 'pl_hostname'
+
 
 for ifig in np.arange(2):
     if ifig == 0:
@@ -45,7 +56,8 @@ for ifig in np.arange(2):
             ("Planet", "@planet"),
             # only give the decimal and sig figs if needed
             ("Period", "@period{0,0[.][0000]} days"),
-            ("Radius", "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup"),
+            ("Radius",
+             "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup"),
             ("Discovered by", "@discovery"),
             ("Status", "@status")
         ]
@@ -57,7 +69,8 @@ for ifig in np.arange(2):
             ("Planet", "@planet"),
             # only give the decimal and sig figs if needed
             ("Period", "@period{0,0[.][0000]} days"),
-            ("Radius", "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup"),
+            ("Radius",
+             "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup"),
             ("Discovered by", "@discovery"),
             ("Discovered in", "@year"),
             ("Status", "@status")
@@ -90,18 +103,18 @@ for ifig in np.arange(2):
         # select the appropriate set of planets for each mission
         # make the confirmed planets more opaque and bigger
         if imiss == 'Other Confirmed':
-            good = ((~np.in1d(dfcon['pl_facility'], ['Kepler', 'K2', 'TESS'])) &
+            good = ((~np.in1d(dfcon[fackey], ['Kepler', 'K2', 'TESS'])) &
                     np.isfinite(dfcon['pl_rade']) &
                     np.isfinite(dfcon['pl_orbper']) &
-                    dfcon['pl_tranflag'].astype(bool))
+                    dfcon[trankey].astype(bool))
             alpha = 0.7
             size = 8
         elif 'Confirmed' in imiss:
             fac = imiss.split()[0]
-            good = ((dfcon['pl_facility'] == fac) &
+            good = ((dfcon[fackey] == fac) &
                     np.isfinite(dfcon['pl_rade']) &
                     np.isfinite(dfcon['pl_orbper']) &
-                    dfcon['pl_tranflag'].astype(bool))
+                    dfcon[trankey].astype(bool))
             alpha = 0.7
             size = 6
         elif 'Kepler' in imiss:
@@ -166,8 +179,8 @@ for ifig in np.arange(2):
                     period=dfcon['pl_orbper'][good],
                     radius=dfcon['pl_rade'][good],
                     jupradius=dfcon['pl_radj'][good],
-                    host=dfcon['pl_hostname'][good],
-                    discovery=dfcon['pl_facility'][good],
+                    host=dfcon[hostkey][good],
+                    discovery=dfcon[fackey][good],
                     status=dfcon['status'][good],
                     url=dfcon['url'][good],
                     year=dfcon['year_disc'][good]
@@ -180,9 +193,10 @@ for ifig in np.arange(2):
         # selection_alpha is just requiring it to make its own selection glyph
         # so we can better control that later
         if ifig == 0:
-            glyph = fig.scatter('period', 'radius', color=colors[ii], source=source,
-                                size=size, alpha=alpha, marker=markers[ii],
-                                nonselection_alpha=0.07, selection_alpha=0.8,
+            glyph = fig.scatter('period', 'radius', color=colors[ii],
+                                source=source, size=size, alpha=alpha,
+                                marker=markers[ii], nonselection_alpha=0.07,
+                                selection_alpha=0.8,
                                 nonselection_color=colors[ii])
         else:
             glyph = fig.scatter('period', 'radius', color=colors[ii],
@@ -208,11 +222,11 @@ for ifig in np.arange(2):
     ydiff = np.log10(ymax) - np.log10(ymin)
     ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
     yend = 10.**(np.log10(ymax) + 0.05*ydiff)
-    
+
     xdiff = np.log10(xmax) - np.log10(xmin)
     xstart = 10.**(np.log10(xmin) - 0.05*xdiff)
     xend = 10.**(np.log10(xmax) + 0.05*xdiff)
-    
+
     fig.x_range = Range1d(start=xstart, end=xend)
 
     # jupiter/earth radius ratio
@@ -349,7 +363,7 @@ for ifig in np.arange(2):
         range_slider = RangeSlider(start=minyr, end=curyr, value=(minyr, curyr),
                                    step=1, title="Year Discovered", width=600,
                                    width_policy='fit')
-        
+
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems,
                      slider=range_slider, label=yrcap)
         yrsel = CustomJS(args=jargs, code=yearselect)
@@ -364,13 +378,13 @@ for ifig in np.arange(2):
         for iglyph in glyphs:
             nw = CustomJS(args=jargs, code=nowvis)
             iglyph.js_on_change('visible', nw)
-        
+
         playbutton = Toggle(label="\u25b6 Play", width=200, width_policy='fit',
                             button_type='success')
         playbutton.js_on_change('active', CustomJS(args=jargs, code=playpause))
-                
+
         anirow = row(range_slider, playbutton)
-        
+
         layout = column(button, anirow, fig)
 
     plotting.save(layout)

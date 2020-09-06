@@ -3,6 +3,8 @@ Utility functions needed for every figure. Load and process the data in a
 uniform way as well as run tests to ensure sensible results.
 """
 
+# XXX: need to handle the new table using estimated masses/radii
+
 
 def get_update_time():
     """
@@ -21,7 +23,7 @@ def get_update_time():
     return datetime.datetime.strptime(lines[0], '%Y-%m-%d %H:%M:%S.%f')
 
 
-def get_new_koi_params(dfcon, dfkoi):
+def get_new_koi_params(dfcon, dfkoi, new=False):
     import numpy as np
     import warnings
 
@@ -46,8 +48,24 @@ def get_new_koi_params(dfcon, dfkoi):
             'Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1635 b',
             'Kepler-36 b', 'Kepler-177 b', 'KOI-1783.02']
 
-    cononly = dfcon['pl_kepflag'].values * 1
-    cononly = cononly.astype(bool)
+    if new:
+        dfcon['pl_kepflag'] = 0
+        # these were labeled in the old table as being in the Kepler field
+        # but didn't have default host names indicating such
+        others = ['PH1', 'PH2', 'TrES-2', 'HAT-P-7', 'HAT-P-11',
+                  '2MASS J19383260+4603591']
+        cononly = np.zeros(len(dfcon), dtype=bool)
+        for ind, icon in dfcon.iterrows():
+            iskep = (icon['hostname'][:3] == 'KOI' or
+                     icon['hostname'][:3] == 'Kep' or
+                     icon['hostname'][:3] == 'KIC' or
+                     icon['hostname'] in others)
+            if iskep:
+                cononly[ind] = True
+                dfcon.loc[ind, 'pl_kepflag'] = 1
+    else:
+        cononly = dfcon['pl_kepflag'].values * 1
+        cononly = cononly.astype(bool)
 
     # match the confirmed KOIs to the appropriate confirmed planets
     for index, icon in dfkoi[koicon].iterrows():
@@ -143,7 +161,10 @@ def get_new_koi_params(dfcon, dfkoi):
         else:
             # get the host name of all similar planets
             isin = dfcon['pl_name'].str.contains(iname, regex=False)
-            matches = dfcon['pl_hostname'][isin]
+            if new:
+                matches = dfcon['hostname'][isin]
+            else:
+                matches = dfcon['pl_hostname'][isin]
 
             # look for those host names in the KOI list
             haskoi = np.zeros(dfkoi['kepler_name'].size).astype(bool)
@@ -180,7 +201,7 @@ def get_new_koi_params(dfcon, dfkoi):
                 dfcon.at[index, 'pl_radj'] *= srat
 
 
-def get_new_k2_params(dfcon, dfk2):
+def get_new_k2_params(dfcon, dfk2, new=False):
     import numpy as np
     import warnings
 
@@ -202,8 +223,29 @@ def get_new_k2_params(dfcon, dfk2):
     hasname = ~dfk2['pl_name'][k2can].isna()
     assert np.in1d(dfk2['pl_name'][k2can][hasname], dfcon['pl_name']).sum() == 0
 
-    cononly = dfcon['pl_k2flag'].values * 1
-    cononly = cononly.astype(bool)
+    if new:
+        dfcon['pl_k2flag'] = 0
+        # these were labeled in the old table as being in the K2 fields
+        # but didn't have default host names indicating such
+        others = ['BD+20 594', 'G 9-40', 'GJ 9827', 'HAT-P-56', 'HATS-11',
+                  'HATS-12', 'HATS-36', 'HATS-9', 'HD 106315', 'HD 3167',
+                  'HD 72490', 'HD 80653', 'HD 89345', 'HIP 116454',
+                  'HIP 41378', 'Qatar-2', 'Ross 128', 'TRAPPIST-1',
+                  'V1298 Tau', 'WASP-151', 'WASP-157', 'WASP-28', 'WASP-47',
+                  'WASP-75', 'WASP-85 A', 'Wolf 503']
+        # note to self: EPIC 211945201 b and HD 3167 d are both in the K2
+        # fields but unlisted as such in the old confirmed planets table
+        cononly = np.zeros(len(dfcon), dtype=bool)
+        for ind, icon in dfcon.iterrows():
+            isk2 = (icon['hostname'][:2] == 'K2' or
+                    icon['hostname'][:4] == 'EPIC' or
+                    icon['hostname'] in others)
+            if isk2:
+                cononly[ind] = True
+                dfcon.loc[ind, 'pl_k2flag'] = 1
+    else:
+        cononly = dfcon['pl_k2flag'].values * 1
+        cononly = cononly.astype(bool)
 
     # match the confirmed K2 candidates to the appropriate confirmed planets
     for index, icon in dfk2[k2con].iterrows():
@@ -321,7 +363,10 @@ def get_new_k2_params(dfcon, dfk2):
         else:
             # get the host name of all similar planets
             isin = dfcon['pl_name'].str.contains(iname, regex=False)
-            matches = dfcon['pl_hostname'][isin]
+            if new:
+                matches = dfcon['hostname'][isin]
+            else:
+                matches = dfcon['pl_hostname'][isin]
 
             # look for those host names in the K2 candidate list
             haskoi = np.zeros(dfk2['pl_name'].size).astype(bool)
@@ -358,7 +403,7 @@ def get_new_k2_params(dfcon, dfk2):
                 dfcon.at[index, 'pl_radj'] *= srat
 
 
-def set_discovery_year(dfcon, dfkoi, dfk2, dftoi):
+def set_discovery_year(dfcon, dfkoi, dfk2, dftoi, new=False):
     """
     Simultaneously test the data to make sure we're counting each planet
     exactly once and also set up the necessary links between planets on the
@@ -370,7 +415,10 @@ def set_discovery_year(dfcon, dfkoi, dfk2, dftoi):
     import pandas as pd
 
     # set up the appropriate columns
-    dfcon['year_disc'] = dfcon['pl_disc'] * 1
+    if new:
+        dfcon['year_disc'] = dfcon['disc_year'] * 1
+    else:
+        dfcon['year_disc'] = dfcon['pl_disc'] * 1
     dfk2['year_disc'] = dfk2['year'] * 1
     dfkoi['year_disc'] = 1950
     dftoi['year_disc'] = dftoi['year'] * 1
@@ -416,7 +464,10 @@ def set_discovery_year(dfcon, dfkoi, dfk2, dftoi):
         else:
             found = dfk2['epic_candname'] == icon['epic_candname']
             k2yr = dfk2['year'][found].min()
-            conyr = dfcon.at[res[0], 'pl_disc']
+            if new:
+                conyr = dfcon.at[res[0], 'disc_year']
+            else:
+                conyr = dfcon.at[res[0], 'pl_disc']
             # set the confirmed planet and this candidate to have the same
             # discovery year
             dfcon.at[res[0], 'year_disc'] = min(k2yr, conyr)
@@ -523,7 +574,10 @@ def set_discovery_year(dfcon, dfkoi, dfk2, dftoi):
             assert len(res) == 1
         # make sure both tables have the same discovery year
         koiyr = icon['koi_year']
-        conyr = dfcon.at[res[0], 'pl_disc']
+        if new:
+            conyr = dfcon.at[res[0], 'disc_year']
+        else:
+            conyr = dfcon.at[res[0], 'pl_disc']
         dfcon.at[res[0], 'year_disc'] = min(koiyr, conyr)
         dfkoi.at[index, 'year_disc'] = min(koiyr, conyr)
 
@@ -549,7 +603,10 @@ def set_discovery_year(dfcon, dfkoi, dfk2, dftoi):
             0]
         assert len(res) == 1
         tessyr = icon['year']
-        conyr = dfcon.at[res[0], 'pl_disc']
+        if new:
+            conyr = dfcon.at[res[0], 'disc_year']
+        else:
+            conyr = dfcon.at[res[0], 'pl_disc']
         dfcon.at[res[0], 'year_disc'] = min(tessyr, conyr)
         dftoi.at[index, 'year_disc'] = min(tessyr, conyr)
 
@@ -904,8 +961,8 @@ def load_data(discovery_year=False, updated_koi_params=True,
                 'Kepler-385 d', 'Kepler-1696 b', 'Kepler-1514 c',
                 'Kepler-1698 b', 'Kepler-1699 b', 'Kepler-1700 b',
                 'Kepler-1676 b', 'Kepler-1697 b']
-    
-    for ii in np.arange(len(newconf)):    
+
+    for ii in np.arange(len(newconf)):
         rep = dfkoi['kepoi_name'] == newconf[ii]
         dfkoi.loc[rep, 'koi_disposition'] = 'Confirmed'
         dfkoi.loc[rep, 'kepler_name'] = newconf2[ii]
@@ -1004,12 +1061,12 @@ def load_data(discovery_year=False, updated_koi_params=True,
     dfk2['distance_pc'] = k2dists
 
     if updated_koi_params:
-        get_new_koi_params(dfcon, dfkoi)
+        get_new_koi_params(dfcon, dfkoi, new=new)
     else:
         dfkoi['log_lum'] = np.nan
 
     if updated_k2_params:
-        get_new_k2_params(dfcon, dfk2)
+        get_new_k2_params(dfcon, dfk2, new=new)
     else:
         dfk2['log_lum'] = np.nan
         dfk2['st_mass'] = np.nan
@@ -1020,7 +1077,7 @@ def load_data(discovery_year=False, updated_koi_params=True,
                     updated_k2_params=updated_k2_params)
 
     if discovery_year:
-        set_discovery_year(dfcon, dfkoi, dfk2, dftoi)
+        set_discovery_year(dfcon, dfkoi, dfk2, dftoi, new=new)
 
     return dfcon, dfkoi, dfk2, dftoi
 
