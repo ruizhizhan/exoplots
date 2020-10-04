@@ -47,7 +47,7 @@ K2:
 """
 # load the data
 new = True
-dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True, new=new)
+dfcon, dfkoi, dfk2, dftoi, comp = load_data(discovery_year=True, new=new)
 
 if new:
     fackey = 'disc_facility'

@@ -37,7 +37,7 @@ plotting.output_file(fullfile, title='Period Mass Plot')
 
 # load the data
 new = False
-dfcon, dfkoi, dfk2, dftoi = load_data(new=new)
+dfcon, dfkoi, dfk2, dftoi, comp = load_data(new=new)
 
 if new:
     hostkey = 'hostname'

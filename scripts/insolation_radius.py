@@ -33,7 +33,7 @@ colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377',
 
 # load the data
 new = True
-dfcon, dfkoi, dfk2, dftoi = load_data(updated_koi_params=True,
+dfcon, dfkoi, dfk2, dftoi, comp = load_data(updated_koi_params=True,
                                       updated_k2_params=True, new=new)
 
 if new:

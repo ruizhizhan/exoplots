@@ -42,7 +42,7 @@ fullfilecumlog_name = '_includes/per_year_{0}_cumul_log.html'
 
 # load the data
 new = True
-dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True, new=new)
+dfcon, dfkoi, dfk2, dftoi, comp = load_data(discovery_year=True, new=new)
 
 if new:
     methodkey = 'discoverymethod'

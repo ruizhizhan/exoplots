@@ -40,7 +40,7 @@ plotting.output_file(fullfile, title='Distance Radius Plot')
 
 # load the data
 new = True
-dfcon, dfkoi, dfk2, dftoi = load_data(new=new)
+dfcon, dfkoi, dfk2, dftoi, comp = load_data(new=new)
 
 if new:
     fackey = 'disc_facility'
