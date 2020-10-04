@@ -321,12 +321,23 @@ if True:
     cols = ['facility', 'ra', 'dec', 'disposition', 'url', 'name', 'hostname',
             'flag_tran', 'distance_pc', 'period', 'rade', 'radj', 'IC',
             'flag_kepler', 'st_mass', 'st_rad', 'st_teff', 'st_log_lum',
-            'flag_k2', 'insol', 'semi_au', 'year_disc']
+            'flag_k2', 'insol', 'semi_au', 'year_discovered', 'year_confirmed']
 
     #########################
     # CONFIRMED PLANET PREP #
     #########################
-
+    
+    # XXX: until this gets fixed, these planet names are switched
+    assert np.unique(dfcon['pl_name']).size == dfcon['pl_name'].size
+    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 b'].values[0] > 5.
+    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 c'].values[0] < 3.
+    dfcon.loc[dfcon['pl_name'] == 'K2-35 b', 'pl_name'] = 'foo'
+    dfcon.loc[dfcon['pl_name'] == 'K2-35 c', 'pl_name'] = 'K2-35 b'
+    dfcon.loc[dfcon['pl_name'] == 'foo', 'pl_name'] = 'K2-35 c'
+    assert np.unique(dfcon['pl_name']).size == dfcon['pl_name'].size
+    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 c'].values[0] > 5.
+    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 b'].values[0] < 3.
+    
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
     if new:
@@ -360,14 +371,14 @@ if True:
     # discovery year        
     if new:
         dfcon['distance_pc'] = dfcon['sy_dist'].values * 1
-        dfcon['year_disc'] = dfcon['disc_year'] * 1
+        dfcon['year_discovered'] = dfcon['disc_year'] * 1
     else:
         # for confirmed planets, trust Gaia over published values if possible
         condists = dfcon['gaia_dist'].values * 1
         ncd = ~np.isfinite(condists)
         condists[~np.isfinite(condists)] = dfcon['st_dist'][ncd]
         dfcon['distance_pc'] = condists
-        dfcon['year_disc'] = dfcon['pl_disc'] * 1
+        dfcon['year_discovered'] = dfcon['pl_disc'] * 1
 
     # set our common names for all of these
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
@@ -462,14 +473,22 @@ if True:
     # confirmed planets don't have Input Catalog numbers, so set them to nan
     dfcon['IC'] = float('nan')
     
+    # make a confirmation year column as well
+    dfcon['year_confirmed'] = dfcon['year_discovered']
+    
     # do all the tests to make sure things are working
-
+    
     # everything has a facility name
     assert (np.array([len(xi) for xi in dfcon['facility']]) > 0).all()
     assert (dfcon['disposition'] == 'Confirmed').all()
     # everything has a host name and URL
     assert (np.array([len(xi) for xi in dfcon['hostname']]) > 0).all()
     assert (np.array([len(xi) for xi in dfcon['url']]) > 0).all()
+    # everything has a planet name
+    assert (np.array([len(xi) for xi in dfcon['name']]) > 0).all()
+    # Input Catalog numbers are correct
+    assert not np.isfinite(dfcon['IC']).any()
+    
     # distances are either NaN or > 1 pc
     assert (~np.isfinite(dfcon['distance_pc']) | (dfcon['distance_pc'] > 1)).all()
     # stellar parameters make sense
@@ -487,8 +506,7 @@ if True:
     assert ((dfcon['ra'][~badra] >= 0) & (dfcon['ra'][~badra] <= 360.)).all()
     assert ((dfcon['dec'][~baddec] >= -90) & (dfcon['dec'][~baddec] <= 90.)).all()
     
-    # everything has a planet name
-    assert (np.array([len(xi) for xi in dfcon['name']]) > 0).all()
+
     
     # planet parameters are either NaN or > 0
     assert (~np.isfinite(dfcon['period']) | (dfcon['period'] > 0)).all()
@@ -506,8 +524,10 @@ if True:
     assert dfcon['flag_k2'].sum() > 400
     assert dfcon['flag_tran'].sum() > 3000
     
-    # discovery years make sense
-    assert (dfcon['year_disc'] >= 1989).all()
+    # discovery and confirmation years make sense
+    assert (dfcon['year_discovered'] >= 1989).all()
+    assert np.allclose(dfcon['year_confirmed'], dfcon['year_discovered'])
+
     
     # create the composite, single data frame for all the planets and 
     # planet candidates
@@ -542,7 +562,7 @@ if True:
     # go through and assign KOIs the year they first showed up in a KOI
     # catalog. We're assuming in this process that a particular KOI number will
     # always refer to the same planet.
-    dfkoi['year_disc'] = 1990
+    dfkoi['year_discovered'] = 1990
 
     # these first 2 KOI tables aren't archived on Exoplanet Archive
     earlykois = ['data/koi1.txt', 'data/koi2.txt']
@@ -571,14 +591,15 @@ if True:
     for index, row in dfkoi.iterrows():
         ikoi = row['name']
         if ikoi in k1 or ikoi in k2:
-            dfkoi.at[index, 'year_disc'] = 2011
+            dfkoi.at[index, 'year_discovered'] = 2011
             continue
         for ii, df in enumerate(dfs):
             if ikoi in df['kepoi_name'].values:
-                dfkoi.at[index, 'year_disc'] = koiyears[ii]
+                dfkoi.at[index, 'year_discovered'] = koiyears[ii]
                 break
 
-    assert dfkoi['year_disc'].min() == 2011 and dfkoi['year_disc'].max() == 2018
+    # we got them all
+    assert dfkoi['year_discovered'].min() == 2011 and dfkoi['year_discovered'].max() == 2018
     
     # give KOIs units of Jupiter radii
     dfkoi['radj'] = dfkoi['rade'] / radratio
@@ -622,6 +643,10 @@ if True:
             res = np.where(comp['name'] == rname)[0]
             assert len(res) == 1
             fixed[excluded.index(icon['name'])] = True
+        # update and sync the discovery year in both tables
+        res = res[0]
+        comp.at[res, 'year_discovered'] = min(comp.at[res, 'year_discovered'], icon['year_discovered'])
+        dfkoi.at[index, 'year_discovered'] = min(comp.at[res, 'year_discovered'], icon['year_discovered'])
     
     assert fixed.all()
     
@@ -643,11 +668,13 @@ if True:
             dfkoi.loc[index, 'disposition'] = 'Confirmed'
             dfkoi.loc[index, 'kepler_name'] = newconf2[newconf.index(ican['name'])]
             isconf[newconf.index(ican['name'])] = True
+            # update and sync the discovery year in both tables
+            res = res[0]
+            comp.at[res, 'year_discovered'] = min(comp.at[res, 'year_discovered'], ican['year_discovered'])
+            dfkoi.at[index, 'year_discovered'] = min(comp.at[res, 'year_discovered'], ican['year_discovered'])
 
     assert isconf.all()
-    
-    assert (dfkoi['IC'] > 0).all()
-    
+
     # make the KIC the host name here
     dfkoi['hostname'] = 'KIC ' + dfkoi['IC'].astype(str)
 
@@ -665,15 +692,11 @@ if True:
         else:
             raise Exception(f'Multiple distances for KIC {ikoi}?')
     dfkoi['distance_pc'] = koidists
-    
-    assert (~np.isfinite(dfkoi['distance_pc']) | (dfkoi['distance_pc'] > 1)).all()
-    
+
     # fill in missing luminosities with our own calculation
     tmplums = (dfkoi['st_rad'] ** 2) * ((dfkoi['st_teff'] / 5772) ** 4)
     dfkoi['st_log_lum'] = np.log10(tmplums)
     
-    assert ((~np.isfinite(dfkoi['st_log_lum'])) | ((dfkoi['st_log_lum'] > -8) & (dfkoi['st_log_lum'] < 5))).all()
-
     # KOI insolations only go to 2 sig figs so gets the distant ones wrong
     # so calculate our own in a consistent way
     tmpau = (((dfkoi['period'] / 365.256)**2) * dfkoi['st_mass'])**(1./3.)
@@ -681,7 +704,6 @@ if True:
     
     tmpinsol = (10.**dfkoi['st_log_lum']) * (dfkoi['semi_au']**-2)
     dfkoi.loc[np.isfinite(tmpinsol), 'insol'] = tmpinsol[np.isfinite(tmpinsol)]
-    assert (~np.isfinite(dfkoi['insol']) | (dfkoi['insol'] > 0)).all()
     
     if updated_koi_params:
         # load the new parameters using Gaia etc
@@ -826,10 +848,6 @@ if True:
                 if np.isfinite(srat):
                     comp.at[index, 'rade'] *= srat
                     comp.at[index, 'radj'] *= srat
-        assert (~np.isfinite(dfkoi['st_rad']) | (dfkoi['st_rad'] > 0)).all()
-        assert (~np.isfinite(dfkoi['st_mass']) | (dfkoi['st_mass'] >= 0)).all()
-        assert (~np.isfinite(dfkoi['st_teff']) | (dfkoi['st_teff'] > 100)).all()
-        assert (~np.isfinite(dfkoi['st_log_lum']) | ((dfkoi['st_log_lum'] > -8) & (dfkoi['st_log_lum'] < 5))).all()
 
     koicon = dfkoi['disposition'] == 'Confirmed'
     koican = dfkoi['disposition'] == 'Candidate'
@@ -850,28 +868,94 @@ if True:
     dfkoi['flag_kepler'] = True
     dfkoi['flag_k2'] = False
     
-    # do all the tests to make sure things are working
+    # these have not been confirmed
+    dfkoi['year_confirmed'] = np.nan
+    
+    # do all the tests to make sure things are working, only focusing on
+    # candidates since that's all we're adding to output. FPs can be weird.    
+    canonly = dfkoi[koican]
+
+    # everything has a facility name
+    assert (np.array([len(xi) for xi in canonly['facility']]) > 0).all()
+    assert (canonly['disposition'] == 'Candidate').all()
+    # everything has a host name and URL
+    assert (np.array([len(xi) for xi in canonly['hostname']]) > 0).all()
+    assert (np.array([len(xi) for xi in canonly['url']]) > 0).all()
+    # everything has a planet name
+    assert (np.array([len(xi) for xi in canonly['name']]) > 0).all()
+    # Input Catalog numbers are correct
+    assert (canonly['IC'] > 0).all()
+    
+    # distances are either NaN or > 1 pc
+    assert (~np.isfinite(canonly['distance_pc']) | (canonly['distance_pc'] > 1)).all()
+    # stellar parameters make sense
+    assert (~np.isfinite(canonly['st_rad']) | (canonly['st_rad'] > 0.07)).all()
+    assert (~np.isfinite(canonly['st_mass']) | (canonly['st_mass'] > 0.07)).all()
+    assert (~np.isfinite(canonly['st_teff']) | (canonly['st_teff'] > 3000)).all()
+    assert (~np.isfinite(canonly['st_log_lum']) | ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 5))).all()
     
     # RA and Dec are both valid
-    assert ((dfkoi['ra'] >= 0) & (dfkoi['ra'] <= 360.)).all()
-    assert ((dfkoi['dec'] >= -90) & (dfkoi['dec'] <= 90.)).all()
+    assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
+    assert ((canonly['dec'] >= -90) & (canonly['dec'] <= 90.)).all()
     
-    assert (~np.isfinite(dfkoi['rade']) | (dfkoi['rade'] > 0)).all()
+    # planet parameters are either NaN or > 0
+    assert (canonly['period'] > 0).all()
+    assert (~np.isfinite(canonly['semi_au']) | (canonly['semi_au'] > 0)).all()
+    assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
+    assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
+    assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     
+    # Jup and Earth radii are either defined or not together
+    assert np.allclose(np.isfinite(canonly['radj']), np.isfinite(canonly['rade']))
+    assert ((~np.isfinite(canonly['rade'])) | ((canonly['rade'] / canonly['radj'] > 0.99 * radratio) & (canonly['rade'] / canonly['radj'] < 1.01 * radratio))).all()
+    
+    # these flags at least have the right number of good values
+    assert canonly['flag_kepler'].all()
+    assert not canonly['flag_k2'].any()
+    assert canonly['flag_tran'].all()
+    
+    # discovery and confirmation years make sense
+    assert ((canonly['year_discovered'] >= 2011) & (canonly['year_discovered'] <= 2018)).all()
+    assert not np.isfinite(canonly['year_confirmed']).any()
+
     # add the KOIs to our final composite table
     koiadd = dfkoi[cols][koican].copy()
     comp = comp.append(koiadd, verify_integrity=True, ignore_index=True)
-
-    assert False
 
     ################
     # K2 LIST PREP #
     ################
     
+    """
+        cols = ['facility', 'ra', 'dec', 'disposition', 'url', 'name', 'hostname',
+            'flag_tran', 'distance_pc', 'period', 'rade', 'radj', 'IC',
+            'flag_kepler', 'st_mass', 'st_rad', 'st_teff', 'st_log_lum',
+            'flag_k2', 'insol', 'semi_au', 'year_discovered', 'year_confirmed']
+    
+    """
+    
     # put these into our keywords
     renames = {'k2c_disp': 'disposition', 'pl_rade': 'rade', 'pl_orbper': 'period',
                'pl_radj': 'radj', 'epic_candname': 'name', 'epic_name': 'hostname'}
     dfk2.rename(columns=renames, inplace=True)
+    
+    # XXX: fix these with the wrong labels
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5)]) == 1
+    dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5), 'k2c_recentflag'] = 0
+    dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5), 'name'] = 'EPIC 201713348.02'
+    dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5), 'pl_name'] = 'K2-36 b'
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5)]) == 0
+    
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 b') & (dfk2['period'] > 5)]) == 1
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 c') & (dfk2['period'] > 8)]) == 1
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 d') & (dfk2['period'] < 9)]) == 1
+    dfk2.loc[dfk2['pl_name'] == 'K2-148 d', 'pl_name'] = 'foo'
+    dfk2.loc[dfk2['pl_name'] == 'K2-148 c', 'pl_name'] = 'K2-148 d'
+    dfk2.loc[dfk2['pl_name'] == 'K2-148 b', 'pl_name'] = 'K2-148 c'
+    dfk2.loc[dfk2['pl_name'] == 'foo', 'pl_name'] = 'K2-148 b'
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 b') & (dfk2['period'] < 5)]) == 1
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 c') & (dfk2['period'] < 8)]) == 1
+    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 d') & (dfk2['period'] > 9)]) == 1
     
     # upper/lower limits are given values at that limit and we need to remove
     # them for now
@@ -889,8 +973,9 @@ if True:
     nojup = (np.isfinite(dfk2['rade']) & (~np.isfinite(dfk2['radj'])))
     dfk2.loc[nojup, 'radj'] = dfk2.loc[nojup, 'rade'] / radratio
     
-    assert (~np.isfinite(dfk2['rade']) | (dfk2['rade'] > 0)).all()
-    assert (~np.isfinite(dfk2['radj']) | (dfk2['radj'] > 0)).all()
+    # XXX: because earth and jup radii don't always agree, make them 
+    # uniform and treat Earth as truth
+    dfk2['radj'] = dfk2['rade'] / radratio
     
     # make these not all caps
     dfk2['disposition'] = dfk2['disposition'].str.title()
@@ -902,7 +987,6 @@ if True:
         epics.append(int(iep[4:]))
     epics = np.array(epics)
     dfk2['IC'] = epics
-    assert (dfk2['IC'] > 0).all()
 
     # set the appropriate discovery facility for candidates
     dfk2['facility'] = 'K2'
@@ -915,16 +999,28 @@ if True:
     srch = np.where(dfk2['name'] == 'EPIC 201497682.03')[0]
     assert len(srch) == 1
     srch = srch[0]
-    assert dfk2['disposition'][srch] == 'Confirmed' 
-    assert dfk2['pl_name'][srch] == 'EPIC 201497682 b'
-    dfk2.loc[srch, 'disposition'] = 'Candidate'
-    dfk2.loc[srch, 'pl_name'] = float('nan')
-    dfk2.loc[srch, 'name'] = 'EPIC 201497682.04'
+    assert dfk2.at[srch, 'disposition'] == 'Confirmed' 
+    assert dfk2.at[srch, 'pl_name'] == 'EPIC 201497682 b'
+    dfk2.at[srch, 'disposition'] = 'Candidate'
+    dfk2.at[srch, 'pl_name'] = float('nan')
+    dfk2.at[srch, 'name'] = 'EPIC 201497682.04'
     srch = np.where(dfk2['name'] == 'EPIC 201497682.04')[0]
     assert len(srch) == 1
     srch = srch[0]
-    assert dfk2['disposition'][srch] == 'Candidate' 
-    assert ~np.isfinite(dfk2['pl_name'][srch])
+    assert dfk2.at[srch, 'disposition'] == 'Candidate' 
+    assert ~np.isfinite(dfk2.at[srch, 'pl_name'])
+    
+    # add in a column for the publication year of the K2 candidates
+    yrs = []
+    for ival in dfk2['k2c_reflink']:
+        yrs.append(int(ival.split('ET_AL__')[1][:4]))
+    dfk2['year_discovered'] = yrs
+    assert (dfk2['year_discovered'] > 2014).all()
+    
+    # set the discovery year to be the same for all rows of the same planet
+    for iplan in np.unique(dfk2['name']):
+        srch = dfk2['name'] == iplan
+        dfk2.loc[srch, 'year_discovered'] = np.min(dfk2.loc[srch, 'year_discovered'])
     
     # check that we're including all K2 planets, but only counting them once
     k2con = dfk2['disposition'] == 'Confirmed'
@@ -957,6 +1053,7 @@ if True:
     isexclude = np.zeros(len(k2exclude), dtype=bool)
 
     # make sure all confirmed K2 planets are in the confirmed table exactly once
+    # and update their discovery year
     for index, icon in dfk2[k2con].iterrows():
         res = np.where((np.abs(comp['ra'] - icon['ra']) < 1. / 60) &
                        (np.abs(comp['dec'] - icon['dec']) < 1. / 60) &
@@ -967,6 +1064,13 @@ if True:
             assert len(res) == 0
             assert icon['name'] in k2exclude
             isexclude[k2exclude.index(icon['name'])] = True
+            res = np.where(comp['name'] == icon['pl_name'])[0]
+            assert len(res) == 1
+        # update and sync the discovery year in both tables
+        res = res[0]
+        assert comp.at[res, 'name'] == icon['pl_name']
+        comp.at[res, 'year_discovered'] = min(comp.at[res, 'year_discovered'], icon['year_discovered'])
+        dfk2.at[index, 'year_discovered'] = min(comp.at[res, 'year_discovered'], icon['year_discovered'])
 
     assert isexclude.all()
 
@@ -984,27 +1088,26 @@ if True:
         res = res[0]
         if len(res) != 0:
             assert ican['name'] in k2known
-            pall = np.where(dfk2['name'] == ican['name'])[0]
+            pall = dfk2['name'] == ican['name']
             dfk2.loc[pall, 'disposition'] = 'Confirmed'
             dfk2.loc[pall, 'pl_name'] = plname[k2known.index(ican['name'])]
             reknown[k2known.index(ican['name'])] = True
             
             # EPIC 201357835.01 is K2-245, but that has a different EPIC: 201357643
             if ican['name'] == 'EPIC 201357835.01':
-                dfk2.loc[index, 'IC'] = 201357643
-                dfk2.loc[index, 'name'] = 'EPIC 201357643.01'
-                dfk2.loc[index, 'hostname'] = 'EPIC 201357643'
-                dfk2.loc[index, 'k2c_recentflag'] = 0
+                dfk2.at[index, 'IC'] = 201357643
+                dfk2.at[index, 'name'] = 'EPIC 201357643.01'
+                dfk2.at[index, 'hostname'] = 'EPIC 201357643'
+                dfk2.at[index, 'k2c_recentflag'] = 0
+                dfk2.at[index, 'url'] = ('https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' +
+                                         dfk2.at[index, 'hostname'][5:])
+                
+            # update and sync the discovery year in both tables
+            res = res[0]
+            comp.at[res, 'year_discovered'] = min(comp.at[res, 'year_discovered'], ican['year_discovered'])
+            dfk2.at[index, 'year_discovered'] = min(comp.at[res, 'year_discovered'], ican['year_discovered'])
 
     assert reknown.all()
-
-    # add in a column for the publication year of the K2 candidates
-    yrs = []
-    for ival in dfk2['k2c_reflink']:
-        yrs.append(int(ival.split('ET_AL__')[1][:4]))
-    dfk2['disc_year'] = yrs
-    
-    assert (dfk2['disc_year'] > 2014).all()
 
     # set up a distance field that is the same in all 4 groups
     k2dists = np.zeros(dfk2['IC'].size)
@@ -1020,18 +1123,13 @@ if True:
         else:
             raise Exception('Multiple distances for EPIC {ik2}?')
     dfk2['distance_pc'] = k2dists
-
-    assert (~np.isfinite(dfk2['distance_pc']) | (dfk2['distance_pc'] > 1)).all()
-    
-    # test the stellar parameters we have and set up the ones we don't
-    assert (~np.isfinite(dfk2['st_rad']) | (dfk2['st_rad'] > 0.05)).all()
-    assert (~np.isfinite(dfk2['st_teff']) | (dfk2['st_teff'] > 2000)).all()
     
     # fill in missing luminosities with our own calculation
     tmplums = (dfk2['st_rad'] ** 2) * ((dfk2['st_teff'] / 5772) ** 4)
     dfk2['st_log_lum'] = np.log10(tmplums)
-    assert ((~np.isfinite(dfk2['st_log_lum'])) | ((dfk2['st_log_lum'] > -8) & (dfk2['st_log_lum'] < 7))).all()
-
+    
+    # these columns aren't in the table by default, and we can't calculate 
+    # them without a stellar mass
     dfk2['st_mass'] = np.nan
     dfk2['semi_au'] = np.nan
     dfk2['insol'] = np.nan
@@ -1061,8 +1159,8 @@ if True:
         hasname = ~dfk2['pl_name'][k2can].isna()
         assert np.in1d(dfk2['pl_name'][k2can][hasname], comp['name']).sum() == 0
     
-        # keep track of which planets in the confirmed list don't have a KOI,
-        # so we have to find its KIC/get stellar parameters a fancier way
+        # keep track of which planets in the confirmed list don't have a K2
+        # cand, so we have to find its EPIC/stellar parameters a fancier way
         cononly = comp['flag_k2'] & True
     
         # match the confirmed K2 candidates to the appropriate confirmed planets
@@ -1216,15 +1314,7 @@ if True:
                 if np.isfinite(srat):
                     comp.at[index, 'rade'] *= srat
                     comp.at[index, 'radj'] *= srat
-        
-        assert (~np.isfinite(dfk2['st_rad']) | (dfk2['st_rad'] > 0)).all()
-        assert (~np.isfinite(dfk2['st_mass']) | (dfk2['st_mass'] > 0)).all()
-        assert (~np.isfinite(dfk2['st_teff']) | (dfk2['st_teff'] > 2000)).all()
-        assert (~np.isfinite(dfk2['st_log_lum']) | ((dfk2['st_log_lum'] > -8) & (dfk2['st_log_lum'] < 7))).all()
-        assert (~np.isfinite(dfk2['distance_pc']) | (dfk2['distance_pc'] > 1)).all()
-        assert (~np.isfinite(dfk2['semi_au']) | (dfk2['semi_au'] > 0)).all()
-        assert (~np.isfinite(dfk2['insol']) | (dfk2['insol'] > 0)).all()
-        
+
     # all K2 candidates transit
     dfk2['flag_tran'] = True
     
@@ -1232,7 +1322,9 @@ if True:
     dfk2['flag_kepler'] = False
     dfk2['flag_k2'] = True
     
-
+    # these have not been confirmed
+    dfk2['year_confirmed'] = np.nan
+    
     k2con = (dfk2['disposition'] == 'Confirmed') & (dfk2['k2c_recentflag'] == 1)
     k2can = (dfk2['disposition'] == 'Candidate') & (dfk2['k2c_recentflag'] == 1)
     
@@ -1251,10 +1343,64 @@ if True:
         for icol in ichk:
             if (not np.isfinite(dfk2.at[index, icol])) and np.isfinite(dfk2[icol][srch]).any(): 
                     dfk2.at[index, icol] = np.nanmedian(dfk2[icol][srch])
+                    
+    # this EPIC doesn't really exist and thus doesn't have properties.
+    # at least give it a sky position from MAST
+    dfk2.loc[dfk2['IC'] == 229228348, 'ra'] = 289.5273417 
+    dfk2.loc[dfk2['IC'] == 229228348, 'dec'] = -16.3430889
+                    
+    # do all the tests to make sure things are working, only focusing on
+    # candidates since that's all we're adding to output. FPs can be weird.    
+    canonly = dfk2[k2can]
+
+    # everything has a facility name
+    assert (np.array([len(xi) for xi in canonly['facility']]) > 0).all()
+    assert (canonly['disposition'] == 'Candidate').all()
+    # everything has a host name and URL
+    assert (np.array([len(xi) for xi in canonly['hostname']]) > 0).all()
+    assert (np.array([len(xi) for xi in canonly['url']]) > 0).all()
+    # everything has a planet name
+    assert (np.array([len(xi) for xi in canonly['name']]) > 0).all()
+    # Input Catalog numbers are correct
+    assert (canonly['IC'] > 0).all()
+    
+    # distances are either NaN or > 1 pc
+    assert (~np.isfinite(canonly['distance_pc']) | (canonly['distance_pc'] > 1)).all()
+    # stellar parameters make sense
+    assert (~np.isfinite(canonly['st_rad']) | (canonly['st_rad'] > 0.07)).all()
+    assert (~np.isfinite(canonly['st_mass']) | (canonly['st_mass'] > 0.07)).all()
+    assert (~np.isfinite(canonly['st_teff']) | (canonly['st_teff'] > 2900)).all()
+    assert (~np.isfinite(canonly['st_log_lum']) | ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 7))).all()
+    
+    # RA and Dec are both valid
+    assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
+    assert ((canonly['dec'] >= -90) & (canonly['dec'] <= 90.)).all()
+    
+    # planet parameters are either NaN or > 0
+    assert ((~np.isfinite(canonly['period'])) | (canonly['period'] > 0)).all()
+    assert (~np.isfinite(canonly['semi_au']) | (canonly['semi_au'] > 0)).all()
+    assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
+    assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
+    assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
+    
+    # Jup and Earth radii are either defined or not together
+    assert np.allclose(np.isfinite(canonly['radj']), np.isfinite(canonly['rade']))
+    assert ((~np.isfinite(canonly['rade'])) | ((canonly['rade'] / canonly['radj'] > 0.99 * radratio) & (canonly['rade'] / canonly['radj'] < 1.01 * radratio))).all()
+    
+    # these flags at least have the right number of good values
+    assert not canonly['flag_kepler'].any()
+    assert canonly['flag_k2'].all()
+    assert canonly['flag_tran'].all()
+    
+    # discovery and confirmation years make sense
+    assert (canonly['year_discovered'] >= 2015).all()
+    assert not np.isfinite(canonly['year_confirmed']).any()
 
     # add the K2 candidates to our final composite table
     k2add = dfk2[cols][k2can].copy()
     comp = comp.append(k2add, verify_integrity=True, ignore_index=True)
+    
+    assert False
 
     #################
     # TOI LIST PREP #
@@ -1284,16 +1430,9 @@ if True:
         from astroquery.mast import Catalogs
         for index, irow in dftoi.iterrows():
             if irow['IC'] not in fulltic['ID'].values:
-                cat = Catalogs.query_object(objectname=irow['hostname'], catalog='tic', radius='0.1"')
-                found = False
-                iind = -1
-                for ii, iid in enumerate(cat):
-                    if int(iid['ID']) == irow['IC']:
-                        found = True
-                        iind = ii
-                        
-                assert found and iind >= 0 and int(cat['ID'][iind]) == irow['IC']
-                istr = cat.to_pandas().to_csv().split()[iind+1]
+                cat = Catalogs.query_criteria(catalog='tic', ID=irow['IC'])
+                assert len(cat) == 1 and int(cat['ID'][0]) == irow['IC']
+                istr = cat.to_pandas().to_csv().split()[1]
                 with open(ticparams, 'a') as off:
                     off.write(istr + '\n')
                 fulltic = pd.read_csv(ticparams)
