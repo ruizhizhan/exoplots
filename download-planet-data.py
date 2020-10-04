@@ -3,6 +3,8 @@ from datetime import datetime
 
 import pandas as pd
 
+from scripts.utils import load_data
+
 NEXSCI_API = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph' \
              '-nstedAPI'
 NEW_API = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query='
@@ -38,6 +40,10 @@ df.to_csv('data/tess-candidates.csv')
 
 with open('data/last_update_time.txt', 'w') as ff:
     ff.write(str(datetime.now()))
+
+# create the master data frame used in all the plots
+print('Creating master data frame and testing all planet properties.')
+load_data()
 
 """
 # all old KOI releases. Should only have to download these once
