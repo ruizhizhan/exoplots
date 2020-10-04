@@ -32,6 +32,19 @@ markers = ['circle_cross', 'circle', 'square_cross', 'square',
 colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377',
           '#ccbb44']
 
+"""
+# possible keys: 
+
+Confirmed:
+    ex_disp, ex_facility, ex_url, ex_distance_pc, ex_ra, ex_dec, ex_rade, ex_radj, ex_period, ex_flag_tran, ex_name, ex_hostname, ex_disc_year
+    
+TOI:
+    ex_disp, ex_facility, ex_url, ex_period, ex_TIC, ex_prade, ex_pradj, ex_ra, ex_dec, ex_TOI, ex_host
+KOI:
+    
+K2: 
+    
+"""
 # load the data
 new = True
 dfcon, dfkoi, dfk2, dftoi = load_data(discovery_year=True, new=new)
