@@ -21,6 +21,10 @@ def get_update_time():
     return datetime.datetime.strptime(lines[0], '%Y-%m-%d %H:%M:%S.%f')
 
 
+#updated_koi_params=True
+#updated_k2_params=True
+#new=True
+#if True:
 def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
@@ -59,6 +63,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     from astropy.coordinates import Angle
     import warnings
     from glob import glob
+    import os
 
     # load the data files
     if new:
@@ -74,8 +79,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     ticparams = 'data/full_tic.txt'
 
-    # XXX: need to handle the new table using estimated masses/radii
-
     # the dtype is to silence a pandas warning
     if new:
         ignore_warns = {'hd_name': 'string', 'hip_name': 'string',
@@ -90,14 +93,17 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfk2 = pd.read_csv(k2file)
     dfkoi = pd.read_csv(koifile)
     dftoi = pd.read_csv(toifile)
-    fulltic = pd.read_csv(ticparams)
+    if os.path.exists(ticparams):   
+        fulltic = pd.read_csv(ticparams)
+    else:
+        fulltic = None
 
     # what columns do we want/need in the final dataframe
-    cols = ['facility', 'ra', 'dec', 'disposition', 'url', 'name', 'hostname',
-            'flag_tran', 'distance_pc', 'period', 'rade', 'radj', 'IC',
-            'flag_kepler', 'st_mass', 'st_rad', 'st_teff', 'st_log_lum',
-            'flag_k2', 'insol', 'semi_au', 'year_discovered', 'year_confirmed',
-            'discoverymethod', 'masse', 'massj']
+    cols = ['name', 'hostname', 'IC', 'disposition', 'period', 'rade', 'radj', 
+            'masse', 'massj', 'semi_au', 'insol', 'distance_pc', 
+            'year_discovered', 'year_confirmed',  'discoverymethod', 
+            'facility', 'st_mass', 'st_rad', 'st_teff', 'st_log_lum', 'Kmag',
+            'ra', 'dec' , 'flag_tran', 'flag_kepler', 'flag_k2', 'url']
 
     #########################
     # CONFIRMED PLANET PREP #
@@ -160,7 +166,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
                'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
                'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
-               'pl_bmassj': 'massj'}
+               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag'}
     dfcon.rename(columns=renames, inplace=True)
 
     # upper/lower limits are given values at that limit and we need to remove
@@ -308,7 +314,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(dfcon['st_teff']) | (dfcon['st_teff'] > 100)).all()
     assert (~np.isfinite(dfcon['st_log_lum']) |
             ((dfcon['st_log_lum'] > -8) & (dfcon['st_log_lum'] < 5))).all()
-
+    assert (~np.isfinite(dfcon['Kmag']) | (dfcon['Kmag'] > -5)).all()
+    
     # RA and Dec are both valid
     # until these are fixed
     badra = ~np.isfinite(dfcon['ra'])
@@ -365,7 +372,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     renames = {'koi_period': 'period', 'koi_prad': 'rade', 'kepid': 'IC',
                'koi_insol': 'insol', 'koi_sma': 'semi_au',
                'koi_smass': 'st_mass', 'koi_srad': 'st_rad',
-               'koi_steff': 'st_teff', 'kepoi_name': 'name'}
+               'koi_steff': 'st_teff', 'kepoi_name': 'name', 
+               'koi_kmag': 'Kmag'}
     dfkoi.rename(columns=renames, inplace=True)
 
     # make KOI strings into the format we expect
@@ -735,6 +743,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             (canonly['st_teff'] > 3000)).all()
     assert (~np.isfinite(canonly['st_log_lum']) |
             ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 5))).all()
+    assert (~np.isfinite(canonly['Kmag']) | (canonly['Kmag'] > 0)).all()
 
     # RA and Dec are both valid
     assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
@@ -776,7 +785,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # put these into our keywords
     renames = {'k2c_disp': 'disposition', 'pl_rade': 'rade',
-               'pl_orbper': 'period', 'pl_radj': 'radj',
+               'pl_orbper': 'period', 'pl_radj': 'radj', 'st_k2': 'Kmag',
                'epic_candname': 'name', 'epic_name': 'hostname'}
     dfk2.rename(columns=renames, inplace=True)
 
@@ -1247,6 +1256,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             (canonly['st_teff'] > 2900)).all()
     assert (~np.isfinite(canonly['st_log_lum']) |
             ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 7))).all()
+    assert (~np.isfinite(canonly['Kmag']) | (canonly['Kmag'] > 4)).all()
 
     # RA and Dec are both valid
     assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
@@ -1301,14 +1311,17 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dftoi['hostname'] = 'TIC ' + dftoi['IC'].astype(str)
 
     # download TIC info for any new entries
-    if not np.in1d(dftoi['IC'], fulltic['ID']).all():
+    if (fulltic is None) or (not np.in1d(dftoi['IC'], fulltic['ID']).all()):
         from astroquery.mast import Catalogs
         for index, irow in dftoi.iterrows():
-            if irow['IC'] not in fulltic['ID'].values:
+            if (fulltic is None) or (irow['IC'] not in fulltic['ID'].values):
                 print('Getting TIC info', index, dftoi['IC'].size)
                 cat = Catalogs.query_criteria(catalog='tic', ID=irow['IC'])
                 assert len(cat) == 1 and int(cat['ID'][0]) == irow['IC']
-                istr = cat.to_pandas().to_csv().split()[1]
+                head, istr = cat.to_pandas().to_csv().split()
+                if not os.path.exists(ticparams):
+                    with open(ticparams, 'w') as off:
+                        off.write(head + '\n')
                 with open(ticparams, 'a') as off:
                     off.write(istr + '\n')
                 fulltic = pd.read_csv(ticparams)
@@ -1512,6 +1525,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # replace everything with new TIC parameters because apparently some TOIs
     # were using TIC v7 and things aren't self-consistent
+    dftoi['Kmag'] = np.nan
     for index, itoi in dftoi.iterrows():
         mt = np.where(itoi['IC'] == fulltic['ID'])[0][0]
         if np.isfinite(fulltic['Teff'][mt]):
@@ -1525,6 +1539,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             dftoi.at[index, 'st_rad'] = fulltic['rad'][mt]
             dftoi.at[index, 'rade'] *= fulltic['rad'][mt]/prev
             dftoi.at[index, 'radj'] *= fulltic['rad'][mt]/prev
+        dftoi.at[index, 'Kmag'] = fulltic['Kmag'][mt]
 
     # fill in missing luminosities with our own calculation
     tmplums = (dftoi['st_rad'] ** 2) * ((dftoi['st_teff'] / 5772) ** 4)
@@ -1579,6 +1594,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             (canonly['st_teff'] > 2700)).all()
     assert (~np.isfinite(canonly['st_log_lum']) |
             ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 7))).all()
+    assert (~np.isfinite(canonly['Kmag']) | (canonly['Kmag'] > 0)).all()
 
     # RA and Dec are both valid
     assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
@@ -1612,6 +1628,51 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # add the K2 candidates to our final composite table
     toiadd = dftoi[cols][newcan].copy()
     comp = comp.append(toiadd, verify_integrity=True, ignore_index=True)
+    
+    ###################
+    # FINAL ADDITIONS #
+    ###################
+    
+    # create the estimate mass/radius columns
+    badm = (np.isfinite(comp['masse']) ^ np.isfinite(comp['massj']))
+    assert badm.sum() == 0
+    
+    badr = (np.isfinite(comp['rade']) ^ np.isfinite(comp['radj']))
+    assert badr.sum() == 0
+    
+    getrad = np.isfinite(comp['masse']) & (~np.isfinite(comp['rade']))
+    
+    r1 = getrad & (comp['masse'] < 2.04)
+    r2 = getrad & (comp['masse'] < 132) & (comp['masse'] >= 2.04)
+    r3 = getrad & (comp['masse'] < 26600) & (comp['masse'] >= 132)
+    r4 = getrad & (comp['masse'] >= 26600)
+    
+    comp.insert(comp.columns.get_loc('rade')+1, 'rade_est', np.nan)
+    comp.insert(comp.columns.get_loc('radj')+1, 'radj_est', np.nan)
+    comp.loc[r1, 'rade_est'] = 10.**(np.log10(comp.loc[r1, 'masse']) * 0.279 + 
+                                     0.00346)
+    comp.loc[r2, 'rade_est'] = 10.**(np.log10(comp.loc[r2, 'masse']) * 0.589 - 
+                                     0.0925)
+    comp.loc[r3, 'rade_est'] = 10.**(np.log10(comp.loc[r3, 'masse']) * -0.044 + 
+                                     1.25)
+    comp.loc[r4, 'rade_est'] = 10.**(np.log10(comp.loc[r4, 'masse']) * 0.881 - 
+                                     2.85)
+    
+    getmass = np.isfinite(comp['rade']) & (~np.isfinite(comp['masse']))
+    
+    m1 = getmass & (comp['rade'] < 1.23)
+    m2 = getmass & (comp['rade'] < 11.1) & (comp['rade'] >= 1.23)
+    m3 = getmass & (comp['rade'] < 14.3) & (comp['rade'] >= 11.1)
+    m4 = getmass & (comp['rade'] >= 14.3)
+    
+    comp.insert(comp.columns.get_loc('masse')+1, 'masse_est', np.nan)
+    comp.insert(comp.columns.get_loc('massj')+1, 'massj_est', np.nan)
+    comp.loc[m1, 'masse_est'] = 10.**((np.log10(comp.loc[m1, 'rade']) - 
+                                       0.00346) / 0.2790)
+    comp.loc[m2, 'masse_est'] = 10.**((np.log10(comp.loc[m2, 'rade']) + 
+                                       0.0925) / 0.589)
+    comp.loc[m4, 'masse_est'] = 10.**((np.log10(comp.loc[m4, 'rade']) + 
+                                       2.85) / 0.881)
 
     # save our final version of the data frame to use in making all the plots
     comp.to_csv('data/exoplots_data.csv')
