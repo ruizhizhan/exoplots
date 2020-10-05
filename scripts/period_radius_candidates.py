@@ -1,17 +1,19 @@
+from datetime import datetime
+
 import numpy as np
+import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
-from bokeh.events import SelectionGeometry, DoubleTap
+from bokeh.events import DoubleTap, SelectionGeometry
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool, Toggle
+from bokeh.models import Button, LogAxis, OpenURL, Range1d, RangeSlider
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
-from bokeh.models import LogAxis, Range1d, RangeSlider, Button, OpenURL
 from bokeh.themes import Theme
-from datetime import datetime
 
-from utils import csv_creation, get_update_time, load_data, log_axis_labels
-from utils import deselect, reset, yearselect, unselect, sliderselect, nowvis
+from utils import csv_creation, get_update_time, log_axis_labels
+from utils import deselect, nowvis, reset, sliderselect, unselect, yearselect
 from utils import playpause
 
 # get the exoplot theme
@@ -32,32 +34,8 @@ markers = ['circle_cross', 'circle', 'square_cross', 'square',
 colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377',
           '#ccbb44']
 
-"""
-# possible keys: 
-
-Confirmed:
-    ex_disp, ex_facility, ex_url, ex_distance_pc, ex_ra, ex_dec, ex_rade, ex_radj, ex_period, ex_flag_tran, ex_name, ex_hostname, ex_disc_year
-    
-TOI:
-    ex_disp, ex_facility, ex_url, ex_period, ex_TIC, ex_prade, ex_pradj, ex_ra, ex_dec, ex_TOI, ex_host
-KOI:
-    
-K2: 
-    
-"""
 # load the data
-new = True
-dfcon, dfkoi, dfk2, dftoi, comp = load_data(discovery_year=True, new=new)
-
-if new:
-    fackey = 'disc_facility'
-    trankey = 'tran_flag'
-    hostkey = 'hostname'
-else:
-    fackey = 'pl_facility'
-    trankey = 'pl_tranflag'
-    hostkey = 'pl_hostname'
-
+dfpl = pd.read_csv('data/exoplots_data.csv')
 
 for ifig in np.arange(2):
     if ifig == 0:
@@ -110,95 +88,46 @@ for ifig in np.arange(2):
     minyr = 2020
 
     for ii, imiss in enumerate(missions):
-        # candidates get these default values
-        alpha = 0.35
-        size = 4
         # select the appropriate set of planets for each mission
         # make the confirmed planets more opaque and bigger
         if imiss == 'Other Confirmed':
-            good = ((~np.in1d(dfcon[fackey], ['Kepler', 'K2', 'TESS'])) &
-                    np.isfinite(dfcon['pl_rade']) &
-                    np.isfinite(dfcon['pl_orbper']) &
-                    dfcon[trankey].astype(bool))
+            good = ((~np.in1d(dfpl['facility'], ['Kepler', 'K2', 'TESS'])) &
+                    np.isfinite(dfpl['rade']) & np.isfinite(dfpl['period']) &
+                    dfpl['flag_tran'] & (dfpl['disposition'] == 'Confirmed'))
             alpha = 0.7
             size = 8
-        elif 'Confirmed' in imiss:
-            fac = imiss.split()[0]
-            good = ((dfcon[fackey] == fac) &
-                    np.isfinite(dfcon['pl_rade']) &
-                    np.isfinite(dfcon['pl_orbper']) &
-                    dfcon[trankey].astype(bool))
-            alpha = 0.7
-            size = 6
-        elif 'Kepler' in imiss:
-            good = ((dfkoi['koi_disposition'] == 'Candidate') &
-                    np.isfinite(dfkoi['koi_period']) &
-                    np.isfinite(dfkoi['koi_prad']))
-            # what the hover tooltip draws its values from
-            source = plotting.ColumnDataSource(data=dict(
-                    planet=dfkoi['kepoi_name'][good],
-                    period=dfkoi['koi_period'][good],
-                    radius=dfkoi['koi_prad'][good],
-                    jupradius=dfkoi['koi_pradj'][good],
-                    host=dfkoi['kepid'][good],
-                    discovery=dfkoi['pl_facility'][good],
-                    status=dfkoi['koi_disposition'][good],
-                    url=dfkoi['url'][good],
-                    year=dfkoi['year_disc'][good]
-                    ))
-            print(imiss, ': ', good.sum())
-        elif 'K2' in imiss:
-            good = ((dfk2['k2c_disp'] == 'Candidate') &
-                    np.isfinite(dfk2['pl_rade']) &
-                    np.isfinite(dfk2['pl_orbper']) &
-                    dfk2['k2c_recentflag'].astype(bool))
-            # what the hover tooltip draws its values from
-            source = plotting.ColumnDataSource(data=dict(
-                    planet=dfk2['epic_candname'][good],
-                    period=dfk2['pl_orbper'][good],
-                    radius=dfk2['pl_rade'][good],
-                    jupradius=dfk2['pl_radj'][good],
-                    host=dfk2['epic_name'][good],
-                    discovery=dfk2['pl_facility'][good],
-                    status=dfk2['k2c_disp'][good],
-                    url=dfk2['url'][good],
-                    year=dfk2['year_disc'][good]
-                    ))
-            print(imiss, ': ', good.sum())
         else:
-            good = ((dftoi['disp'] == 'Candidate') &
-                    np.isfinite(dftoi['prade']) &
-                    np.isfinite(dftoi['period']))
-            # what the hover tooltip draws its values from
-            source = plotting.ColumnDataSource(data=dict(
-                    planet=dftoi['TOI'][good],
-                    period=dftoi['period'][good],
-                    radius=dftoi['prade'][good],
-                    jupradius=dftoi['pradj'][good],
-                    host=dftoi['host'][good],
-                    discovery=dftoi['pl_facility'][good],
-                    status=dftoi['disp'][good],
-                    url=dftoi['url'][good],
-                    year=dftoi['year_disc'][good]
-                    ))
-            print(imiss, ': ', good.sum())
-            alpha = 0.6
+            fac = imiss.split()[0]
+            disp = imiss.split()[1]
+            good = ((dfpl['facility'] == fac) & np.isfinite(dfpl['rade']) &
+                    np.isfinite(dfpl['period']) & dfpl['flag_tran'] &
+                    (dfpl['disposition'] == disp))
+            if disp == 'Confirmed':
+                alpha = 0.7
+                size = 6
+            else:
+                # candidates get these values
+                alpha = 0.35
+                size = 4
+                # make the yellow darker
+                if fac == 'TESS':
+                    alpha = 0.6
         counts.append(f'{good.sum():,}')
 
-        if 'Confirmed' in imiss:
-            # what the hover tooltip draws its values from
-            source = plotting.ColumnDataSource(data=dict(
-                    planet=dfcon['pl_name'][good],
-                    period=dfcon['pl_orbper'][good],
-                    radius=dfcon['pl_rade'][good],
-                    jupradius=dfcon['pl_radj'][good],
-                    host=dfcon[hostkey][good],
-                    discovery=dfcon[fackey][good],
-                    status=dfcon['status'][good],
-                    url=dfcon['url'][good],
-                    year=dfcon['year_disc'][good]
-                    ))
-            print(imiss, ': ', good.sum())
+        # what the hover tooltip draws its values from
+        source = plotting.ColumnDataSource(data=dict(
+                planet=dfpl['name'][good],
+                period=dfpl['period'][good],
+                radius=dfpl['rade'][good],
+                jupradius=dfpl['radj'][good],
+                host=dfpl['hostname'][good],
+                discovery=dfpl['facility'][good],
+                status=dfpl['disposition'][good],
+                url=dfpl['url'][good],
+                year=dfpl['year_discovered'][good]
+                ))
+
+        print(imiss, ': ', good.sum())
 
         # plot the planets
         # nonselection stuff is needed to prevent planets in that category from

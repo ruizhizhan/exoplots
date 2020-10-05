@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.events import SelectionGeometry
@@ -10,7 +11,7 @@ from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
-from utils import csv_creation, get_update_time, load_data, log_axis_labels
+from utils import csv_creation, get_update_time, log_axis_labels
 from utils import deselect, reset
 
 # get the exoplot theme
@@ -36,17 +37,7 @@ fullfile = '_includes/period_radius.html'
 plotting.output_file(fullfile, title='Period Radius Plot')
 
 # load the data
-new = True
-dfcon, dfkoi, dfk2, dftoi, comp = load_data(new=new)
-
-if new:
-    fackey = 'disc_facility'
-    trankey = 'tran_flag'
-    hostkey = 'hostname'
-else:
-    fackey = 'pl_facility'
-    trankey = 'pl_tranflag'
-    hostkey = 'pl_hostname'
+dfpl = pd.read_csv('data/exoplots_data.csv')
 
 # what to display when hovering over a data point
 TOOLTIPS = [
@@ -75,15 +66,13 @@ alphas = []
 for ii, imiss in enumerate(missions):
     # select the appropriate set of planets for each mission
     if imiss == 'Other':
-        good = ((~np.in1d(dfcon[fackey], missions)) &
-                np.isfinite(dfcon['pl_rade']) &
-                np.isfinite(dfcon['pl_orbper']) &
-                dfcon[trankey].astype(bool))
+        good = ((~np.in1d(dfpl['facility'], missions)) &
+                np.isfinite(dfpl['rade']) & np.isfinite(dfpl['period']) &
+                dfpl['flag_tran'] & (dfpl['disposition'] == 'Confirmed'))
     else:
-        good = ((dfcon[fackey] == imiss) &
-                np.isfinite(dfcon['pl_rade']) &
-                np.isfinite(dfcon['pl_orbper']) &
-                dfcon[trankey].astype(bool))
+        good = ((dfpl['facility'] == imiss) & np.isfinite(dfpl['rade']) &
+                (dfpl['disposition'] == 'Confirmed') & dfpl['flag_tran'] &
+                np.isfinite(dfpl['period']))
 
     # make the alpha of large groups lower so they don't dominate so much
     alpha = 1. - good.sum()/1000.
@@ -91,13 +80,13 @@ for ii, imiss in enumerate(missions):
 
     # what the hover tooltip draws its values from
     source = plotting.ColumnDataSource(data=dict(
-            planet=dfcon['pl_name'][good],
-            period=dfcon['pl_orbper'][good],
-            radius=dfcon['pl_rade'][good],
-            jupradius=dfcon['pl_radj'][good],
-            host=dfcon[hostkey][good],
-            discovery=dfcon[fackey][good],
-            url=dfcon['url'][good]
+            planet=dfpl['name'][good],
+            period=dfpl['period'][good],
+            radius=dfpl['rade'][good],
+            jupradius=dfpl['radj'][good],
+            host=dfpl['hostname'][good],
+            discovery=dfpl['facility'][good],
+            url=dfpl['url'][good]
             ))
     print(imiss, ': ', good.sum())
     counts.append(f'{good.sum():,}')

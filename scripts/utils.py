@@ -96,7 +96,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     cols = ['facility', 'ra', 'dec', 'disposition', 'url', 'name', 'hostname',
             'flag_tran', 'distance_pc', 'period', 'rade', 'radj', 'IC',
             'flag_kepler', 'st_mass', 'st_rad', 'st_teff', 'st_log_lum',
-            'flag_k2', 'insol', 'semi_au', 'year_discovered', 'year_confirmed']
+            'flag_k2', 'insol', 'semi_au', 'year_discovered', 'year_confirmed',
+            'discoverymethod', 'masse', 'massj']
 
     #########################
     # CONFIRMED PLANET PREP #
@@ -158,7 +159,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # set our common names for all of these
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
                'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
-               'pl_orbsmax': 'semi_au'}
+               'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
+               'pl_bmassj': 'massj'}
     dfcon.rename(columns=renames, inplace=True)
 
     # upper/lower limits are given values at that limit and we need to remove
@@ -173,6 +175,32 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfcon.loc[dfcon['pl_insollim'] != 0, 'insol'] = np.nan
     dfcon.loc[dfcon['pl_orbsmaxlim'] != 0, 'semi_au'] = np.nan
     dfcon.loc[dfcon['pl_ratdorlim'] != 0, 'pl_ratdor'] = np.nan
+    dfcon.loc[dfcon['pl_bmasselim'] != 0, 'masse'] = np.nan
+    dfcon.loc[dfcon['pl_bmassjlim'] != 0, 'massj'] = np.nan
+
+    ct = 0
+    # one planet (OGLE-TR-111 b) has different references for the two masses
+    for ii in np.arange(dfcon['masse'].size):
+        if (dfcon.at[ii, 'pl_bmasse_reflink'] != 
+                dfcon.at[ii, 'pl_bmassj_reflink']):
+            ct += 1
+    assert ct == 1
+    
+    # both always exist or not together
+    badm = (np.isfinite(dfcon['masse']) ^ np.isfinite(dfcon['massj']))
+    assert badm.sum() == 0
+    
+    # remove calculated values from true masses. we'll make a calculated
+    # column later
+    badme = dfcon['pl_bmasse_reflink'].str.contains('Calculated')
+    badmj = dfcon['pl_bmassj_reflink'].str.contains('Calculated')
+    assert not (badme ^ badmj).any()
+    dfcon.loc[badme, ['masse', 'massj']] = np.nan
+    
+    massrat = 317.83
+    # XXX: because earth and jup radii don't always agree, make them
+    # uniform and treat Earth as truth
+    dfcon['massj'] = dfcon['masse'] / massrat
 
     # jupiter/earth radius ratio
     radratio = 11.21
@@ -181,6 +209,13 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     if new:
         assert badrj.sum() == 4
     dfcon.loc[badrj, 'radj'] = dfcon.loc[badrj, 'rade'] / radratio
+
+    # remove calculated values from true masses. we'll make a calculated
+    # column later
+    badre = dfcon['pl_rade_reflink'].str.contains('Calculated')
+    badrj = dfcon['pl_radj_reflink'].str.contains('Calculated')
+    assert not (badre ^ badrj).any()
+    dfcon.loc[badre, ['rade', 'radj']] = np.nan
 
     # XXX: because earth and jup radii use different sources, make them
     # uniform and treat Earth as truth
@@ -262,6 +297,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (np.array([len(xi) for xi in dfcon['name']]) > 0).all()
     # Input Catalog numbers are correct
     assert not np.isfinite(dfcon['IC']).any()
+    assert (np.array([len(xi) for xi in dfcon['discoverymethod']]) > 0).all()
 
     # distances are either NaN or > 1 pc
     assert (~np.isfinite(dfcon['distance_pc']) |
@@ -290,12 +326,19 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(dfcon['insol']) | (dfcon['insol'] > 0)).all()
     assert (~np.isfinite(dfcon['rade']) | (dfcon['rade'] > 0)).all()
     assert (~np.isfinite(dfcon['radj']) | (dfcon['radj'] > 0)).all()
+    assert (~np.isfinite(dfcon['masse']) | (dfcon['masse'] > 0)).all()
+    assert (~np.isfinite(dfcon['massj']) | (dfcon['massj'] > 0)).all()
 
-    # Jup and Earth radii are either defined or not together
+    # Jup and Earth radii and masses are either defined or not together
     assert np.allclose(np.isfinite(dfcon['radj']), np.isfinite(dfcon['rade']))
     assert ((~np.isfinite(dfcon['rade'])) |
             ((dfcon['rade'] / dfcon['radj'] > 0.99 * radratio) &
              (dfcon['rade'] / dfcon['radj'] < 1.01 * radratio))).all()
+    assert np.allclose(np.isfinite(dfcon['massj']), 
+                       np.isfinite(dfcon['masse']))
+    assert ((~np.isfinite(dfcon['masse'])) |
+            ((dfcon['masse'] / dfcon['massj'] > 0.99 * massrat) &
+             (dfcon['masse'] / dfcon['massj'] < 1.01 * massrat))).all()
 
     # these flags at least have the right number of good values
     assert dfcon['flag_kepler'].sum() > 2000
@@ -657,6 +700,13 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # these have not been confirmed
     dfkoi['year_confirmed'] = np.nan
+    
+    # all discovered via transit
+    dfkoi['discoverymethod'] = 'Transit'
+    
+    # no masses
+    dfkoi['masse'] = np.nan
+    dfkoi['massj'] = np.nan
 
     # do all the tests to make sure things are working, only focusing on
     # candidates since that's all we're adding to output. FPs can be weird.
@@ -672,6 +722,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (np.array([len(xi) for xi in canonly['name']]) > 0).all()
     # Input Catalog numbers are correct
     assert (canonly['IC'] > 0).all()
+    assert (canonly['discoverymethod'] == 'Transit').all()
 
     # distances are either NaN or > 1 pc
     assert (~np.isfinite(canonly['distance_pc']) |
@@ -695,6 +746,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
+    assert (~np.isfinite(canonly['masse'])).all()
+    assert (~np.isfinite(canonly['massj'])).all()
 
     # Jup and Earth radii are either defined or not together
     assert np.allclose(np.isfinite(canonly['radj']),
@@ -1133,6 +1186,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # these have not been confirmed
     dfk2['year_confirmed'] = np.nan
+    
+    # all found via transit
+    dfk2['discoverymethod'] = 'Transit'
 
     k2can = (dfk2['disposition'] == 'Candidate') & (dfk2['k2c_recentflag'] == 1)
 
@@ -1159,6 +1215,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # at least give it a sky position from MAST
     dfk2.loc[dfk2['IC'] == 229228348, 'ra'] = 289.5273417
     dfk2.loc[dfk2['IC'] == 229228348, 'dec'] = -16.3430889
+    
+    # no masses
+    dfk2['masse'] = np.nan
+    dfk2['massj'] = np.nan
 
     # do all the tests to make sure things are working, only focusing on
     # candidates since that's all we're adding to output. FPs can be weird.
@@ -1174,6 +1234,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (np.array([len(xi) for xi in canonly['name']]) > 0).all()
     # Input Catalog numbers are correct
     assert (canonly['IC'] > 0).all()
+    assert (canonly['discoverymethod'] == 'Transit').all()
 
     # distances are either NaN or > 1 pc
     assert (~np.isfinite(canonly['distance_pc']) |
@@ -1197,6 +1258,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
+    assert (~np.isfinite(canonly['masse'])).all()
+    assert (~np.isfinite(canonly['massj'])).all()
 
     # Jup and Earth radii are either defined or not together
     assert np.allclose(np.isfinite(canonly['radj']),
@@ -1481,6 +1544,13 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # these have not been confirmed
     dftoi['year_confirmed'] = np.nan
+    
+    # no masses
+    dftoi['masse'] = np.nan
+    dftoi['massj'] = np.nan
+
+    # all found via transit
+    dftoi['discoverymethod'] = 'Transit'
 
     # do all the tests to make sure things are working, only focusing on
     # candidates since that's all we're adding to output. FPs can be weird.
@@ -1496,6 +1566,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (np.array([len(xi) for xi in canonly['name']]) > 0).all()
     # Input Catalog numbers are correct
     assert (canonly['IC'] > 0).all()
+    assert (canonly['discoverymethod'] == 'Transit').all()
 
     # distances are either NaN or > 1 pc
     assert (~np.isfinite(canonly['distance_pc']) |
@@ -1519,6 +1590,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
+    assert (~np.isfinite(canonly['masse'])).all()
+    assert (~np.isfinite(canonly['massj'])).all()
 
     # Jup and Earth radii are either defined or not together
     assert np.allclose(np.isfinite(canonly['radj']),

@@ -1,13 +1,14 @@
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.io import curdoc
 from bokeh.models import FuncTickFormatter, Label, NumeralTickFormatter
 from bokeh.themes import Theme
 
-from utils import get_update_time, log_axis_labels, load_data
+from utils import get_update_time, log_axis_labels
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -41,17 +42,9 @@ embedfilecumlog_name = '_includes/per_year_{0}_cumul_log_embed.html'
 fullfilecumlog_name = '_includes/per_year_{0}_cumul_log.html'
 
 # load the data
-new = True
-dfcon, dfkoi, dfk2, dftoi, comp = load_data(discovery_year=True, new=new)
+dfpl = pd.read_csv('data/exoplots_data.csv')
 
-if new:
-    methodkey = 'discoverymethod'
-    yearkey = 'disc_year'
-else:
-    methodkey = 'pl_discmethod'
-    yearkey = 'pl_disc'
-
-years = range(dfcon[yearkey].min(), datetime.now().year+1)
+years = range(dfpl['year_discovered'].min(), datetime.now().year+1)
 
 condata = {'years': years}
 concumul = {'years': years}
@@ -68,9 +61,11 @@ pccumtots = []
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
     if imeth == 'Other':
-        good = ~np.in1d(dfcon[methodkey], methods)
+        good = ((~np.in1d(dfpl['discoverymethod'], methods)) &
+                (dfpl['disposition'] == 'Confirmed'))
     else:
-        good = dfcon[methodkey] == imeth
+        good = ((dfpl['discoverymethod'] == imeth) &
+                (dfpl['disposition'] == 'Confirmed'))
     ntot = good.sum()
 
     base = []
@@ -79,28 +74,21 @@ for ii, imeth in enumerate(methods):
     pcll = []
     pcisum = [0]
     for iyear in years:
-        ct = (dfcon[yearkey][good] == iyear).sum()
+        ct = (dfpl['year_confirmed'][good] == iyear).sum()
         conll.append(ct)
         conisum.append(conisum[-1] + ct)
         base.append(0.01)
 
-        pcct = (dfcon['year_disc'][good] == iyear).sum()
+        pcct = (dfpl['year_discovered'][good] == iyear).sum()
         if imeth == 'Transit':
-            toican = dftoi['disp'] == 'Candidate'
-            pcct += (dftoi['year_disc'][toican] == iyear).sum()
-
-            k2can = ((dfk2['k2c_disp'] == 'Candidate') &
-                     dfk2['k2c_recentflag'].astype(bool))
-            pcct += (dfk2['year_disc'][k2can] == iyear).sum()
-
-            koican = dfkoi['koi_disposition'] == 'Candidate'
-            pcct += (dfkoi['year_disc'][koican] == iyear).sum()
+            canfind = dfpl['disposition'] == 'Candidate'
+            pcct += (dfpl.loc[canfind, 'year_discovered'] == iyear).sum()
 
         pcll.append(pcct)
         pcisum.append(pcisum[-1] + pcct)
 
     if imeth == 'Transit':
-        ntot += toican.sum() + k2can.sum() + koican.sum()
+        ntot += canfind.sum()
 
     conisum.pop(0)
     pcisum.pop(0)

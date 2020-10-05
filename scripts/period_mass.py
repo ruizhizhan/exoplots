@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.events import SelectionGeometry
@@ -10,7 +11,7 @@ from bokeh.models import LogAxis, Range1d
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
-from utils import csv_creation, get_update_time, load_data, log_axis_labels
+from utils import csv_creation, get_update_time, log_axis_labels
 from utils import deselect, reset
 
 # get the exoplot theme
@@ -36,16 +37,7 @@ fullfile = '_includes/period_mass.html'
 plotting.output_file(fullfile, title='Period Mass Plot')
 
 # load the data
-new = False
-dfcon, dfkoi, dfk2, dftoi, comp = load_data(new=new)
-
-if new:
-    hostkey = 'hostname'
-    methodkey = 'discoverymethod'
-else:
-    hostkey = 'pl_hostname'
-    methodkey = 'pl_discmethod'
-
+dfpl = pd.read_csv('data/exoplots_data.csv')
 
 # what to display when hovering over a data point
 TOOLTIPS = [
@@ -74,18 +66,18 @@ alphas = []
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
     if imeth == 'Other':
-        good = ((~np.in1d(dfcon[methodkey], methods)) &
-                (~dfcon[methodkey].str.contains('Timing')) &
-                np.isfinite(dfcon['pl_bmasse']) &
-                np.isfinite(dfcon['pl_orbper']))
+        good = ((~np.in1d(dfpl['discoverymethod'], methods)) &
+                (~dfpl['discoverymethod'].str.contains('Timing')) &
+                np.isfinite(dfpl['masse']) & np.isfinite(dfpl['period']) &
+                (dfpl['disposition'] == 'Confirmed'))
     elif imeth == 'Timing Variations':
-        good = (dfcon[methodkey].str.contains('Timing') &
-                np.isfinite(dfcon['pl_bmasse']) &
-                np.isfinite(dfcon['pl_orbper']))
+        good = (dfpl['discoverymethod'].str.contains('Timing') &
+                np.isfinite(dfpl['masse']) & np.isfinite(dfpl['period']) &
+                (dfpl['disposition'] == 'Confirmed'))
     else:
-        good = ((dfcon[methodkey] == imeth) &
-                np.isfinite(dfcon['pl_bmasse']) &
-                np.isfinite(dfcon['pl_orbper']))
+        good = ((dfpl['discoverymethod'] == imeth) &
+                np.isfinite(dfpl['masse']) & np.isfinite(dfpl['period']) &
+                (dfpl['disposition'] == 'Confirmed'))
 
     # make the alpha of large groups lower so they don't dominate so much
     alpha = 1. - good.sum()/1000.
@@ -93,13 +85,13 @@ for ii, imeth in enumerate(methods):
 
     # what the hover tooltip draws its values from
     source = plotting.ColumnDataSource(data=dict(
-            planet=dfcon['pl_name'][good],
-            period=dfcon['pl_orbper'][good],
-            host=dfcon[hostkey][good],
-            mass=dfcon['pl_bmasse'][good],
-            method=dfcon[methodkey][good],
-            jupmass=dfcon['pl_bmassj'][good],
-            url=dfcon['url'][good]
+            planet=dfpl['name'][good],
+            period=dfpl['period'][good],
+            host=dfpl['hostname'][good],
+            mass=dfpl['masse'][good],
+            method=dfpl['discoverymethod'][good],
+            jupmass=dfpl['massj'][good],
+            url=dfpl['url'][good]
             ))
     print(imeth, ': ', good.sum())
     counts.append(f'{good.sum():,}')
