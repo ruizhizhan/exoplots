@@ -21,11 +21,11 @@ def get_update_time():
     return datetime.datetime.strptime(lines[0], '%Y-%m-%d %H:%M:%S.%f')
 
 
-#updated_koi_params=True
-#updated_k2_params=True
-#new=True
-#if True:
-def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
+updated_koi_params=True
+updated_k2_params=True
+new=True
+if True:
+# def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
     ready for use in our interactive figures.
@@ -100,10 +100,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # what columns do we want/need in the final dataframe
     cols = ['name', 'hostname', 'IC', 'disposition', 'period', 'rade', 'radj', 
-            'masse', 'massj', 'semi_au', 'insol', 'distance_pc', 
-            'year_discovered', 'year_confirmed',  'discoverymethod', 
-            'facility', 'st_mass', 'st_rad', 'st_teff', 'st_log_lum', 'Kmag',
-            'ra', 'dec' , 'flag_tran', 'flag_kepler', 'flag_k2', 'url']
+            'masse', 'massj', 'tran_depth_ppm', 'tran_dur_hr', 'semi_au',
+            'insol', 'distance_pc', 'year_discovered', 'year_confirmed',  
+            'discoverymethod', 'facility', 'st_mass', 'st_rad', 'st_teff',
+            'st_log_lum', 'Kmag', 'ra', 'dec' , 'flag_tran', 'flag_kepler',
+            'flag_k2', 'url']
 
     #########################
     # CONFIRMED PLANET PREP #
@@ -166,7 +167,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
                'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
                'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
-               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag'}
+               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag',
+               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr'}
     dfcon.rename(columns=renames, inplace=True)
 
     # upper/lower limits are given values at that limit and we need to remove
@@ -183,6 +185,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfcon.loc[dfcon['pl_ratdorlim'] != 0, 'pl_ratdor'] = np.nan
     dfcon.loc[dfcon['pl_bmasselim'] != 0, 'masse'] = np.nan
     dfcon.loc[dfcon['pl_bmassjlim'] != 0, 'massj'] = np.nan
+    dfcon.loc[dfcon['pl_trandeplim'] != 0, 'tran_depth_ppm'] = np.nan
+    dfcon.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
 
     ct = 0
     # one planet (OGLE-TR-111 b) has different references for the two masses
@@ -226,6 +230,34 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # XXX: because earth and jup radii use different sources, make them
     # uniform and treat Earth as truth
     dfcon['radj'] = dfcon['rade'] / radratio
+
+    # convert their depth in % to depth in ppm
+    dfcon['tran_depth_ppm'] *= 1e4
+    # we should have transit depths for these
+    getdep = (dfcon['flag_tran'] & (~np.isfinite(dfcon['tran_depth_ppm'])) & 
+              np.isfinite(dfcon['rade']) & np.isfinite(dfcon['st_rad']))
+    
+    tranrat = dfcon['rade']**2 / (dfcon['st_rad'] * 109.1)**2
+    tranrat *= 1e6
+    dfcon.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep]
+    
+    # for some reason these claim to have transits but either no 
+    # stellar or planet radius measurement
+    getdep = (dfcon['flag_tran'] & (~np.isfinite(dfcon['tran_depth_ppm'])) & 
+              np.isfinite(dfcon['rade']) & np.isfinite(dfcon['st_rad']))
+    assert getdep.sum() == 0
+    
+    # K2-22 b
+    getrad = (dfcon['flag_tran'] & np.isfinite(dfcon['tran_depth_ppm']) & 
+              (~np.isfinite(dfcon['rade'])) & np.isfinite(dfcon['st_rad']))
+    assert getrad.sum() == 1    
+    # don't assume radius from depth because it's a disintegrating planet 
+    # where depth doesn't equal true radius    
+
+    # fix these inconsistencies by hand for now
+    baddep = ((dfcon['tran_depth_ppm'] < tranrat/3) | 
+              (dfcon['tran_depth_ppm'] > tranrat*3)) & (dfcon['rade'] < 4)
+    dfcon.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]    
 
     # set whether or not these were observed by Kepler or K2
     if new:
@@ -335,6 +367,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(dfcon['radj']) | (dfcon['radj'] > 0)).all()
     assert (~np.isfinite(dfcon['masse']) | (dfcon['masse'] > 0)).all()
     assert (~np.isfinite(dfcon['massj']) | (dfcon['massj'] > 0)).all()
+    assert (~np.isfinite(dfcon['tran_depth_ppm']) | 
+            (dfcon['tran_depth_ppm'] > 0)).all()
+    assert (~np.isfinite(dfcon['tran_dur_hr']) | 
+            (dfcon['tran_dur_hr'] > 0)).all()
 
     # Jup and Earth radii and masses are either defined or not together
     assert np.allclose(np.isfinite(dfcon['radj']), np.isfinite(dfcon['rade']))
@@ -373,7 +409,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'koi_insol': 'insol', 'koi_sma': 'semi_au',
                'koi_smass': 'st_mass', 'koi_srad': 'st_rad',
                'koi_steff': 'st_teff', 'kepoi_name': 'name', 
-               'koi_kmag': 'Kmag'}
+               'koi_kmag': 'Kmag', 'koi_depth': 'tran_depth_ppm',
+               'koi_duration': 'tran_dur_hr'}
     dfkoi.rename(columns=renames, inplace=True)
 
     # make KOI strings into the format we expect
@@ -694,10 +731,22 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert not (badfit & koicon).any()
     # use depth instead of r/R for radius
     sunearth = 109.1
-    rr = np.sqrt(dfkoi['koi_depth'] / 1e6) * dfkoi['st_rad'] * sunearth
+    rr = np.sqrt(dfkoi['tran_depth_ppm'] / 1e6) * dfkoi['st_rad'] * sunearth
     badfit = badfit & koican & np.isfinite(rr)
     dfkoi.loc[badfit, 'rade'] = rr[badfit]
     dfkoi.loc[badfit, 'radj'] = rr[badfit] / radratio
+    
+    # make sure things that have radii also have depths and vice versa
+    cons = ((~np.isfinite(dfkoi['tran_depth_ppm'])) & 
+            np.isfinite(dfkoi['rade'])).sum()
+    assert cons == 0
+
+    # fix these inconsistencies by hand for now
+    tranrat = dfkoi['rade']**2 / (dfkoi['st_rad'] * 109.1)**2
+    tranrat *= 1e6
+    baddep = ((dfkoi['tran_depth_ppm'] < tranrat/3) | 
+              (dfkoi['tran_depth_ppm'] > tranrat*3)) & (dfkoi['rade'] < 4)
+    dfkoi.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]    
 
     # all KOIs transit
     dfkoi['flag_tran'] = True
@@ -757,6 +806,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
+    assert (~np.isfinite(canonly['tran_depth_ppm']) | 
+            (canonly['tran_depth_ppm'] >= 0)).all()
+    assert (canonly['tran_dur_hr'] > 0).all()
 
     # Jup and Earth radii are either defined or not together
     assert np.allclose(np.isfinite(canonly['radj']),
@@ -786,7 +838,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # put these into our keywords
     renames = {'k2c_disp': 'disposition', 'pl_rade': 'rade',
                'pl_orbper': 'period', 'pl_radj': 'radj', 'st_k2': 'Kmag',
-               'epic_candname': 'name', 'epic_name': 'hostname'}
+               'epic_candname': 'name', 'epic_name': 'hostname',
+               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr'}
     dfk2.rename(columns=renames, inplace=True)
 
     # XXX: fix these with the wrong labels
@@ -826,6 +879,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfk2.loc[dfk2['st_radlim'] != 0, 'st_rad'] = np.nan
     dfk2.loc[dfk2['st_tefflim'] != 0, 'st_teff'] = np.nan
     dfk2.loc[dfk2['pl_ratdorlim'] != 0, 'pl_ratdor'] = np.nan
+    dfcon.loc[dfcon['pl_trandeplim'] != 0, 'tran_depth_ppm'] = np.nan
+    dfcon.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
 
     # K2 tables don't have both columns always filled in
     noearth = (~np.isfinite(dfk2['rade']) & np.isfinite(dfk2['radj']))
@@ -990,6 +1045,36 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
         else:
             raise Exception('Multiple distances for EPIC {ik2}?')
     dfk2['distance_pc'] = k2dists
+    
+    # all K2 candidates transit
+    dfk2['flag_tran'] = True
+    
+    # convert their duration in days to hours
+    dfk2['tran_dur_hr'] *= 24
+    
+    # convert their depth in % to depth in ppm
+    dfk2['tran_depth_ppm'] *= 1e4
+    # we should have transit depths for these
+    getdep = (dfk2['flag_tran'] & (~np.isfinite(dfk2['tran_depth_ppm'])) & 
+              np.isfinite(dfk2['rade']) & np.isfinite(dfk2['st_rad']))
+    
+    tranrat = dfk2['rade']**2 / (dfk2['st_rad'] * 109.1)**2
+    dfk2.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep] * 1e6
+    
+    # we should have a radius if they gave a depth
+    getrad = (dfk2['flag_tran'] & np.isfinite(dfk2['tran_depth_ppm']) & 
+              (~np.isfinite(dfk2['rade'])) & np.isfinite(dfk2['st_rad']))
+    tranrad = np.sqrt((dfk2['tran_depth_ppm']/1e6) * (dfk2['st_rad']**2))
+    tranrad *= 109.1
+    dfk2.loc[getrad, 'rade'] = tranrad[getrad]
+    dfk2.loc[getrad, 'radj'] = tranrad[getrad] / radratio
+    
+    # fix these inconsistencies by hand for now
+    tranrat = dfk2['rade']**2 / (dfk2['st_rad'] * 109.1)**2
+    tranrat *= 1e6
+    baddep = ((dfk2['tran_depth_ppm'] < tranrat/3) | 
+              (dfk2['tran_depth_ppm'] > tranrat*3)) & (dfk2['rade'] < 4)
+    dfk2.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]  
 
     # fill in missing luminosities with our own calculation
     tmplums = (dfk2['st_rad'] ** 2) * ((dfk2['st_teff'] / 5772) ** 4)
@@ -1186,9 +1271,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                     comp.at[index, 'rade'] *= srat
                     comp.at[index, 'radj'] *= srat
 
-    # all K2 candidates transit
-    dfk2['flag_tran'] = True
-
     # no K2 candidate observed by Kepler prime but all by K2
     dfk2['flag_kepler'] = False
     dfk2['flag_k2'] = True
@@ -1208,7 +1290,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # go through the ones we're going to add to the table and fill in any
     # missing values if possible from other entries in the table
     ichk = ['period', 'rade', 'radj', 'st_rad', 'st_teff', 'st_log_lum',
-            'st_mass', 'insol', 'semi_au']
+            'st_mass', 'insol', 'semi_au', 'tran_depth_ppm']
 
     for index, ican in dfk2[k2can].iterrows():
         srch = np.where((dfk2['name'] == ican['name']) &
@@ -1270,6 +1352,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
+    assert (~np.isfinite(canonly['tran_depth_ppm']) | 
+            (canonly['tran_depth_ppm'] > 0)).all()
+    assert (~np.isfinite(canonly['tran_dur_hr']) | 
+            (canonly['tran_dur_hr'] >= 0)).all()
 
     # Jup and Earth radii are either defined or not together
     assert np.allclose(np.isfinite(canonly['radj']),
@@ -1302,8 +1388,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'Stellar Radius (R_Sun)': 'st_rad',
                'Stellar Eff Temp (K)': 'st_teff',
                'Stellar Distance (pc)': 'distance_pc',
-               'Planet Insolation (Earth Flux)': 'insol'
-               }
+               'Planet Insolation (Earth Flux)': 'insol',
+               'Depth (ppm)': 'tran_depth_ppm',
+               'Duration (hours)': 'tran_dur_hr'}
     dftoi.rename(columns=renames, inplace=True)
 
     # set these to strings we'd want to show in a figure
@@ -1550,12 +1637,35 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     iau = (((dftoi['period'] / 365.256)**2) * dftoi['st_mass'])**(1./3.)
     iinsol = (10.**dftoi['st_log_lum']) * (iau**-2)
 
+    # all TESS candidates transit
+    dftoi['flag_tran'] = True
+    
+    # we should have transit depths for these (all TOIs so far have had 
+    # depth listed so this doesn't do anything)
+    getdep = (dftoi['flag_tran'] & (~np.isfinite(dftoi['tran_depth_ppm'])) & 
+              np.isfinite(dftoi['rade']) & np.isfinite(dftoi['st_rad']))
+    assert getdep.sum() == 0
+    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * 109.1)**2
+    dftoi.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep] * 1e6
+    
+    # we should have a radius if they gave a depth
+    getrad = (dftoi['flag_tran'] & np.isfinite(dftoi['tran_depth_ppm']) & 
+              (~np.isfinite(dftoi['rade'])) & np.isfinite(dftoi['st_rad']))
+    tranrad = np.sqrt((dftoi['tran_depth_ppm']/1e6) * (dftoi['st_rad']**2))
+    tranrad *= 109.1
+    dftoi.loc[getrad, 'rade'] = tranrad[getrad]
+    dftoi.loc[getrad, 'radj'] = tranrad[getrad] / radratio
+    
+    # fix these by hand for now
+    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * 109.1)**2
+    tranrat *= 1e6
+    baddep = ((dftoi['tran_depth_ppm'] < tranrat/3) | 
+              (dftoi['tran_depth_ppm'] > tranrat*3)) & (dftoi['rade'] < 4)
+    dftoi.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]  
+    
     igd = np.isfinite(iinsol)
     dftoi['semi_au'] = iau
     dftoi.loc[igd, 'insol'] = iinsol[igd]
-
-    # all TESS candidates transit
-    dftoi['flag_tran'] = True
 
     # these have not been confirmed
     dftoi['year_confirmed'] = np.nan
@@ -1608,6 +1718,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
+    assert (~np.isfinite(canonly['tran_depth_ppm']) | 
+            (canonly['tran_depth_ppm'] > 0)).all()
+    assert (canonly['tran_dur_hr'] > 0).all()
 
     # Jup and Earth radii are either defined or not together
     assert np.allclose(np.isfinite(canonly['radj']),
@@ -1675,11 +1788,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                                        2.85) / 0.881)
 
     # save our final version of the data frame to use in making all the plots
-    comp.to_csv('data/exoplots_data.csv')
+    comp.to_csv('data/exoplots_data.csv', index=False)
 
     # XXX: check that the planet is smaller than the star in all cases
 
-    return dfcon, dfkoi, dfk2, dftoi, comp
+    # return dfcon, dfkoi, dfk2, dftoi, comp
 
 
 def log_axis_labels(min_tick=-2.001, max_tick=3.):
