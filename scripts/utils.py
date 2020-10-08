@@ -1557,11 +1557,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-700.02', 'TOI-700.03', 'TOI-704.01', 'TOI-732.01',
                 'TOI-732.02', 'TOI-736.01', 'TOI-736.02', 'TOI-1078.01',
                 'TOI-1339.01', 'TOI-1339.02', 'TOI-1462.01', 'TOI-1728.01',
-                'TOI-1690.01', 'TOI-193.01', 'TOI-824.01']
+                'TOI-1690.01', 'TOI-193.01', 'TOI-824.01', 'TOI-1339.03']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = ['TOI-1339.03', 'TOI-1847.01']
-    confmatch = ['HD 191939 d', 'NGTS-11 b']
+    nopermatch = ['TOI-1847.01']
+    confmatch = ['NGTS-11 b']
     singconf = np.zeros(len(nopermatch), dtype=bool)
 
     # any candidates in the confirmed table get set as such
