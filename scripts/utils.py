@@ -351,15 +351,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(dfcon['Kmag']) | (dfcon['Kmag'] > -5)).all()
 
     # RA and Dec are both valid
-    # until these are fixed
-    badra = ~np.isfinite(dfcon['ra'])
-    baddec = ~np.isfinite(dfcon['dec'])
-    if new:
-        assert (badra.sum() == 2 and baddec.sum() == 2 and
-                np.allclose(badra, baddec))
-    assert ((dfcon['ra'][~badra] >= 0) & (dfcon['ra'][~badra] <= 360.)).all()
-    assert ((dfcon['dec'][~baddec] >= -90) &
-            (dfcon['dec'][~baddec] <= 90.)).all()
+    assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
+    assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
 
     # planet parameters are either NaN or > 0
     assert (~np.isfinite(dfcon['period']) | (dfcon['period'] > 0)).all()
@@ -1557,7 +1550,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-700.02', 'TOI-700.03', 'TOI-704.01', 'TOI-732.01',
                 'TOI-732.02', 'TOI-736.01', 'TOI-736.02', 'TOI-1078.01',
                 'TOI-1339.01', 'TOI-1339.02', 'TOI-1462.01', 'TOI-1728.01',
-                'TOI-1690.01', 'TOI-193.01', 'TOI-824.01', 'TOI-1339.03']
+                'TOI-1690.01', 'TOI-193.01', 'TOI-824.01', 'TOI-1339.03',
+                'TOI-421.01', 'TOI-540.01', 'TOI-1266.01', 'TOI-1266.02']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = ['TOI-1847.01']
