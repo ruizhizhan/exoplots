@@ -8,7 +8,8 @@ reset_order = False
 dfpl = pd.read_csv('data/exoplots_data.csv')
 
 # teq = (incident flux)**0.25 * 255
-dfpl['t_eq'] = dfpl['insol']**0.25 * 255
+# earth eq temp at 0 albedo is 278.3 K
+dfpl['t_eq'] = dfpl['insol']**0.25 * 278.3
 
 planck = 6.6261e-34
 cc = 2.9979e8
