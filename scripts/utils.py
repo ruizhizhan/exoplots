@@ -874,8 +874,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfk2.loc[dfk2['st_radlim'] != 0, 'st_rad'] = np.nan
     dfk2.loc[dfk2['st_tefflim'] != 0, 'st_teff'] = np.nan
     dfk2.loc[dfk2['pl_ratdorlim'] != 0, 'pl_ratdor'] = np.nan
-    dfcon.loc[dfcon['pl_trandeplim'] != 0, 'tran_depth_ppm'] = np.nan
-    dfcon.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
+    dfk2.loc[dfcon['pl_trandeplim'] != 0, 'tran_depth_ppm'] = np.nan
+    dfk2.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
+    dfk2.loc[dfcon['pl_ratrorlim'] != 0, 'pl_ratror'] = np.nan
 
     # K2 tables don't have both columns always filled in
     noearth = (~np.isfinite(dfk2['rade']) & np.isfinite(dfk2['radj']))

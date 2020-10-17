@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+# if we want to redo the order column to sort by ESM
+reset_order = False
 
 # load the data
 dfpl = pd.read_csv('data/exoplots_data.csv')
@@ -23,13 +25,36 @@ toprint = (dfpl['esm'] > 1) & (dfpl['rade'] < 2)
 
 subset = dfpl[toprint]
 
-toprint = ['name', 'period', 'rade', 
-            'tran_depth_ppm', 'tran_dur_hr', 'semi_au',
-            'insol', 't_eq', 'Kmag', '7.5dep', 'esm',
-            'st_mass', 'st_rad', 'st_teff',
-            'st_log_lum', 'masse', 'masse_est', 'disposition']
+toprintcol = ['name', 'order', 'period', 'rade', 'tran_depth_ppm',
+              'tran_dur_hr', 'masse', 'masse_est', 'semi_au', 'st_mass',
+              'st_rad', 'st_teff', 'st_log_lum', 'Kmag', 'insol', 't_eq',
+              '7.5dep', 'esm', 'disposition']
 
-subset.sort_values('esm', ascending=False, inplace=True)
-subset.to_csv('data/rpe.txt', index=False, columns=toprint, 
+old = pd.read_csv('data/rpe.txt')
+nextind = old['order'].max() + 1
+
+dfpl['order'] = -1
+
+for ind, row in subset.iterrows():
+    srch = old['name'] == row['name']
+    assert srch.sum() <= 1
+    if srch.sum() == 1:
+        dfpl.at[ind, 'order'] = old.loc[srch, 'order'].values[0]
+    else:
+        dfpl.at[ind, 'order'] = nextind
+        nextind += 1
+
+subset = dfpl[toprint]
+
+assert subset['order'].min() == 0
+assert np.unique(subset['order']).size == subset['order'].size
+
+# reset the order flag
+if reset_order:
+    subset.sort_values('esm', ascending=False, inplace=True)
+    subset['order'] = np.arange(len(subset))
+
+subset.sort_values('order', ascending=True, inplace=True)
+subset.to_csv('data/rpe.txt', index=False, columns=toprintcol,
               float_format='%.5f')
 
