@@ -21,12 +21,6 @@ def get_update_time():
     return datetime.datetime.strptime(lines[0], '%Y-%m-%d %H:%M:%S.%f')
 
 
-# updated_koi_params=True
-# updated_k2_params=True
-# new=True
-# if True:
-
-
 def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
@@ -111,17 +105,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     #########################
     # CONFIRMED PLANET PREP #
     #########################
-
-    # XXX: until this gets fixed, these planet names are switched
-    assert np.unique(dfcon['pl_name']).size == dfcon['pl_name'].size
-    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 b'].values[0] > 5.
-    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 c'].values[0] < 3.
-    dfcon.loc[dfcon['pl_name'] == 'K2-35 b', 'pl_name'] = 'foo'
-    dfcon.loc[dfcon['pl_name'] == 'K2-35 c', 'pl_name'] = 'K2-35 b'
-    dfcon.loc[dfcon['pl_name'] == 'foo', 'pl_name'] = 'K2-35 c'
-    assert np.unique(dfcon['pl_name']).size == dfcon['pl_name'].size
-    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 c'].values[0] > 5.
-    assert dfcon['pl_orbper'][dfcon['pl_name'] == 'K2-35 b'].values[0] < 3.
 
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
@@ -836,36 +819,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'epic_candname': 'name', 'epic_name': 'hostname',
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr'}
     dfk2.rename(columns=renames, inplace=True)
-
-    # XXX: fix these with the wrong labels
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') &
-                        (dfk2['period'] < 5)]) == 1
-    dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5),
-             'k2c_recentflag'] = 0
-    dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5),
-             'name'] = 'EPIC 201713348.02'
-    dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') & (dfk2['period'] < 5),
-             'pl_name'] = 'K2-36 b'
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-36 c') &
-                        (dfk2['period'] < 5)]) == 0
-
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 b') &
-                        (dfk2['period'] > 5)]) == 1
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 c') &
-                        (dfk2['period'] > 8)]) == 1
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 d') &
-                        (dfk2['period'] < 9)]) == 1
-    dfk2.loc[dfk2['pl_name'] == 'K2-148 d', 'pl_name'] = 'foo'
-    dfk2.loc[dfk2['pl_name'] == 'K2-148 c', 'pl_name'] = 'K2-148 d'
-    dfk2.loc[dfk2['pl_name'] == 'K2-148 b', 'pl_name'] = 'K2-148 c'
-    dfk2.loc[dfk2['pl_name'] == 'foo', 'pl_name'] = 'K2-148 b'
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 b') &
-                        (dfk2['period'] < 5)]) == 1
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 c') &
-                        (dfk2['period'] < 8)]) == 1
-    assert len(dfk2.loc[(dfk2['pl_name'] == 'K2-148 d') &
-                        (dfk2['period'] > 9)]) == 1
-
+    
     # upper/lower limits are given values at that limit and we need to remove
     # them for now
     dfk2.loc[dfk2['pl_orbperlim'] != 0, 'period'] = np.nan
@@ -1553,7 +1507,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-732.02', 'TOI-736.01', 'TOI-736.02', 'TOI-1078.01',
                 'TOI-1339.01', 'TOI-1339.02', 'TOI-1462.01', 'TOI-1728.01',
                 'TOI-1690.01', 'TOI-193.01', 'TOI-824.01', 'TOI-1339.03',
-                'TOI-421.01', 'TOI-540.01', 'TOI-1266.01', 'TOI-1266.02']
+                'TOI-421.01', 'TOI-540.01', 'TOI-1266.01', 'TOI-1266.02',
+                'TOI-488.01', 'TOI-837.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = ['TOI-1847.01']
