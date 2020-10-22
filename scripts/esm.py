@@ -58,4 +58,3 @@ if reset_order:
 subset.sort_values('order', ascending=True, inplace=True)
 subset.to_csv('data/rpe.txt', index=False, columns=toprintcol,
               float_format='%.5f')
-
