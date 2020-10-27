@@ -11,7 +11,7 @@ from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
 from utils import csv_creation, get_update_time, log_axis_labels
-from utils import deselect, reset
+from utils import deselect, get_equilibrium_temperature, get_esm, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -47,34 +47,22 @@ TOOLTIPS = [
     ("Status", "@status")
 ]
 
-# Stefan-Boltzman constant
-# (solar luminosity / AU^2 / K^4)
-sigma = 3.29800E-12
 # calculate the values we want
 albedo = 0.3
-# 4 = equal heat everywhere, 2 = only day side reradiates
-redist = 2
+# fraction of planet radiating (1 for fast spin, 0.5 tidally locked)
+redist = 0.5
 rediststr = 'No Night-side Redistribution'
 
-teq = ((10.**dfpl['st_log_lum']) * (1. - albedo) /
-       (redist * 4 * np.pi * sigma * (dfpl['semi_au']**2)))**0.25
-dfpl['teq'] = teq
-
-planck = 6.6261e-34
-cc = 2.9979e8
-boltz = 1.38065e-23
+dfpl['teq'] = get_equilibrium_temperature(dfpl, albedo=albedo,
+                                          radiative_fraction=redist)
 
 esmscale = 3.44
 
 refwavs = [7.5, 15]
 for refwav in refwavs:
-    exp1 = np.exp((planck * cc)/(refwav * 0.000001 * boltz *
-                                 dfpl['st_teff'])) - 1
-    exp2 = np.exp((planck * cc)/(refwav * 0.000001 * boltz * 1.1 *
-                                 dfpl['teq'])) - 1
-    dfpl['dep'+str(refwav)] = dfpl['tran_depth_ppm'] * exp1 / exp2
-    dfpl['esm'+str(refwav)] = (esmscale * dfpl['dep'+str(refwav)] *
-                               (10.**(-0.2 * dfpl['Kmag'])))
+    dfpl['esm'+str(refwav)] = get_esm(dfpl, wavelength_micron=refwav,
+                                      scale=esmscale, albedo=albedo,
+                                      radiative_fraction=redist)
 
 for ifig in np.arange(len(refwavs)):
 
@@ -144,7 +132,7 @@ for ifig in np.arange(len(refwavs)):
                 else:
                     # candidates get these values
                     alpha = 0.4
-                    size = 5
+                    size = 6
                     # make the yellow darker
                     if fac == 'TESS':
                         alpha = 0.6

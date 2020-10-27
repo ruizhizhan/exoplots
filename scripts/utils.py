@@ -21,6 +21,87 @@ def get_update_time():
     return datetime.datetime.strptime(lines[0], '%Y-%m-%d %H:%M:%S.%f')
 
 
+def get_equilibrium_temperature(df, albedo: float = 0.3,
+                                radiative_fraction: float = 1):
+    """
+    Calculate the equilibrium temperature of a planet given the star's
+    luminosity and the planet's distance away. Takes into account the planet's
+    albedo and the fraction of the planet assumed to be heated and radiating
+    at the equilibrium temperature.
+
+    Parameters
+    ----------
+    df : pandas dataframe
+        Dataframe assumed to have columns of 'st_log_lum' and 'semi_au' that
+        contain a star's log10 solar luminosity and the planet's semi-major
+        axis in AU respectively. These are the only parameters needed to get
+        an equilibrium temperature
+    albedo : float, optional
+        What fraction of a star's incoming light the planet reflects.
+    radiative_fraction : float, optional
+        What fraction of a planet is heated by the star and radiates at the
+        returned equilibrium temperature. Full heat redistribution (entire
+        planet is at the same temperature) has a fraction of 1; a tidally
+        locked world where only half the planet is heated would be 0.5. The
+        cold side is assumed to be negligible (temperature of 0 K).
+
+    Returns
+    -------
+    astropy Quantity array
+    """
+    from astropy import constants as const
+    import numpy as np
+
+    if albedo < 0 or albedo > 1:
+        raise Exception('Invalid albedo. Must be between 0 and 1.')
+    if radiative_fraction < 0 or radiative_fraction > 1:
+        raise Exception('Invalid radiative fraction. Must be between 0 and 1.')
+    num = (10.**df['st_log_lum'].values) * const.L_sun * (1. - albedo)
+    semisq = (df['semi_au'].values * const.au)**2
+    denom = radiative_fraction * 16 * np.pi * const.sigma_sb * semisq
+    return (num / denom)**0.25
+
+
+def get_esm(df, wavelength_micron: float = 7.5, scale: float = 4.29, **kwargs):
+    """
+    Calculate the Emission Spectroscopy Metric for planets. The reference
+    wavelength, overall scaling, and parameters for calculating the equilibrium
+    temperature can all be changed.
+
+    Parameters
+    ----------
+    df : pandas dataframe
+        Dataframe assumed to have columns needed to calculate equilibrium
+        temperature and ESM, namely: 'st_log_lum', 'semi_au', 'st_teff',
+        'tran_depth_ppm', and 'Kmag' that respectively contain a star's log10
+        solar luminosity, the planet's semi-major axis in AU, stellar effective
+        temperature, the planet's transit depth in ppm, and the star's K band
+        magnitude.
+    wavelength_micron : float, optional
+        The wavelength to calculate the ESM at, in microns.
+    scale : float, optional
+        The overall ESM scaling, defaulting to the 4.29 used in
+        Kempton et al., 2018.
+    kwargs
+        Any other parameters are passed to get_equilibrium_temperature.
+
+    Returns
+    -------
+    astropy Quantity array
+    """
+    from astropy import constants as const
+    from astropy import units as uu
+    import numpy as np
+
+    teq = get_equilibrium_temperature(df, **kwargs)
+    exp1 = np.exp((const.h * const.c)/(wavelength_micron * uu.um * const.k_B *
+                                       df['st_teff'].values * uu.K)) - 1
+    exp2 = np.exp((const.h * const.c)/(wavelength_micron * uu.um * const.k_B *
+                                       1.1 * teq)) - 1
+    ecldep = df['tran_depth_ppm'].values * exp1 / exp2
+    return scale * ecldep * (10.**(-0.2 * df['Kmag'].values))
+
+
 def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
@@ -99,8 +180,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             'masse', 'massj', 'tran_depth_ppm', 'tran_dur_hr', 'semi_au',
             'insol', 'distance_pc', 'year_discovered', 'year_confirmed',
             'discoverymethod', 'facility', 'st_mass', 'st_rad', 'st_teff',
-            'st_log_lum', 'Kmag', 'ra', 'dec', 'flag_tran', 'flag_kepler',
-            'flag_k2', 'url']
+            'st_log_lum', 'Jmag', 'Kmag', 'ra', 'dec', 'flag_tran',
+            'flag_kepler', 'flag_k2', 'url']
 
     #########################
     # CONFIRMED PLANET PREP #
@@ -152,7 +233,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
                'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
                'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
-               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag',
+               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag', 'sy_jmag': 'Jmag',
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr'}
     dfcon.rename(columns=renames, inplace=True)
 
@@ -332,6 +413,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(dfcon['st_log_lum']) |
             ((dfcon['st_log_lum'] > -8) & (dfcon['st_log_lum'] < 5))).all()
     assert (~np.isfinite(dfcon['Kmag']) | (dfcon['Kmag'] > -5)).all()
+    assert (~np.isfinite(dfcon['Jmag']) | (dfcon['Jmag'] > -5)).all()
 
     # RA and Dec are both valid
     assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
@@ -388,7 +470,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'koi_smass': 'st_mass', 'koi_srad': 'st_rad',
                'koi_steff': 'st_teff', 'kepoi_name': 'name',
                'koi_kmag': 'Kmag', 'koi_depth': 'tran_depth_ppm',
-               'koi_duration': 'tran_dur_hr'}
+               'koi_duration': 'tran_dur_hr', 'koi_jmag': 'Jmag'}
     dfkoi.rename(columns=renames, inplace=True)
 
     # make KOI strings into the format we expect
@@ -771,6 +853,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['st_log_lum']) |
             ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 5))).all()
     assert (~np.isfinite(canonly['Kmag']) | (canonly['Kmag'] > 0)).all()
+    assert (~np.isfinite(canonly['Jmag']) | (canonly['Jmag'] > 0)).all()
 
     # RA and Dec are both valid
     assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
@@ -817,9 +900,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     renames = {'k2c_disp': 'disposition', 'pl_rade': 'rade',
                'pl_orbper': 'period', 'pl_radj': 'radj', 'st_k2': 'Kmag',
                'epic_candname': 'name', 'epic_name': 'hostname',
-               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr'}
+               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
+               'st_j2': 'Jmag'}
     dfk2.rename(columns=renames, inplace=True)
-    
+
     # upper/lower limits are given values at that limit and we need to remove
     # them for now
     dfk2.loc[dfk2['pl_orbperlim'] != 0, 'period'] = np.nan
@@ -1289,6 +1373,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['st_log_lum']) |
             ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 7))).all()
     assert (~np.isfinite(canonly['Kmag']) | (canonly['Kmag'] > 4)).all()
+    assert (~np.isfinite(canonly['Jmag']) | (canonly['Jmag'] > 4)).all()
 
     # RA and Dec are both valid
     assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
@@ -1566,6 +1651,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # replace everything with new TIC parameters because apparently some TOIs
     # were using TIC v7 and things aren't self-consistent
     dftoi['Kmag'] = np.nan
+    dftoi['Jmag'] = np.nan
     for index, itoi in dftoi.iterrows():
         mt = np.where(itoi['IC'] == fulltic['ID'])[0][0]
         if np.isfinite(fulltic['Teff'][mt]):
@@ -1580,6 +1666,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             dftoi.at[index, 'rade'] *= fulltic['rad'][mt]/prev
             dftoi.at[index, 'radj'] *= fulltic['rad'][mt]/prev
         dftoi.at[index, 'Kmag'] = fulltic['Kmag'][mt]
+        dftoi.at[index, 'Jmag'] = fulltic['Jmag'][mt]
 
     # fill in missing luminosities with our own calculation
     tmplums = (dftoi['st_rad'] ** 2) * ((dftoi['st_teff'] / 5772) ** 4)
@@ -1658,6 +1745,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(canonly['st_log_lum']) |
             ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 7))).all()
     assert (~np.isfinite(canonly['Kmag']) | (canonly['Kmag'] > 0)).all()
+    assert (~np.isfinite(canonly['Jmag']) | (canonly['Jmag'] > 0)).all()
 
     # RA and Dec are both valid
     assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
