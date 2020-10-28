@@ -63,9 +63,11 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
         if imet == 'esm':
             ikey = imet + str(refwavs[ifig])
             ttstr = 'ESM'
+            imag = 'Kmag'
         else:
             ttstr = 'TSM'
             ikey = imet
+            imag = 'Jmag'
 
         # what to display when hovering over a data point
         TOOLTIPS = [
@@ -79,6 +81,7 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             ("Measured Mass", "@mass{0,0[.][00]} Earth"),
             ("Estimated Mass", "@massest{0,0[.][00]} Earth"),
             ("Discovered by", "@discovery"),
+            (imag, '@mag{0[.][00]}'),
             ("Status", "@status")
         ]
 
@@ -164,7 +167,8 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                         teq=dfpl['teq'][good],
                         met=dfpl[ikey][good],
                         mass=dfpl['masse'][good],
-                        massest=dfpl['masse_est'][good]
+                        massest=dfpl['masse_est'][good],
+                        mag=dfpl[imag][good]
                         ))
                 print(istat, ': ', good.sum())
 
@@ -342,9 +346,10 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             # output CSV files
             csvhead = '# Planet Name, Status, Period (days), Radius (Earths), ' \
                       'Radius (Jupiters), Insolation (Earths), Discovered by, ' \
-                      f'T_eq (K), {imet.upper()}, Meas. Mass, Mass Est'
+                      f'T_eq (K), {imet.upper()}, Meas. Mass, Mass Est, {imag}'
             keys = ['planet', 'status', 'period', 'radius', 'jupradius',
-                    'insolation', 'discovery', 'teq', 'met', 'mass', 'massest']
+                    'insolation', 'discovery', 'teq', 'met', 'mass', 'massest',
+                    'mag']
             button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
                                                   header=csvhead),
                                         code=csv_creation))
