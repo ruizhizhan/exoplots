@@ -102,6 +102,46 @@ def get_esm(df, wavelength_micron: float = 7.5, scale: float = 4.29, **kwargs):
     return scale * ecldep * (10.**(-0.2 * df['Kmag'].values))
 
 
+def get_tsm(df, scale: float = 0.19, **kwargs):
+    """
+    Calculate the Transmission Spectroscopy Metric for planets. The 
+    overall S/N scaling value and parameters for calculating the equilibrium
+    temperature can all be changed.
+
+    Parameters
+    ----------
+    df : pandas dataframe
+        Dataframe assumed to have columns needed to calculate equilibrium
+        temperature and TSM, namely: 'st_log_lum', 'semi_au', 'rade',
+        'masse', 'masse_est', 'st_rad', and 'Jmag' that respectively contain 
+        a star's log10 solar luminosity, the planet's semi-major axis in AU, 
+        the planet's radius, the planet's measured mass, an estimate of
+        the planet's mass from M-R relations when measured mass is unavailable,
+        the star's radius, and the star's J band magnitude.
+    scale : float, optional
+        The overall TSM scaling, defaulting to the 0.19 used in
+        Kempton et al., 2018 for terrestrial planets.
+    kwargs
+        Any other parameters are passed to get_equilibrium_temperature.
+
+    Returns
+    -------
+    ndarray
+    """
+    import numpy as np
+    teq = get_equilibrium_temperature(df, **kwargs)
+
+    num = scale * (df['rade']**3) * teq * (10.**(-0.2*df['Jmag']))
+    
+    combmass = df['masse_est'].values * 1
+    isreal = np.isfinite(df['masse'])
+    combmass[isreal] = df.loc[isreal, 'masse']
+    
+    denom = combmass * (df['st_rad']**2)
+    
+    return num / denom
+
+
 def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
