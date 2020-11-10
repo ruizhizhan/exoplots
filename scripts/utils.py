@@ -1562,16 +1562,16 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # these ones we have an explanation for and know they're properly in the
     # confirmed table.
-    # 186, 1793, 1899, 2011, 2221 are single transits, so no period
+    # 1793, 1899, 2011, 2221 are single transits, so no period
     # matching
     # 1338 is the CBP, so not sure where its wrong TOI period came from
     # 1456 was a single obvious transit and the second hidden in scattered
     # light causing SPOC to miss it and get the period wrong
     # 351 TESS got the period wrong by 2x
-    ignores = ['TOI-186.01', 'TOI-1338.01', 'TOI-1456.01',
+    ignores = ['TOI-1338.01', 'TOI-1456.01',
                'TOI-1793.01', 'TOI-1899.01', 'TOI-2011.01', 'TOI-2221.01',
                'TOI-351.01']
-    conname = ['GJ 143 b', 'TOI-1338 b', 'HD 332231 b', 'HD 95338 b',
+    conname = ['TOI-1338 b', 'HD 332231 b', 'HD 95338 b',
                'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 'WASP-165 b']
     # we know what these are and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
