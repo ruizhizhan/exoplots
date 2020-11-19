@@ -1300,7 +1300,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             iname = icon['name'][:-1]
             # easy case where the planet name is EPIC #### b
             if iname[:4] == 'EPIC':
-                isepic = int(iname[4:])
+                # sometimes now it's XX.02 which fails to go straight from 
+                # string to int
+                isepic = int(float(iname[4:]))
             else:
                 # get the host name of all similar planets
                 isin = comp['name'].str.contains(iname, regex=False)
@@ -1635,7 +1637,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-1339.01', 'TOI-1339.02', 'TOI-1462.01', 'TOI-1728.01',
                 'TOI-1690.01', 'TOI-193.01', 'TOI-824.01', 'TOI-1339.03',
                 'TOI-421.01', 'TOI-540.01', 'TOI-1266.01', 'TOI-1266.02',
-                'TOI-488.01', 'TOI-837.01']
+                'TOI-488.01', 'TOI-837.01', 'TOI-954.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = ['TOI-1847.01']

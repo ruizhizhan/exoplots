@@ -13,13 +13,13 @@ from utils import load_data
 run = False
 
 if run:
-    dfcon, dfkoi, dfk2, dftoi = load_data(updated_koi_params=False,
-                                          updated_k2_params=False)
+    _, dfkoi, dfk2, _, _ = load_data(updated_koi_params=False,
+                                     updated_k2_params=False)
 
     gkep = fits.open('data/kepler_dr2_1arcsec.fits')
 
     dists = []
-    ukics = np.unique(dfkoi['kepid'])
+    ukics = np.unique(dfkoi['IC'])
     
     # these are KICs of confirmed planets in the Kepler field but not KOIs
     fillkics = [5446285, 8435766, 12644769, 8572936, 9837578, 6762829, 10020423,
@@ -78,7 +78,7 @@ if run:
 
     gk2 = fits.open('data/k2_dr2_1arcsec.fits')
     k2dists = []
-    uepics = np.unique(dfk2['epic'])
+    uepics = np.unique(dfk2['IC'])
     
     # these are EPICs of confirmed planets in the K2 fields but not K2 cands
     fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
@@ -102,7 +102,8 @@ if run:
                  246074965, 246472939]
     
     # these are confirmed only planets with planet names EPIC ##### b
-    moreepics = [249893012, 248847494, 246851721]
+    moreepics = [249893012, 248847494, 246851721, 201170410, 201757695, 
+                 246193072]
     
     uepics = np.unique(np.concatenate((uepics, fillepics, moreepics)))
 
