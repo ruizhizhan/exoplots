@@ -1628,6 +1628,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # any candidates that appear in the confirmed table need to be upgraded
 
+    # XXX: 2410.01 is a K2 candidate. how to handle that?
+    
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-125.03', 'TOI-129.01', 'TOI-132.01', 'TOI-134.01',
                 'TOI-150.01', 'TOI-157.01', 'TOI-169.01', 'TOI-186.02',
@@ -1637,7 +1639,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-1339.01', 'TOI-1339.02', 'TOI-1462.01', 'TOI-1728.01',
                 'TOI-1690.01', 'TOI-193.01', 'TOI-824.01', 'TOI-1339.03',
                 'TOI-421.01', 'TOI-540.01', 'TOI-1266.01', 'TOI-1266.02',
-                'TOI-488.01', 'TOI-837.01', 'TOI-954.01']
+                'TOI-488.01', 'TOI-837.01', 'TOI-954.01', 'TOI-2403.01', 
+                'TOI-2410.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = ['TOI-1847.01']
