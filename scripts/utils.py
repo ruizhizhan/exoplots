@@ -1572,9 +1572,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # 351 TESS got the period wrong by 2x
     ignores = ['TOI-1338.01', 'TOI-1456.01',
                'TOI-1793.01', 'TOI-1899.01', 'TOI-2011.01', 'TOI-2221.01',
-               'TOI-351.01']
+               'TOI-351.01', 'TOI-1847.01']
     conname = ['TOI-1338 b', 'HD 332231 b', 'HD 95338 b',
-               'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 'WASP-165 b']
+               'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 'WASP-165 b', 
+               'NGTS-11 b']
     # we know what these are and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # only TOI-1918/481/892 I can't figure out what it is yet
@@ -1584,7 +1585,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-1071.01', 'TOI-1493.01', 'TOI-1494.01', 'TOI-1580.01',
                'TOI-1603.01', 'TOI-1826.01',
                'TOI-1918.01', 'TOI-481.01', 'TOI-892.01',
-               'TOI-2179.01', 'TOI-2330.01']
+               'TOI-2179.01', 'TOI-2330.01', 'TOI-201.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1643,8 +1644,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-2410.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = ['TOI-1847.01']
-    confmatch = ['NGTS-11 b']
+    nopermatch = []
+    confmatch = []
     singconf = np.zeros(len(nopermatch), dtype=bool)
 
     # any candidates in the confirmed table get set as such
