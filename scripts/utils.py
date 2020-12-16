@@ -202,7 +202,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                         'pl_orbtperstr': 'string', 'pl_occdepstr': 'string',
                         'pl_projobliqstr': 'string', 'sy_icmagstr': 'string',
                         'pl_trueobliqstr': 'string', 'pl_msinijstr': 'string',
-                        'pl_msiniestr': 'string'}
+                        'pl_msiniestr': 'string', 
+                        'pl_occdep_reflink': 'string'}
         dfcon = pd.read_csv(datafile, dtype=ignore_warns)
     else:
         dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string',
@@ -235,6 +236,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     else:
         dfcon['facility'] = dfcon['pl_facility']
         dfcon['facility'].replace(full, 'TESS', inplace=True)
+        
+    dfcon['pl_bmasse_reflink'].replace(np.nan, '', inplace=True)
+    dfcon['pl_bmassj_reflink'].replace(np.nan, '', inplace=True)
+    dfcon['pl_rade_reflink'].replace(np.nan, '', inplace=True)
+    dfcon['pl_radj_reflink'].replace(np.nan, '', inplace=True)
 
     # set all of these planets as confirmed
     dfcon['disposition'] = 'Confirmed'
@@ -297,8 +303,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     ct = 0
     # one planet (OGLE-TR-111 b) has different references for the two masses
     for ii in np.arange(dfcon['masse'].size):
-        if (dfcon.at[ii, 'pl_bmasse_reflink'] !=
-                dfcon.at[ii, 'pl_bmassj_reflink']):
+        r1 = dfcon.at[ii, 'pl_bmasse_reflink']
+        r2 = dfcon.at[ii, 'pl_bmassj_reflink']
+        if r1 != r2:
             ct += 1
     assert ct == 1
 
@@ -1636,8 +1643,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-125.03', 'TOI-129.01', 'TOI-132.01', 'TOI-134.01',
                 'TOI-150.01', 'TOI-157.01', 'TOI-169.01', 'TOI-186.02',
-                'TOI-294.01', 'TOI-448.01', 'TOI-652.01', 'TOI-700.01',
-                'TOI-700.02', 'TOI-700.03', 'TOI-704.01', 'TOI-732.01',
+                'TOI-294.01', 'TOI-448.01', 'TOI-652.01', 
+                'TOI-704.01', 'TOI-732.01',
                 'TOI-732.02', 'TOI-736.01', 'TOI-736.02', 'TOI-1078.01',
                 'TOI-1339.01', 'TOI-1339.02', 'TOI-1462.01', 'TOI-1728.01',
                 'TOI-1690.01', 'TOI-193.01', 'TOI-824.01', 'TOI-1339.03',
