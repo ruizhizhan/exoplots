@@ -1649,8 +1649,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     tobeconf = ['TOI-732.02', 'TOI-2410.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = []
-    confmatch = []
+    nopermatch = ['TOI-2425.01']
+    confmatch = ['EPIC 220192485.01']
     singconf = np.zeros(len(nopermatch), dtype=bool)
 
     # any candidates in the confirmed table get set as such
