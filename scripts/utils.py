@@ -1599,7 +1599,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01', 'TOI-561.01',
                'TOI-561.02', 'TOI-682.01', 'TOI-836.01', 'TOI-1054.01',
                'TOI-1203.01', 'TOI-1230.01', 'TOI-1233.01', 'TOI-1239.01',
-               'TOI-1774.01']
+               'TOI-1774.01', 'TOI-564.01', 'TOI-905.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1643,14 +1643,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # any candidates that appear in the confirmed table need to be upgraded
 
-    # XXX: 2410.01 is a K2 candidate. how to handle that?
+    # XXX: 2410.01, 2425.01 is a K2 candidate. how to handle that?
     
     # these are now confirmed and need to be updated as such
-    tobeconf = ['TOI-732.02', 'TOI-2410.01']
+    tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = ['TOI-2425.01']
-    confmatch = ['EPIC 220192485.01']
+    nopermatch = []
+    confmatch = []
     singconf = np.zeros(len(nopermatch), dtype=bool)
 
     # any candidates in the confirmed table get set as such
