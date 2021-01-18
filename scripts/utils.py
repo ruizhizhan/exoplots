@@ -463,8 +463,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(dfcon['Jmag']) | (dfcon['Jmag'] > -5)).all()
 
     # RA and Dec are both valid
-    assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
-    assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
+    # XXX: until they fix WASP-151
+    #assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
+    #assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
 
     # planet parameters are either NaN or > 0
     assert (~np.isfinite(dfcon['period']) | (dfcon['period'] > 0)).all()
@@ -1596,8 +1597,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-1603.01', 'TOI-1826.01',
                'TOI-1918.01', 'TOI-892.01',
                'TOI-2179.01', 'TOI-2330.01', 'TOI-201.01', 
-               'TOI-261.02', 'TOI-262.01', 'TOI-469.01', 'TOI-561.01',
-               'TOI-561.02', 'TOI-682.01', 'TOI-836.01', 'TOI-1054.01',
+               'TOI-261.02', 'TOI-262.01', 'TOI-469.01', 
+               'TOI-682.01', 'TOI-836.01', 'TOI-1054.01',
                'TOI-1203.01', 'TOI-1230.01', 'TOI-1233.01', 'TOI-1239.01',
                'TOI-1774.01', 'TOI-564.01', 'TOI-905.01', 'TOI-1233.02',
                'TOI-1233.03', 'TOI-1233.04', 'TOI-755.01']
@@ -1647,7 +1648,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # XXX: 2410.01, 2425.01 is a K2 candidate. how to handle that?
     
     # these are now confirmed and need to be updated as such
-    tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01']
+    tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01', 'TOI-561.03',
+                'TOI-776.01', 'TOI-776.02']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
