@@ -992,6 +992,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfk2['url'] = ('https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' +
                    dfk2['hostname'].str.slice(5))
 
+    """
+    XXX: they deleted this candidate from the K2 table?
     # until this is fixed (the Kruse and Heller .03 are different planets)
     srch = np.where(dfk2['name'] == 'EPIC 201497682.03')[0]
     assert len(srch) == 1
@@ -1006,6 +1008,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     srch = srch[0]
     assert dfk2.at[srch, 'disposition'] == 'Candidate'
     assert ~np.isfinite(dfk2.at[srch, 'pl_name'])
+    """
 
     # add in a column for the publication year of the K2 candidates
     yrs = []
@@ -1279,7 +1282,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                    'V1298 Tau d', 'V1298 Tau e', 'WASP-151 b', 'WASP-28 b',
                    'Wolf 503 b', 'K2-315 b', 'K2-316 b', 'K2-316 c', 'K2-317 b',
                    'K2-318 b', 'K2-319 b', 'K2-320 b', 'K2-321 b', 'K2-322 b',
-                   'K2-323 b', 'K2-324 b', 'K2-325 b', 'K2-326 b']
+                   'K2-323 b', 'K2-324 b', 'K2-325 b', 'K2-326 b', 'K2-329 b']
         fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
                      60021410, 211311380, 211311380, 211311380, 211311380,
                      211311380, 247887989, 247887989, 247887989, 247887989,
@@ -1298,7 +1301,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                      246441449, 60017806, 212779563, 249631677,
                      249384674, 249384674, 249557502, 249826231, 201663879,
                      201796690, 248480671, 248558190, 248616368, 248639308,
-                     246074965, 246472939]
+                     246074965, 246472939, 246193072]
 
         # for K2 planets only on the confirmed list, try to find their EPIC
         # from other KOIs in the system
@@ -1598,10 +1601,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-2179.01', 'TOI-2330.01', 'TOI-201.01', 
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01', 
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01',
-               'TOI-1203.01', 'TOI-1230.01', 'TOI-1233.01', 'TOI-1239.01',
-               'TOI-1774.01', 'TOI-564.01', 'TOI-905.01', 'TOI-1233.02',
-               'TOI-1233.03', 'TOI-1233.04', 'TOI-755.01',
-               'TOI-178.01', 'TOI-178.02', 'TOI-178.03']
+               'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01',
+               'TOI-1774.01', 'TOI-755.01',
+               'TOI-178.01', 'TOI-178.02', 'TOI-178.03', 'TOI-1098.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
