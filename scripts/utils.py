@@ -1870,6 +1870,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                                      1.25)
     comp.loc[r4, 'rade_est'] = 10.**(np.log10(comp.loc[r4, 'masse']) * 0.881 -
                                      2.85)
+    
+    comp.loc[getrad, 'radj_est'] = comp.loc[getrad, 'rade_est'] / radratio
 
     getmass = np.isfinite(comp['rade']) & (~np.isfinite(comp['masse']))
 
@@ -1886,6 +1888,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                                        0.0925) / 0.589)
     comp.loc[m4, 'masse_est'] = 10.**((np.log10(comp.loc[m4, 'rade']) +
                                        2.85) / 0.881)
+    
+    comp.loc[getmass, 'massj_est'] = comp.loc[getmass, 'masse_est'] / massrat
 
     # save our final version of the data frame to use in making all the plots
     comp.to_csv('data/exoplots_data.csv', index=False)
