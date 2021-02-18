@@ -330,7 +330,7 @@ for ifig in np.arange(4):
         yrcap = Label(text=yrtxt, **yrlabelopts)
         fig.add_layout(yrcap)
         range_slider = RangeSlider(start=minyr, end=curyr, value=(minyr, curyr),
-                                   step=1, title="Year Discovered", width=600,
+                                   step=1, title="Year Confirmed", width=600,
                                    width_policy='fit')
 
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems,
