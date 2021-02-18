@@ -1877,7 +1877,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     m1 = getmass & (comp['rade'] < 1.23)
     m2 = getmass & (comp['rade'] < 11.1) & (comp['rade'] >= 1.23)
-    # m3 = getmass & (comp['rade'] < 14.3) & (comp['rade'] >= 11.1)
+    # note that m3 is degenerate and this is a hack just to make sure 
+    # everything has values
+    m3 = getmass & (comp['rade'] < 14.3) & (comp['rade'] >= 11.1)
     m4 = getmass & (comp['rade'] >= 14.3)
 
     comp.insert(comp.columns.get_loc('masse')+1, 'masse_est', np.nan)
@@ -1886,6 +1888,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                                        0.00346) / 0.2790)
     comp.loc[m2, 'masse_est'] = 10.**((np.log10(comp.loc[m2, 'rade']) +
                                        0.0925) / 0.589)
+    comp.loc[m3, 'masse_est'] = 10.**((np.log10(comp.loc[m3, 'rade']) -
+                                       1.25) / -0.044)
     comp.loc[m4, 'masse_est'] = 10.**((np.log10(comp.loc[m4, 'rade']) +
                                        2.85) / 0.881)
     
