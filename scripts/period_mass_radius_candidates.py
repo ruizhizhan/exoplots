@@ -360,11 +360,11 @@ for ifig in np.arange(4):
         layout = column(button, fig)
     else:
         if ifig == 1:
-            yrlabelopts = dict(x=520, y=395, x_units='screen', y_units='screen',
+            yrlabelopts = dict(x=520, y=390, x_units='screen', y_units='screen',
                                text_align='right', text_font_size='20pt',
                                text_baseline='top')
         else:
-            yrlabelopts = dict(x=505, y=395, x_units='screen', y_units='screen',
+            yrlabelopts = dict(x=505, y=390, x_units='screen', y_units='screen',
                                text_align='right', text_font_size='20pt',
                                text_baseline='top')
         curyr = datetime.now().year
