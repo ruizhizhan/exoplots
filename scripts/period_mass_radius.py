@@ -63,7 +63,7 @@ for ifig in np.arange(4):
          "@mass{0,0[.][00]} Earth; @jupmass{0,0[.][0000]} Jup"),
         ("Estimated Mass",
          "@mass_est{0,0[.][00]} Earth; @jupmass_est{0,0[.][0000]} Jup"),
-        ("Discovered by", "@method"),
+        ("Discovered via", "@method"),
         ("Confirmed in", "@year")
     ]
 

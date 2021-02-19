@@ -1592,19 +1592,15 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
     # prematurely marked confirmed on ExoFOP
-    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-257.01',
-               'TOI-295.01', 'TOI-626.01', 'TOI-657.01',
-               'TOI-834.01', 'TOI-840.01', 'TOI-857.01',
-               'TOI-1071.01', 'TOI-1580.01',
-               'TOI-1603.01', 'TOI-1826.01',
-               'TOI-1918.01', 'TOI-892.01',
-               'TOI-2179.01', 'TOI-2330.01', 'TOI-201.01', 
-               'TOI-261.02', 'TOI-262.01', 'TOI-469.01', 
-               'TOI-682.01', 'TOI-836.01', 'TOI-1054.01',
-               'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01',
-               'TOI-1774.01', 'TOI-755.01',
-               'TOI-178.01', 'TOI-178.02', 'TOI-178.03', 'TOI-1098.01',
-               'TOI-130.01', 'TOI-1055.01', 'TOI-558.01', 'TOI-559.01']
+    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-257.01', 'TOI-295.01', 
+               'TOI-626.01', 'TOI-657.01', 'TOI-834.01', 'TOI-840.01',
+               'TOI-857.01', 'TOI-1071.01', 'TOI-1580.01', 'TOI-1603.01', 
+               'TOI-1826.01', 'TOI-1918.01', 'TOI-2179.01', 'TOI-2330.01', 
+               'TOI-201.01', 'TOI-261.02', 'TOI-262.01', 'TOI-469.01', 
+               'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01', 
+               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02', 
+               'TOI-1098.01', 'TOI-130.01', 'TOI-1055.01', 'TOI-558.01', 
+               'TOI-559.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
