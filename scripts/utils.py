@@ -3,6 +3,13 @@ Utility functions needed for every figure. Load and process the data in a
 uniform way as well as run tests to ensure sensible results.
 """
 
+# order is green, salmon, gold, purple, blue, cyan
+palette = {'C0': '#228833', 'C1': '#ee6677', 'C2': '#ccbb44', 'C3': '#aa3377',
+           'C4': '#4477aa', 'C5': '#66ccee'}
+# colorblind friendly palette from https://personal.sron.nl/~pault/
+# other ideas:
+# https://thenode.biologists.com/data-visualization-with-flying-colors/research/
+
 
 def get_update_time():
     """
@@ -104,7 +111,7 @@ def get_esm(df, wavelength_micron: float = 7.5, scale: float = 4.29, **kwargs):
 
 def get_tsm(df, scale: float = 0.19, **kwargs):
     """
-    Calculate the Transmission Spectroscopy Metric for planets. The 
+    Calculate the Transmission Spectroscopy Metric for planets. The
     overall S/N scaling value and parameters for calculating the equilibrium
     temperature can all be changed.
 
@@ -113,8 +120,8 @@ def get_tsm(df, scale: float = 0.19, **kwargs):
     df : pandas dataframe
         Dataframe assumed to have columns needed to calculate equilibrium
         temperature and TSM, namely: 'st_log_lum', 'semi_au', 'rade',
-        'masse', 'masse_est', 'st_rad', and 'Jmag' that respectively contain 
-        a star's log10 solar luminosity, the planet's semi-major axis in AU, 
+        'masse', 'masse_est', 'st_rad', and 'Jmag' that respectively contain
+        a star's log10 solar luminosity, the planet's semi-major axis in AU,
         the planet's radius, the planet's measured mass, an estimate of
         the planet's mass from M-R relations when measured mass is unavailable,
         the star's radius, and the star's J band magnitude.
@@ -132,13 +139,13 @@ def get_tsm(df, scale: float = 0.19, **kwargs):
     teq = get_equilibrium_temperature(df, **kwargs)
 
     num = scale * (df['rade']**3) * teq * (10.**(-0.2*df['Jmag']))
-    
+
     combmass = df['masse_est'].values * 1
     isreal = np.isfinite(df['masse'])
     combmass[isreal] = df.loc[isreal, 'masse']
-    
+
     denom = combmass * (df['st_rad']**2)
-    
+
     return num / denom
 
 
@@ -202,7 +209,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                         'pl_orbtperstr': 'string', 'pl_occdepstr': 'string',
                         'pl_projobliqstr': 'string', 'sy_icmagstr': 'string',
                         'pl_trueobliqstr': 'string', 'pl_msinijstr': 'string',
-                        'pl_msiniestr': 'string', 
+                        'pl_msiniestr': 'string',
                         'pl_occdep_reflink': 'string'}
         dfcon = pd.read_csv(datafile, dtype=ignore_warns)
     else:
@@ -236,7 +243,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     else:
         dfcon['facility'] = dfcon['pl_facility']
         dfcon['facility'].replace(full, 'TESS', inplace=True)
-        
+
     dfcon['pl_bmasse_reflink'].replace(np.nan, '', inplace=True)
     dfcon['pl_bmassj_reflink'].replace(np.nan, '', inplace=True)
     dfcon['pl_rade_reflink'].replace(np.nan, '', inplace=True)
@@ -1311,7 +1318,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             iname = icon['name'][:-1]
             # easy case where the planet name is EPIC #### b
             if iname[:4] == 'EPIC':
-                # sometimes now it's XX.02 which fails to go straight from 
+                # sometimes now it's XX.02 which fails to go straight from
                 # string to int
                 isepic = int(float(iname[4:]))
             else:
@@ -1546,7 +1553,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # these are WASP-30 and LP 261-75, brown dwarfs and not a real planet
     bds = ['TOI-239.01', 'TOI-1779.01', 'TOI-148.01', 'TOI-503.01',
-           'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01', 
+           'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01',
            'TOI-2119.01']
     for ibd in bds:
         bd = np.where(dftoi['name'] == ibd)[0][0]
@@ -1587,20 +1594,20 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-1793.01', 'TOI-1899.01', 'TOI-2011.01', 'TOI-2221.01',
                'TOI-351.01', 'TOI-1847.01']
     conname = ['TOI-1338 b', 'HD 332231 b', 'HD 95338 b',
-               'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 'WASP-165 b', 
+               'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 'WASP-165 b',
                'NGTS-11 b']
     # we know what these are and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
     # prematurely marked confirmed on ExoFOP
-    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-257.01', 'TOI-295.01', 
+    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-257.01', 'TOI-295.01',
                'TOI-626.01', 'TOI-657.01', 'TOI-834.01', 'TOI-840.01',
-               'TOI-857.01', 'TOI-1071.01', 'TOI-1580.01', 'TOI-1603.01', 
-               'TOI-1826.01', 'TOI-1918.01', 'TOI-2179.01', 'TOI-2330.01', 
-               'TOI-201.01', 'TOI-261.02', 'TOI-262.01', 'TOI-469.01', 
-               'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01', 
-               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02', 
-               'TOI-130.01', 'TOI-558.01', 'TOI-559.01']
+               'TOI-857.01', 'TOI-1071.01', 'TOI-1580.01', 'TOI-1603.01',
+               'TOI-1826.01', 'TOI-1918.01', 'TOI-2179.01', 'TOI-2330.01',
+               'TOI-201.01', 'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
+               'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
+               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
+               'TOI-130.01', 'TOI-558.01', 'TOI-559.01', 'TOI-1827.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1645,7 +1652,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # any candidates that appear in the confirmed table need to be upgraded
 
     # XXX: 2410.01, 2425.01, 2455.01 is a K2 candidate. how to handle that?
-    
+
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01', 'TOI-561.03',
                 'TOI-776.01', 'TOI-776.02', 'TOI-451.01', 'TOI-2455.01',
@@ -1868,14 +1875,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                                      1.25)
     comp.loc[r4, 'rade_est'] = 10.**(np.log10(comp.loc[r4, 'masse']) * 0.881 -
                                      2.85)
-    
+
     comp.loc[getrad, 'radj_est'] = comp.loc[getrad, 'rade_est'] / radratio
 
     getmass = np.isfinite(comp['rade']) & (~np.isfinite(comp['masse']))
 
     m1 = getmass & (comp['rade'] < 1.23)
     m2 = getmass & (comp['rade'] < 11.1) & (comp['rade'] >= 1.23)
-    # note that m3 is degenerate and this is a hack just to make sure 
+    # note that m3 is degenerate and this is a hack just to make sure
     # everything has values
     m3 = getmass & (comp['rade'] < 14.3) & (comp['rade'] >= 11.1)
     m4 = getmass & (comp['rade'] >= 14.3)
@@ -1890,7 +1897,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                                        1.25) / -0.044)
     comp.loc[m4, 'masse_est'] = 10.**((np.log10(comp.loc[m4, 'rade']) +
                                        2.85) / 0.881)
-    
+
     comp.loc[getmass, 'massj_est'] = comp.loc[getmass, 'masse_est'] / massrat
 
     # save our final version of the data frame to use in making all the plots
@@ -2054,6 +2061,20 @@ if (some == 0){
         newnum = '(' + newnum + ')';
         var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
         legend.label['value'] = newstr;
+    }
+}
+"""
+
+openurl = """
+const nsources = sources.length;
+for (let nn = 0; nn < nsources; nn++) {
+    var source = sources[nn];
+    const nrows = source.selected.indices.length;
+    
+    for (let ii = 0; ii < nrows; ii++) {
+        var ind = source.selected.indices[ii];
+        window.open(source.data['url'][ind]);
+        
     }
 }
 """

@@ -2,17 +2,17 @@ import numpy as np
 import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
-from bokeh.events import SelectionGeometry
+from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import BoxSelectTool, FuncTickFormatter, OpenURL, TapTool
+from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.models import LogAxis, Range1d
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
 from utils import csv_creation, get_update_time, log_axis_labels
-from utils import deselect, reset
+from utils import deselect, openurl, palette, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -26,8 +26,7 @@ markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
-          '#aaaaaa', '#66ccee']
+colors = [palette['C0'], palette['C1'], palette['C2'], palette['C3']]
 
 # output files
 embedfile = '_includes/period_mass_embed.html'
@@ -50,9 +49,7 @@ TOOLTIPS = [
 
 # create the figure
 fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS,
-                      plot_height=700)
-# allow for something to happen when you click on data points
-fig.add_tools(TapTool())
+                      plot_height=700, plot_width=750)
 
 # need to store min and max radius values to create the second axis
 ymin = 1
@@ -110,10 +107,11 @@ for ii, imeth in enumerate(methods):
     sources.append(source)
     alphas.append(alpha)
 
+# allow for something to happen when you click on data points
+fig.add_tools(TapTool())
 # set up where to send people when they click on a planet
-url = "@url"
-taptool = fig.select(TapTool)
-taptool.callback = OpenURL(url=url)
+uclick = CustomJS(args=dict(sources=sources), code=openurl)
+fig.js_on_event(Tap, uclick)
 
 # figure out what the default axis limits are
 ydiff = np.log10(ymax) - np.log10(ymin)
@@ -155,12 +153,12 @@ fig.title.text = 'Confirmed Planets'
 
 # create the three lines of credit text in the two bottom corners
 label_opts1 = dict(
-    x=-84, y=42,
+    x=-84, y=32,
     x_units='screen', y_units='screen'
 )
 
 label_opts2 = dict(
-    x=-84, y=47,
+    x=-84, y=37,
     x_units='screen', y_units='screen'
 )
 
@@ -187,9 +185,10 @@ fig.add_layout(caption3, 'below')
 button = Button(label="Download CSV of Selected Data", button_type="primary")
 # what is the header and what keys correspond to those columns for
 # output CSV files
-csvhead = '# Planet Name, Period (days), Mass (Earths), ' \
-          'Mass (Jupiters), Discovered by'
-keys = ['planet', 'period', 'mass', 'jupmass', 'method']
+keys = source.column_names
+keys.remove('url')
+keys.remove('host')
+csvhead = '# ' + ', '.join(keys)
 button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
                                       header=csvhead), code=csv_creation))
 
@@ -211,6 +210,8 @@ for iglyph in glyphs:
 layout = column(button, fig)
 
 plotting.save(layout)
+
+plotting.show(layout)
 
 # save the individual pieces so we can just embed the figure without the whole
 # html page

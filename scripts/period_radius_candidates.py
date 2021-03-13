@@ -4,17 +4,17 @@ import numpy as np
 import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
-from bokeh.events import DoubleTap, SelectionGeometry
+from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool, Toggle
-from bokeh.models import Button, LogAxis, OpenURL, Range1d, RangeSlider
+from bokeh.models import Button, LogAxis, Range1d, RangeSlider
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.themes import Theme
 
 from utils import csv_creation, get_update_time, log_axis_labels
 from utils import deselect, nowvis, reset, sliderselect, unselect, yearselect
-from utils import playpause
+from utils import openurl, palette, playpause
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -31,8 +31,8 @@ markers = ['circle_cross', 'circle', 'square_cross', 'square',
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377',
-          '#ccbb44']
+colors = [palette['C0'], palette['C0'], palette['C1'], palette['C1'],
+          palette['C2'], palette['C3'], palette['C2']]
 
 # load the data
 dfpl = pd.read_csv('data/exoplots_data.csv')
@@ -72,7 +72,7 @@ for ifig in np.arange(2):
 
     # create the figure
     fig = plotting.figure(x_axis_type='log', y_axis_type='log',
-                          plot_height=700, tooltips=TOOLTIPS)
+                          plot_height=700, plot_width=750, tooltips=TOOLTIPS)
 
     # need to store min and max radius values to create the second axis
     ymin = 1
@@ -226,11 +226,11 @@ for ifig in np.arange(2):
     fig.title.text = 'Transiting Planets and Planet Candidates'
 
     # create the four lines of credit text in the two bottom corners
-    label_opts1 = dict(x=-85, y=42, x_units='screen', y_units='screen')
-    label_opts2 = dict(x=-85, y=47, x_units='screen', y_units='screen')
-    label_opts3 = dict(x=612, y=79, x_units='screen', y_units='screen',
+    label_opts1 = dict(x=-85, y=32, x_units='screen', y_units='screen')
+    label_opts2 = dict(x=-85, y=37, x_units='screen', y_units='screen')
+    label_opts3 = dict(x=612, y=69, x_units='screen', y_units='screen',
                        text_align='right', text_font_size='9pt')
-    label_opts4 = dict(x=612, y=83, x_units='screen', y_units='screen',
+    label_opts4 = dict(x=612, y=73, x_units='screen', y_units='screen',
                        text_align='right', text_font_size='9pt')
 
     msg1 = 'By Exoplots'
@@ -252,20 +252,12 @@ for ifig in np.arange(2):
     # add the download button
     button = Button(label="Download CSV of Selected Data",
                     button_type="primary")
-    if ifig == 0:
-        # what is the header and what keys correspond to those columns for
-        # output CSV files
-        csvhead = '# Planet Name, Status, Period (days), Radius (Earths), ' \
-                  'Radius (Jupiters), Discovered by'
-        keys = ['planet', 'status', 'period', 'radius', 'jupradius',
-                'discovery']
-    else:
-        # what is the header and what keys correspond to those columns for
-        # output CSV files
-        csvhead = '# Planet Name, Status, Period (days), Radius (Earths), ' \
-                  'Radius (Jupiters), Discovered by, Discovery Year'
-        keys = ['planet', 'status', 'period', 'radius', 'jupradius',
-                'discovery', 'year']
+    # what is the header and what keys correspond to those columns for
+    # output CSV files
+    keys = source.column_names
+    keys.remove('url')
+    keys.remove('host')
+    csvhead = '# ' + ', '.join(keys)
     button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
                                           header=csvhead), code=csv_creation))
 
@@ -280,9 +272,8 @@ for ifig in np.arange(2):
     # allow for something to happen when you click on data points
     fig.add_tools(TapTool())
     # set up where to send people when they click on a planet
-    url = "@url"
-    taptool = fig.select(TapTool)
-    taptool.callback = OpenURL(url=url)
+    uclick = CustomJS(args=dict(sources=sources), code=openurl)
+    fig.js_on_event(Tap, uclick)
 
     if ifig == 0:
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems)
@@ -295,7 +286,7 @@ for ifig in np.arange(2):
             iglyph.js_on_change('visible', des)
         layout = column(button, fig)
     else:
-        yrlabelopts = dict(x=520, y=390, x_units='screen', y_units='screen',
+        yrlabelopts = dict(x=520, y=410, x_units='screen', y_units='screen',
                            text_align='right', text_font_size='20pt',
                            text_baseline='top')
         curyr = datetime.now().year
@@ -303,7 +294,7 @@ for ifig in np.arange(2):
         yrcap = Label(text=yrtxt, **yrlabelopts)
         fig.add_layout(yrcap)
         range_slider = RangeSlider(start=minyr, end=curyr, value=(minyr, curyr),
-                                   step=1, title="Year Discovered", width=600,
+                                   step=1, title="Year Discovered", width=580,
                                    width_policy='fit')
 
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems,
@@ -321,7 +312,7 @@ for ifig in np.arange(2):
             nw = CustomJS(args=jargs, code=nowvis)
             iglyph.js_on_change('visible', nw)
 
-        playbutton = Toggle(label="\u25b6 Play", width=200, width_policy='fit',
+        playbutton = Toggle(label="\u25b6 Play", width=150, width_policy='fit',
                             button_type='success')
         playbutton.js_on_change('active', CustomJS(args=jargs, code=playpause))
 

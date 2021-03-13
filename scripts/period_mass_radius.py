@@ -4,17 +4,17 @@ import numpy as np
 import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
-from bokeh.events import DoubleTap, SelectionGeometry
+from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool, Toggle
-from bokeh.models import Button, LogAxis, OpenURL, Range1d, RangeSlider
+from bokeh.models import Button, LogAxis, Range1d, RangeSlider
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.themes import Theme
 
 from utils import csv_creation, get_update_time, log_axis_labels
 from utils import deselect, nowvis, reset, sliderselect, unselect, yearselect
-from utils import playpause
+from utils import openurl, palette, playpause
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -29,7 +29,7 @@ markers = ['circle', 'square', 'triangle']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#ccbb44']
+colors = [palette['C0'], palette['C1'], palette['C2']]
 
 # load the data
 dfpl = pd.read_csv('data/exoplots_data.csv')
@@ -46,7 +46,7 @@ for ifig in np.arange(4):
         # output files
         embedfile = '_includes/period_mass_all_confirmed_embed.html'
         fullfile = '_includes/period_mass_all_confirmed.html'
-    elif ifig == 3:
+    else:
         embedfile = '_includes/period_mass_all_confirmed_year_embed.html'
         fullfile = '_includes/period_mass_all_confirmed_year.html'
 
@@ -72,7 +72,7 @@ for ifig in np.arange(4):
 
     # create the figure
     fig = plotting.figure(x_axis_type='log', y_axis_type='log',
-                          plot_height=700, tooltips=TOOLTIPS)
+                          plot_height=700, plot_width=750, tooltips=TOOLTIPS)
 
     # need to store min and max radius values to create the second axis
     ymin = 1
@@ -90,26 +90,30 @@ for ifig in np.arange(4):
     for ii, idisc in enumerate(discovery):
         if ifig < 2:
             if idisc == 'Other':
-                good = ((~np.in1d(dfpl['discoverymethod'], discovery[:-1])) & 
-                        (np.isfinite(dfpl['rade']) | np.isfinite(dfpl['rade_est'])) &
+                good = ((~np.in1d(dfpl['discoverymethod'], discovery[:-1])) &
+                        (np.isfinite(dfpl['rade']) |
+                         np.isfinite(dfpl['rade_est'])) &
                         np.isfinite(dfpl['period']) &
                         (dfpl['disposition'] == "Confirmed"))
             else:
                 # select the appropriate set of planets for each method
-                good = ((dfpl['discoverymethod'] == idisc) & 
-                        (np.isfinite(dfpl['rade']) | np.isfinite(dfpl['rade_est'])) &
+                good = ((dfpl['discoverymethod'] == idisc) &
+                        (np.isfinite(dfpl['rade']) |
+                         np.isfinite(dfpl['rade_est'])) &
                         np.isfinite(dfpl['period']) &
                         (dfpl['disposition'] == "Confirmed"))
         else:
             if idisc == 'Other':
-                good = ((~np.in1d(dfpl['discoverymethod'], discovery[:-1])) & 
-                        (np.isfinite(dfpl['masse']) | np.isfinite(dfpl['masse_est'])) &
+                good = ((~np.in1d(dfpl['discoverymethod'], discovery[:-1])) &
+                        (np.isfinite(dfpl['masse']) |
+                         np.isfinite(dfpl['masse_est'])) &
                         np.isfinite(dfpl['period']) &
                         (dfpl['disposition'] == "Confirmed"))
             else:
                 # select the appropriate set of planets for each method
-                good = ((dfpl['discoverymethod'] == idisc) & 
-                        (np.isfinite(dfpl['masse']) | np.isfinite(dfpl['masse_est'])) &
+                good = ((dfpl['discoverymethod'] == idisc) &
+                        (np.isfinite(dfpl['masse']) |
+                         np.isfinite(dfpl['masse_est'])) &
                         np.isfinite(dfpl['period']) &
                         (dfpl['disposition'] == "Confirmed"))
         alpha = 0.7
@@ -121,12 +125,14 @@ for ifig in np.arange(4):
         source = plotting.ColumnDataSource(data=dict(
                 planet=dfpl['name'][good],
                 period=dfpl['period'][good],
-                radius_plot=np.nanmin(dfpl.loc[good, ['rade', 'rade_est']], axis=1),
+                radius_plot=np.nanmin(dfpl.loc[good, ['rade', 'rade_est']],
+                                      axis=1),
                 radius=dfpl['rade'][good],
                 radius_est=dfpl['rade_est'][good],
                 jupradius=dfpl['radj'][good],
                 jupradius_est=dfpl['radj_est'][good],
-                mass_plot=np.nanmin(dfpl.loc[good, ['masse', 'masse_est']], axis=1),
+                mass_plot=np.nanmin(dfpl.loc[good, ['masse', 'masse_est']],
+                                    axis=1),
                 mass=dfpl['masse'][good],
                 mass_est=dfpl['masse_est'][good],
                 jupmass=dfpl['massj'][good],
@@ -162,7 +168,7 @@ for ifig in np.arange(4):
                                 marker=markers[ii], nonselection_alpha=0.07,
                                 selection_alpha=0.8,
                                 nonselection_color=colors[ii])
-        elif ifig == 3:
+        else:
             glyph = fig.scatter('period', 'mass_plot', color=colors[ii],
                                 source=source, size=size, alpha=alpha,
                                 marker=markers[ii], nonselection_alpha=0.,
@@ -249,35 +255,35 @@ for ifig in np.arange(4):
 
     # create the four lines of credit text in the two bottom corners
     if ifig < 2:
-        label_opts1 = dict(x=-55, y=42, x_units='screen', y_units='screen')
-        label_opts2 = dict(x=-55, y=47, x_units='screen', y_units='screen')
-        label_opts3 = dict(x=642, y=79, x_units='screen', y_units='screen',
+        label_opts1 = dict(x=-55, y=32, x_units='screen', y_units='screen')
+        label_opts2 = dict(x=-55, y=37, x_units='screen', y_units='screen')
+        label_opts3 = dict(x=622, y=69, x_units='screen', y_units='screen',
                            text_align='right', text_font_size='9pt')
-        label_opts4 = dict(x=642, y=83, x_units='screen', y_units='screen',
+        label_opts4 = dict(x=622, y=73, x_units='screen', y_units='screen',
                            text_align='right', text_font_size='9pt')
     else:
-        label_opts1 = dict(x=-85, y=42, x_units='screen', y_units='screen')
-        label_opts2 = dict(x=-85, y=47, x_units='screen', y_units='screen')
-        label_opts3 = dict(x=612, y=79, x_units='screen', y_units='screen',
+        label_opts1 = dict(x=-85, y=32, x_units='screen', y_units='screen')
+        label_opts2 = dict(x=-85, y=37, x_units='screen', y_units='screen')
+        label_opts3 = dict(x=592, y=69, x_units='screen', y_units='screen',
                            text_align='right', text_font_size='9pt')
-        label_opts4 = dict(x=612, y=83, x_units='screen', y_units='screen',
+        label_opts4 = dict(x=592, y=73, x_units='screen', y_units='screen',
                            text_align='right', text_font_size='9pt')
 
     msg1 = 'By Exoplots'
     # when did the data last get updated
     modtimestr = get_update_time().strftime('%Y %b %d')
     msg3 = 'Data: NASA Exoplanet Archive'
-    #msg4 = 'and ExoFOP-TESS'
+    # msg4 = 'and ExoFOP-TESS'
 
     caption1 = Label(text=msg1, **label_opts1)
     caption2 = Label(text=modtimestr, **label_opts2)
     caption3 = Label(text=msg3, **label_opts3)
-    #caption4 = Label(text=msg4, **label_opts4)
+    # caption4 = Label(text=msg4, **label_opts4)
 
     fig.add_layout(caption1, 'below')
     fig.add_layout(caption2, 'below')
     fig.add_layout(caption3, 'below')
-    #fig.add_layout(caption4, 'below')
+    # fig.add_layout(caption4, 'below')
 
     # add the download button
     button = Button(label="Download CSV of Selected Data",
@@ -302,9 +308,8 @@ for ifig in np.arange(4):
     # allow for something to happen when you click on data points
     fig.add_tools(TapTool())
     # set up where to send people when they click on a planet
-    url = "@url"
-    taptool = fig.select(TapTool)
-    taptool.callback = OpenURL(url=url)
+    uclick = CustomJS(args=dict(sources=sources), code=openurl)
+    fig.js_on_event(Tap, uclick)
 
     if ifig in [0, 2]:
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems)
@@ -318,11 +323,11 @@ for ifig in np.arange(4):
         layout = column(button, fig)
     else:
         if ifig == 1:
-            yrlabelopts = dict(x=545, y=455, x_units='screen', y_units='screen',
+            yrlabelopts = dict(x=535, y=465, x_units='screen', y_units='screen',
                                text_align='right', text_font_size='20pt',
                                text_baseline='top')
         else:
-            yrlabelopts = dict(x=505, y=455, x_units='screen', y_units='screen',
+            yrlabelopts = dict(x=505, y=465, x_units='screen', y_units='screen',
                                text_align='right', text_font_size='20pt',
                                text_baseline='top')
         curyr = datetime.now().year
@@ -330,7 +335,7 @@ for ifig in np.arange(4):
         yrcap = Label(text=yrtxt, **yrlabelopts)
         fig.add_layout(yrcap)
         range_slider = RangeSlider(start=minyr, end=curyr, value=(minyr, curyr),
-                                   step=1, title="Year Confirmed", width=600,
+                                   step=1, title="Year Confirmed", width=580,
                                    width_policy='fit')
 
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems,
@@ -348,7 +353,7 @@ for ifig in np.arange(4):
             nw = CustomJS(args=jargs, code=nowvis)
             iglyph.js_on_change('visible', nw)
 
-        playbutton = Toggle(label="\u25b6 Play", width=200, width_policy='fit',
+        playbutton = Toggle(label="\u25b6 Play", width=150, width_policy='fit',
                             button_type='success')
         playbutton.js_on_change('active', CustomJS(args=jargs, code=playpause))
 

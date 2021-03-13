@@ -2,16 +2,17 @@ import numpy as np
 import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
-from bokeh.events import SelectionGeometry
+from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import BoxSelectTool, FuncTickFormatter, OpenURL, TapTool
+from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
 from utils import csv_creation, get_update_time, log_axis_labels, reset
 from utils import deselect, get_equilibrium_temperature, get_esm, get_tsm
+from utils import openurl, palette
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -25,7 +26,7 @@ markers = ['circle', 'square', 'triangle']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#aa3377']
+colors = [palette['C0'], palette['C1'], palette['C3']]
 
 # load the data
 dfpl = pd.read_csv('data/exoplots_data.csv')
@@ -106,13 +107,12 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             # create the figure
             if ixx == 0:
                 fig = plotting.figure(x_axis_type='linear', y_axis_type='log',
-                                      tooltips=TOOLTIPS, plot_height=700)
+                                      tooltips=TOOLTIPS, plot_height=700,
+                                      plot_width=750)
             else:
                 fig = plotting.figure(x_axis_type='log', y_axis_type='log',
-                                      tooltips=TOOLTIPS, plot_height=700)
-
-            # allow for something to happen when you click on data points
-            fig.add_tools(TapTool())
+                                      tooltips=TOOLTIPS, plot_height=700,
+                                      plot_width=750)
 
             # need to store min and max radius values to create the second axis
             ymin = 1
@@ -131,7 +131,7 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                 if istat == 'Confirmed':
                     good = (np.isfinite(dfpl['teq']) & np.isfinite(dfpl[ikey]) &
                             (dfpl['disposition'] == 'Confirmed') &
-                            dfpl['flag_tran'] & #(dfpl['rade'] <= 2.) &
+                            dfpl['flag_tran'] &  # (dfpl['rade'] <= 2.) &
                             (dfpl[ikey] >= 0.) & (~np.isfinite(dfpl['masse'])) &
                             np.isfinite(dfpl['masse_est']))
                     alpha = 0.4
@@ -139,14 +139,14 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                 elif istat == 'Candidate':
                     good = (np.isfinite(dfpl['teq']) & np.isfinite(dfpl[ikey]) &
                             (dfpl['disposition'] == 'Candidate') &
-                            dfpl['flag_tran'] & #(dfpl['rade'] <= 2.) &
+                            dfpl['flag_tran'] &  # (dfpl['rade'] <= 2.) &
                             (dfpl[ikey] >= 0.))
                     alpha = 0.4
                     size = 6
                 else:
                     good = (np.isfinite(dfpl['teq']) & np.isfinite(dfpl[ikey]) &
                             (dfpl['disposition'] == 'Confirmed') &
-                            dfpl['flag_tran'] & #(dfpl['rade'] <= 2.) &
+                            dfpl['flag_tran'] &  # (dfpl['rade'] <= 2.) &
                             (dfpl[ikey] >= 0.) & np.isfinite(dfpl['masse']))
                     alpha = 0.8
                     size = 8
@@ -199,10 +199,11 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                                  renderers=[glyph])
                 legitems.append(leg)
 
+            # allow for something to happen when you click on data points
+            fig.add_tools(TapTool())
             # set up where to send people when they click on a planet
-            url = "@url"
-            taptool = fig.select(TapTool)
-            taptool.callback = OpenURL(url=url)
+            uclick = CustomJS(args=dict(sources=sources), code=openurl)
+            fig.js_on_event(Tap, uclick)
 
             # figure out what the default axis limits are
             if ifig == 0:
@@ -292,29 +293,29 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
 
             # create the four lines of credit text in the two bottom corners
             label_opts1 = dict(
-                x=-65, y=42,
+                x=-65, y=32,
                 x_units='screen', y_units='screen'
             )
 
             label_opts2 = dict(
-                x=-65, y=47,
+                x=-65, y=37,
                 x_units='screen', y_units='screen'
             )
 
             label_opts3 = dict(
-                x=632, y=79,
+                x=632, y=69,
                 x_units='screen', y_units='screen', text_align='right',
                 text_font_size='9pt'
             )
 
             label_opts4 = dict(
-                x=632, y=83,
+                x=632, y=73,
                 x_units='screen', y_units='screen', text_align='right',
                 text_font_size='9pt'
             )
 
             label_opts5 = dict(
-                x=310, y=85,
+                x=310, y=70,
                 x_units='screen', y_units='screen', text_align='center'
             )
 
@@ -344,12 +345,10 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                             button_type="primary")
             # what is the header and what keys correspond to those columns for
             # output CSV files
-            csvhead = '# Planet Name, Status, Period (days), Radius (Earths), ' \
-                      'Radius (Jupiters), Insolation (Earths), Discovered by, ' \
-                      f'T_eq (K), {imet.upper()}, Meas. Mass, Mass Est, {imag}'
-            keys = ['planet', 'status', 'period', 'radius', 'jupradius',
-                    'insolation', 'discovery', 'teq', 'met', 'mass', 'massest',
-                    'mag']
+            keys = source.column_names
+            keys.remove('url')
+            keys.remove('host')
+            csvhead = '# ' + ', '.join(keys)
             button.js_on_click(CustomJS(args=dict(sources=sources, keys=keys,
                                                   header=csvhead),
                                         code=csv_creation))

@@ -8,7 +8,7 @@ from bokeh.io import curdoc
 from bokeh.models import FuncTickFormatter, Label, NumeralTickFormatter
 from bokeh.themes import Theme
 
-from utils import get_update_time, log_axis_labels
+from utils import get_update_time, log_axis_labels, palette
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -26,7 +26,7 @@ methods = ['Other', 'Radial Velocity', 'Transit']
 # colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
 #           '#aaaaaa', '#66ccee']
 
-colors = ['#ccbb44', '#ee6677', '#228833']
+colors = [palette['C2'], palette['C1'], palette['C0']]
 
 # output files
 embedfile_name = '_includes/per_year_{0}_embed.html'
@@ -189,8 +189,8 @@ for xx in np.arange(4):
         plotting.output_file(fullfile_name.format(txt),
                              title='Planets Per Year')
         # '@years $name: @$name; Total: @total'
-        fig = plotting.figure(tooltips=fancytool0,
-                              y_range=(0, tots.max()*1.05))
+        fig = plotting.figure(tooltips=fancytool0, plot_width=750,
+                              plot_height=600, y_range=(0, tots.max()*1.05))
         fig.vbar_stack(methods, x='years', width=0.9, color=colors, source=data,
                        legend_label=leglab, line_width=0)
     else:
@@ -212,8 +212,8 @@ for xx in np.arange(4):
             tdouble = pctdouble
         plotting.output_file(fullfilecum_name.format(txt),
                              title='Cumulative Planets')
-        fig = plotting.figure(tooltips=fancytool1,
-                              y_range=(0, cumtots.max()*1.05))
+        fig = plotting.figure(tooltips=fancytool1, plot_width=750,
+                              plot_height=600, y_range=(0, cumtots.max()*1.05))
         # plot the exponential growth
         fig.line('years', 'Predicted', source=cumul, line_width=5,
                  line_color='black', name='Predicted',
@@ -257,19 +257,16 @@ for xx in np.arange(4):
 
     # create the three lines of credit text in the two bottom corners
     label_opts1 = dict(
-        x=-84, y=42,
+        x=-84, y=32,
         x_units='screen', y_units='screen'
     )
 
     label_opts2 = dict(
-        x=-84, y=47,
+        x=-84, y=37,
         x_units='screen', y_units='screen'
     )
 
-    if xx > 1:
-        yup = 80
-    else:
-        yup = 70
+    yup = 65
 
     label_opts3 = dict(
         x=612, y=yup,
@@ -343,8 +340,9 @@ for xx in np.arange(4):
                      0.05*(np.log10(tots.max()) - np.log10(ymin)))
         plotting.output_file(fullfilelog_name.format(txt),
                              title='Planets Per Year Log')
-        fig2 = plotting.figure(tooltips=fancytool0,
-                               y_range=(ymin, ymax), y_axis_type='log')
+        fig2 = plotting.figure(tooltips=fancytool0, plot_width=750,
+                               plot_height=600, y_range=(ymin, ymax),
+                               y_axis_type='log')
         fig2.vbar_stack(methods, x='years', width=0.9, color=colors,
                         source=data, legend_label=leglab, line_width=0)
     else:
@@ -368,8 +366,9 @@ for xx in np.arange(4):
                      0.065*(np.log10(cumtots.max()) - np.log10(ymin)))
         plotting.output_file(fullfilecumlog_name.format(txt),
                              title='Planets Per Year Log')
-        fig2 = plotting.figure(tooltips=fancytool1,
-                               y_range=(ymin, ymax), y_axis_type='log')
+        fig2 = plotting.figure(tooltips=fancytool1, plot_width=750,
+                               plot_height=600, y_range=(ymin, ymax),
+                               y_axis_type='log')
         # plot the exponential growth
         fig2.line('years', 'Predicted', source=cumul, line_width=5,
                   line_color='black', name='Predicted',
@@ -418,19 +417,16 @@ for xx in np.arange(4):
 
     # create the three lines of credit text in the two bottom corners
     label_opts1 = dict(
-        x=-84, y=42,
+        x=-84, y=32,
         x_units='screen', y_units='screen'
     )
 
     label_opts2 = dict(
-        x=-84, y=47,
+        x=-84, y=37,
         x_units='screen', y_units='screen'
     )
 
-    if xx > 1:
-        yup = 80
-    else:
-        yup = 70
+    yup = 65
 
     label_opts3 = dict(
         x=612, y=yup,
