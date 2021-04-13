@@ -1658,7 +1658,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01', 'TOI-561.03',
                 'TOI-776.01', 'TOI-776.02', 'TOI-451.01', 'TOI-2455.01',
                 'TOI-628.01', 'TOI-640.01', 'TOI-1333.01', 'TOI-1478.01',
-                'TOI-1601.01', 'TOI-519.01']
+                'TOI-1601.01', 'TOI-519.01', 'TOI-2604.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
