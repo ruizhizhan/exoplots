@@ -1600,15 +1600,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
     # prematurely marked confirmed on ExoFOP
-    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-257.01', 'TOI-295.01',
+    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01',
                'TOI-626.01', 'TOI-657.01', 'TOI-834.01', 'TOI-840.01',
                'TOI-857.01', 'TOI-1071.01', 'TOI-1580.01', 'TOI-1603.01',
                'TOI-1826.01', 'TOI-1918.01', 'TOI-2330.01',
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
-               'TOI-130.01', 'TOI-558.01', 'TOI-559.01', 'TOI-263.01',
-               'TOI-1640.01']
+               'TOI-558.01', 'TOI-559.01', 'TOI-263.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1658,7 +1657,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01', 'TOI-561.03',
                 'TOI-776.01', 'TOI-776.02', 'TOI-451.01', 'TOI-2455.01',
                 'TOI-628.01', 'TOI-640.01', 'TOI-1333.01', 'TOI-1478.01',
-                'TOI-1601.01', 'TOI-519.01']
+                'TOI-1601.01', 'TOI-519.01', 'TOI-2639.01', 'TOI-2642.01',
+                'TOI-2643.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
