@@ -1607,7 +1607,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
-               'TOI-558.01', 'TOI-559.01', 'TOI-263.01']
+               'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 'TOI-1444.01', 
+               'TOI-1634.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1657,7 +1658,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01', 'TOI-561.03',
                 'TOI-776.01', 'TOI-776.02', 'TOI-451.01', 'TOI-2455.01',
                 'TOI-628.01', 'TOI-640.01', 'TOI-1333.01', 'TOI-1478.01',
-                'TOI-1601.01', 'TOI-519.01', 'TOI-2639.01']
+                'TOI-1601.01', 'TOI-519.01', 'TOI-2639.01', 'TOI-269.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
