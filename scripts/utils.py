@@ -1603,7 +1603,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01',
                'TOI-626.01', 'TOI-657.01', 'TOI-834.01', 'TOI-840.01',
                'TOI-857.01', 'TOI-1071.01', 'TOI-1580.01', 'TOI-1603.01',
-               'TOI-1826.01', 'TOI-1918.01', 'TOI-2330.01',
+               'TOI-1826.01', 'TOI-2330.01',
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
