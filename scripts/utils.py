@@ -1592,10 +1592,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # 351 TESS got the period wrong by 2x
     ignores = ['TOI-1338.01', 'TOI-1456.01',
                'TOI-1793.01', 'TOI-1899.01', 'TOI-2011.01', 'TOI-2221.01',
-               'TOI-351.01', 'TOI-1847.01']
+               'TOI-351.01', 'TOI-1847.01', 'TOI-704.01']
     conname = ['TOI-1338 b', 'HD 332231 b', 'HD 95338 b',
                'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 'WASP-165 b',
-               'NGTS-11 b']
+               'NGTS-11 b', 'LHS 1815 b']
     # we know what these are and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
