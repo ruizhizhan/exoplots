@@ -26,8 +26,9 @@ esm = get_esm(dfpl, wavelength_micron=refwav, scale=esmscale, albedo=albedo,
 dfpl['esm'] = esm
 
 toprint = (dfpl['esm'] > 1) & (dfpl['rade'] < 2)
-
+print('here 1')
 subset = dfpl[toprint]
+print('here 2')
 
 toprintcol = ['name', 'order', 'period', 'rade', 'tran_depth_ppm',
               'tran_dur_hr', 'masse', 'masse_est', 'semi_au', 'st_mass',
