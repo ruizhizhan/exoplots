@@ -136,7 +136,7 @@ def get_tsm(df, scale: float = 0.19, **kwargs):
     ndarray
     """
     import numpy as np
-    teq = get_equilibrium_temperature(df, **kwargs)
+    teq = get_equilibrium_temperature(df, **kwargs).value
 
     num = scale * (df['rade']**3) * teq * (10.**(-0.2*df['Jmag']))
 

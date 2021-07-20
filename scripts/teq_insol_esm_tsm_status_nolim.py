@@ -40,7 +40,7 @@ rediststr = 'No Night-side Redistribution'
 atmos = 'Atmos. \u03bc = 18'
 
 dfpl['teq'] = get_equilibrium_temperature(dfpl, albedo=albedo,
-                                          radiative_fraction=redist)
+                                          radiative_fraction=redist).value
 
 esmscale = 3.44
 
