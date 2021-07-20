@@ -16,7 +16,7 @@ albedo = 0.
 redist = 1.
 
 dfpl['t_eq'] = get_equilibrium_temperature(dfpl, albedo=albedo,
-                                           radiative_fraction=redist)
+                                           radiative_fraction=redist).value
 
 esmscale = 4.29
 refwav = 7.5
