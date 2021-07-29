@@ -634,8 +634,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # these are now confirmed but they didn't update it
     # in the KOI table
-    newconf = ['KOI-1831.03', 'KOI-3503.01', 'KOI-3503.02', 'KOI-1833.02']
-    newconf2 = ['Kepler-324 d', 'Kepler-1703 b', 'Kepler-1703 c', 'Kepler-968 d']
+    newconf = ['KOI-1831.03', 'KOI-3503.01', 'KOI-3503.02', 'KOI-1833.02', 'KOI-375.01']
+    newconf2 = ['Kepler-324 d', 'Kepler-1703 b', 'Kepler-1703 c', 'Kepler-968 d', 'Kepler-1704 b']
     isconf = np.zeros(len(newconf), dtype=bool)
 
     # make sure all candidate KOIs aren't in the confirmed table
@@ -1602,13 +1602,12 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # prematurely marked confirmed on ExoFOP
     waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01',
                'TOI-626.01', 'TOI-657.01', 'TOI-834.01', 'TOI-840.01',
-               'TOI-857.01', 'TOI-1071.01', 'TOI-1580.01', 'TOI-1603.01',
-               'TOI-1826.01', 'TOI-2330.01',
+               'TOI-857.01', 'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01',
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
                'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 
-               'TOI-2707.01', 'TOI-3422.01']
+               'TOI-3422.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1664,7 +1663,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-3595.01', 'TOI-3597.01', 'TOI-3612.01', 'TOI-3630.01',
                 'TOI-3636.01', 'TOI-3681.01', 'TOI-3846.01', 'TOI-1259.01',
                 'TOI-1260.01', 'TOI-1260.02', 'TOI-1685.01', 'TOI-1807.01',
-                'TOI-2076.01']
+                'TOI-2076.01', 'TOI-451.02', 'TOI-451.03', 'TOI-1749.01',
+                'TOI-1749.02', 'TOI-3705.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
