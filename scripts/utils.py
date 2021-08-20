@@ -1586,6 +1586,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # confirmed table.
     # 1793, 1899, 2011, 2221 are single transits, so no period
     # matching
+
     # 1456 was a single obvious transit and the second hidden in scattered
     # light causing SPOC to miss it and get the period wrong
     # 351 TESS got the period wrong by 2x
@@ -1606,8 +1607,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
                'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 
-               'TOI-3422.01', 'TOI-431.01', 'TOI-431.02', 'TOI-555.01',
-               'TOI-2202.01', 'TOI-2406.01']
+               'TOI-3422.01', 'TOI-555.01', 'TOI-2202.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1664,7 +1664,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-3636.01', 'TOI-3681.01', 'TOI-3846.01', 'TOI-1259.01',
                 'TOI-1260.01', 'TOI-1260.02', 'TOI-1685.01', 'TOI-1807.01',
                 'TOI-2076.01', 'TOI-1749.01',
-                'TOI-1749.02', 'TOI-3705.01', 'TOI-1062.01']
+                'TOI-1749.02', 'TOI-3705.01', 'TOI-1062.01', 'TOI-532.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
