@@ -1086,8 +1086,27 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # these are confirmed planets that aren't listed as such, so match them up
     # and set them as confirmed
-    k2known = ['EPIC 202126849.01', 'EPIC 212555594.02', 'EPIC 201357835.01']
-    plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b']
+    k2known = ['EPIC 202126849.01', 'EPIC 212555594.02', 'EPIC 201357835.01',
+               'EPIC 212587672.01', 'EPIC 211314705.01', 'EPIC 211401787.01',
+               'EPIC 211579112.01', 'EPIC 211743874.01', 'EPIC 211763214.01',
+               'EPIC 211770696.01', 'EPIC 211779390.01', 'EPIC 211923431.01',
+               'EPIC 212088059.01', 'EPIC 212132195.01', 'EPIC 212161956.01',
+               'EPIC 212297394.01', 'EPIC 212420823.01', 'EPIC 212440430.01',
+               'EPIC 212543933.01', 'EPIC 211611158.02', 'EPIC 211978988.01',
+               'EPIC 211502222.01', 'EPIC 211647930.01', 'EPIC 211730024.01',
+               'EPIC 212058012.01', 'EPIC 212072539.01', 'EPIC 212081533.01',
+               'EPIC 212204403.01', 'EPIC 212204403.02', 'EPIC 251319382.01',
+               'EPIC 251319382.02', 'EPIC 211413752.04', 'EPIC 211413752.03',
+               'EPIC 211413752.05', 'EPIC 211897691.02', 'EPIC 212072539.02']
+
+    plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b', 'K2-307 c', 'K2-354 b',
+              'K2-330 b', 'K2-332 b', 'K2-335 b', 'K2-336 b', 'K2-337 b',
+              'K2-338 b', 'K2-340 b', 'K2-345 b', 'K2-346 b', 'K2-347 b',
+              'K2-304 c', 'K2-349 b', 'K2-350 c', 'K2-351 b', 'K2-185 c',
+              'K2-341 b', 'K2-331 c', 'K2-333 b', 'K2-334 b', 'K2-342 b',
+              'K2-343 c', 'K2-344 b', 'K2-348 b', 'K2-348 c', 'K2-352 c',
+              'K2-352 d', 'K2-268 d', 'K2-268 f', 'K2-268 e', 'K2-339 b',
+              'K2-343 b']
     reknown = np.zeros(len(k2known), dtype=bool)
 
     # make sure all candidate K2 planets aren't in the confirmed table
@@ -1290,7 +1309,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                    'Wolf 503 b', 'K2-315 b', 'K2-316 b', 'K2-316 c', 'K2-317 b',
                    'K2-318 b', 'K2-319 b', 'K2-320 b', 'K2-321 b', 'K2-322 b',
                    'K2-323 b', 'K2-324 b', 'K2-325 b', 'K2-326 b', 'K2-329 b',
-                   'K2-138 g']
+                   'K2-138 g', 'K2-353 b']
         fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
                      60021410, 211311380, 211311380, 211311380, 211311380,
                      211311380, 247887989, 247887989, 247887989, 247887989,
@@ -1309,7 +1328,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                      246441449, 60017806, 212779563, 249631677,
                      249384674, 249384674, 249557502, 249826231, 201663879,
                      201796690, 248480671, 248558190, 248616368, 248639308,
-                     246074965, 246472939, 246193072, 245950175]
+                     246074965, 246472939, 246193072, 245950175, 251554286]
 
         # for K2 planets only on the confirmed list, try to find their EPIC
         # from other KOIs in the system
@@ -1607,7 +1626,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
                'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 
-               'TOI-3422.01', 'TOI-555.01', 'TOI-2202.01', 'TOI-2285.01']
+               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
