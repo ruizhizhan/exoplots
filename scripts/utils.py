@@ -1099,14 +1099,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'EPIC 251319382.02', 'EPIC 211413752.04', 'EPIC 211413752.03',
                'EPIC 211413752.05', 'EPIC 211897691.02', 'EPIC 212072539.02']
 
-    plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b', 'K2-307 c', 'K2-354 b',
-              'K2-330 b', 'K2-332 b', 'K2-335 b', 'K2-336 b', 'K2-337 b',
-              'K2-338 b', 'K2-340 b', 'K2-345 b', 'K2-346 b', 'K2-347 b',
-              'K2-304 c', 'K2-349 b', 'K2-350 c', 'K2-351 b', 'K2-185 c',
-              'K2-341 b', 'K2-331 c', 'K2-333 b', 'K2-334 b', 'K2-342 b',
-              'K2-343 c', 'K2-344 b', 'K2-348 b', 'K2-348 c', 'K2-352 c',
-              'K2-352 d', 'K2-268 d', 'K2-268 f', 'K2-268 e', 'K2-339 b',
-              'K2-343 b']
+    plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b', 'EPIC 212587672 c', 
+              'K2-354 b', 'K2-330 b', 'K2-332 b', 'K2-335 b', 'K2-336 b', 
+              'K2-337 b', 'K2-338 b', 'K2-340 b', 'K2-345 b', 'K2-346 b', 
+              'K2-347 b', 'EPIC 212297394 c', 'K2-349 b', 'K2-350 c', 
+              'K2-351 b', 'K2-185 c', 'K2-341 b', 'K2-331 c', 'K2-333 b', 
+              'K2-334 b', 'K2-342 b', 'K2-343 c', 'K2-344 b', 'K2-348 b', 
+              'K2-348 c', 'K2-352 c', 'K2-352 d', 'K2-268 d', 'K2-268 f', 
+              'K2-268 e', 'K2-339 b', 'K2-343 b']
     reknown = np.zeros(len(k2known), dtype=bool)
 
     # make sure all candidate K2 planets aren't in the confirmed table
@@ -1679,7 +1679,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-628.01', 'TOI-640.01', 'TOI-1333.01', 'TOI-1478.01',
                 'TOI-1601.01', 'TOI-519.01', 'TOI-2639.01', 'TOI-269.01',
                 'TOI-220.01', 'TOI-1231.01', 'TOI-3534.01', 'TOI-3563.01',
-                'TOI-3595.01', 'TOI-3597.01', 'TOI-3612.01', 'TOI-3630.01',
+                'TOI-3595.01', 'TOI-3597.01', 'TOI-3612.01', 
                 'TOI-3636.01', 'TOI-3681.01', 'TOI-3846.01', 'TOI-1259.01',
                 'TOI-1260.01', 'TOI-1260.02', 'TOI-1685.01', 'TOI-1807.01',
                 'TOI-2076.01', 'TOI-1749.01',
