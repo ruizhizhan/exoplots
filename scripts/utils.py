@@ -469,6 +469,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     assert (~np.isfinite(dfcon['Kmag']) | (dfcon['Kmag'] > -5)).all()
     assert (~np.isfinite(dfcon['Jmag']) | (dfcon['Jmag'] > -5)).all()
 
+    # XXX: while this gets fixed
+    dfcon.loc[np.where(dfcon['name']=='HD 70573 b')[0][0], 'ra'] = 22
+    dfcon.loc[np.where(dfcon['name']=='HD 70573 b')[0][0], 'dec'] = 22
+
     # RA and Dec are both valid
     assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
     assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
@@ -1626,7 +1630,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
                'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 
-               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01']
+               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 'TOI-1201.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1671,6 +1675,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # any candidates that appear in the confirmed table need to be upgraded
 
     # XXX: 2410.01, 2425.01, 2455.01 is a K2 candidate. how to handle that?
+    # XXX: TOI-4433, 4444 is a KOI
 
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
@@ -1684,7 +1689,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-1260.01', 'TOI-1260.02', 'TOI-1685.01', 'TOI-1807.01',
                 'TOI-2076.01', 'TOI-1749.01',
                 'TOI-1749.02', 'TOI-3705.01', 'TOI-1062.01', 'TOI-532.01',
-                'TOI-4411.01']
+                'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
