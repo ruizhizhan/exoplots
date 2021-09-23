@@ -308,13 +308,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfcon.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
 
     ct = 0
-    # one planet (OGLE-TR-111 b) has different references for the two masses
+    # 2 planets (OGLE-TR-111 b, Kepler-49 b) have different references 
+    # for the two masses
     for ii in np.arange(dfcon['masse'].size):
         r1 = dfcon.at[ii, 'pl_bmasse_reflink']
         r2 = dfcon.at[ii, 'pl_bmassj_reflink']
         if r1 != r2:
             ct += 1
-    assert ct == 1
+    assert ct == 2
 
     # both always exist or not together
     badm = (np.isfinite(dfcon['masse']) ^ np.isfinite(dfcon['massj']))
@@ -468,10 +469,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
             ((dfcon['st_log_lum'] > -8) & (dfcon['st_log_lum'] < 5))).all()
     assert (~np.isfinite(dfcon['Kmag']) | (dfcon['Kmag'] > -5)).all()
     assert (~np.isfinite(dfcon['Jmag']) | (dfcon['Jmag'] > -5)).all()
-
-    # XXX: while this gets fixed
-    dfcon.loc[np.where(dfcon['name']=='HD 70573 b')[0][0], 'ra'] = 22
-    dfcon.loc[np.where(dfcon['name']=='HD 70573 b')[0][0], 'dec'] = 22
 
     # RA and Dec are both valid
     assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
@@ -1313,7 +1310,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                    'Wolf 503 b', 'K2-315 b', 'K2-316 b', 'K2-316 c', 'K2-317 b',
                    'K2-318 b', 'K2-319 b', 'K2-320 b', 'K2-321 b', 'K2-322 b',
                    'K2-323 b', 'K2-324 b', 'K2-325 b', 'K2-326 b', 'K2-329 b',
-                   'K2-138 g', 'K2-353 b']
+                   'K2-138 g', 'K2-353 b', 'K2-358 b', 'K2-357 b', 'K2-356 b',
+                   'K2-355 b']
         fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
                      60021410, 211311380, 211311380, 211311380, 211311380,
                      211311380, 247887989, 247887989, 247887989, 247887989,
@@ -1332,7 +1330,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                      246441449, 60017806, 212779563, 249631677,
                      249384674, 249384674, 249557502, 249826231, 201663879,
                      201796690, 248480671, 248558190, 248616368, 248639308,
-                     246074965, 246472939, 246193072, 245950175, 251554286]
+                     246074965, 246472939, 246193072, 245950175, 251554286,
+                     211914998, 211730267, 211537087, 211525753]
 
         # for K2 planets only on the confirmed list, try to find their EPIC
         # from other KOIs in the system
@@ -1630,7 +1629,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
                'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 
-               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 'TOI-1201.01']
+               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 'TOI-1201.01',
+               'TOI-1296.01', 'TOI-1298.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
