@@ -1629,7 +1629,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
                'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 
-               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 'TOI-1201.01',
+               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 
                'TOI-1296.01', 'TOI-1298.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
