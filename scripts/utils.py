@@ -1612,12 +1612,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # 1456 was a single obvious transit and the second hidden in scattered
     # light causing SPOC to miss it and get the period wrong
     # 351 TESS got the period wrong by 2x
-    ignores = ['TOI-1456.01',
-               'TOI-1899.01', 'TOI-2011.01', 'TOI-2221.01',
-               'TOI-351.01', 'TOI-1847.01', 'TOI-704.01', 'TOI-2319.01']
-    conname = ['HD 332231 b',
-               'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 'WASP-165 b',
-               'NGTS-11 b', 'LHS 1815 b', 'HD 152843 c']
+    ignores = ['TOI-1456.01', 'TOI-1899.01', 'TOI-2011.01', 'TOI-2221.01',
+               'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01']
+    conname = ['HD 332231 b', 'TOI-1899 b', 'HD 136352 b', 'AU Mic b', 
+               'WASP-165 b', 'NGTS-11 b', 'HD 152843 c']
     # we know what these are and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
@@ -1628,9 +1626,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
-               'TOI-558.01', 'TOI-559.01', 'TOI-263.01', 
-               'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 
-               'TOI-1296.01', 'TOI-1298.01', 'TOI-4138.01']
+               'TOI-263.01', 'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 
+               'TOI-1296.01', 'TOI-1298.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1675,7 +1672,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # any candidates that appear in the confirmed table need to be upgraded
 
     # XXX: 2410.01, 2425.01, 2455.01 is a K2 candidate. how to handle that?
-    # XXX: TOI-4433, 4444 is a KOI
+    # XXX: TOI-4433, 4444, 4484 is a KOI
 
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
@@ -1689,7 +1686,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-1260.01', 'TOI-1260.02', 'TOI-1685.01', 'TOI-1807.01',
                 'TOI-2076.01', 'TOI-1749.01',
                 'TOI-1749.02', 'TOI-3705.01', 'TOI-1062.01', 'TOI-532.01',
-                'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01']
+                'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01',
+                'TOI-4484.01']
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
