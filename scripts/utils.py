@@ -1625,9 +1625,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'TOI-857.01', 'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01',
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
-               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 'TOI-178.02',
+               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 
                'TOI-263.01', 'TOI-3422.01', 'TOI-555.01', 'TOI-2285.01', 
-               'TOI-1296.01', 'TOI-1298.01', 'TOI-1255.01', 'TOI-3666.01']
+               'TOI-1255.01', 'TOI-3666.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1687,7 +1687,15 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-2076.01', 'TOI-1749.01',
                 'TOI-1749.02', 'TOI-3705.01', 'TOI-1062.01', 'TOI-532.01',
                 'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01',
-                'TOI-4484.01', 'TOI-1431.01']
+                'TOI-4484.01', 'TOI-1431.01', 'TOI-421.02', 'TOI-509.01',
+                'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01', 'TOI-4512.01',
+                'TOI-4514.01', 'TOI-4516.01', 'TOI-4517.01', 'TOI-4518.01',
+                'TOI-4520.01', 'TOI-4521.01', 'TOI-4523.01', 'TOI-4525.01', 
+                'TOI-4526.01', 'TOI-4528.01', 'TOI-4530.01', 'TOI-4531.01',
+                'TOI-4532.01', 'TOI-4533.01', 'TOI-4534.01', 'TOI-4535.01',
+                'TOI-4536.01', 'TOI-4538.01', 'TOI-4538.02', 'TOI-4539.01',
+                'TOI-4540.01', 'TOI-4544.01', 'TOI-4545.01', 'TOI-4547.01']
+    tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
@@ -1704,7 +1712,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
         # period and location match, so mark this as confirmed
         if len(res) == 1:
             dftoi.at[index, 'disposition'] = 'Confirmed'
-            tbc[tobeconf.index(ican['name'])] = True
+            if ican['name'] not in tobeconf:
+                tobeadded.append(ican['name'])
+            else:
+                tbc[tobeconf.index(ican['name'])] = True
             # update and sync the discovery year in both tables
             res = res[0]
             myr = min(comp.at[res, 'year_discovered'], ican['year_discovered'])
@@ -1733,6 +1744,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     assert tbc.all()
     assert singconf.all()
+    assert len(tobeadded) == 0
 
     newcan = dftoi['disposition'] == 'Candidate'
     newcon = dftoi['disposition'] == 'Confirmed'
