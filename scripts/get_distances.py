@@ -104,7 +104,7 @@ if run:
     
     # these are confirmed only planets with planet names EPIC ##### b
     moreepics = [249893012, 248847494, 246851721, 201170410, 201757695, 
-                 246193072]
+                 246193072, 201427007, 220492298]
     
     uepics = np.unique(np.concatenate((uepics, fillepics, moreepics)))
 

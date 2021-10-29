@@ -5,7 +5,7 @@ import pandas as pd
 
 from scripts.utils import load_data
 
-NEXSCI_API = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph' \
+NEXSCI_API = 'https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph' \
              '-nstedAPI'
 NEW_API = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query='
 # The "exoplanets" table includes all confirmed planets and hosts in the
