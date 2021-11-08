@@ -1099,8 +1099,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'EPIC 212204403.01', 'EPIC 212204403.02', 'EPIC 251319382.01',
                'EPIC 251319382.02', 'EPIC 211413752.04', 'EPIC 211413752.03',
                'EPIC 211413752.05', 'EPIC 211897691.02', 'EPIC 212072539.02',
-               'EPIC 206024342.01', 'EPIC 206024342.02', 'EPIC 206042996.01',
-               'EPIC 201595106.01', 'EPIC 228836835.01', 'EPIC 212624936.01']
+               'EPIC 212624936.01', 'EPIC 206024342.01', 'EPIC 206024342.02',
+               'EPIC 206042996.01', 'EPIC 201595106.01', 'EPIC 228836835.01']
 
     plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b', 'EPIC 212587672 c', 
               'K2-354 b', 'K2-330 b', 'K2-332 b', 'K2-335 b', 'K2-336 b', 
@@ -1109,9 +1109,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
               'K2-351 b', 'K2-185 c', 'K2-341 b', 'K2-331 c', 'K2-333 b', 
               'K2-334 b', 'K2-342 b', 'K2-343 c', 'K2-344 b', 'K2-348 b', 
               'K2-348 c', 'K2-352 c', 'K2-352 d', 'K2-268 d', 'K2-268 f', 
-              'K2-268 e', 'K2-339 b', 'K2-343 b', 'EPIC 206024342.01', 
-              'EPIC 206024342.02', 'EPIC 206042996.01', 'EPIC 201595106.01',
-              'EPIC 228836835.01', 'EPIC 212624936.01']
+              'K2-268 e', 'K2-339 b', 'K2-343 b', 'EPIC 212624936 c',
+              'EPIC 206024342 d', 'EPIC 206024342 c', 'EPIC 206042996 c',
+              'EPIC 201595106 b', 'EPIC 228836835 b']
     reknown = np.zeros(len(k2known), dtype=bool)
 
     # make sure all candidate K2 planets aren't in the confirmed table
@@ -1693,7 +1693,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01',
                 'TOI-4484.01', 'TOI-1431.01', 'TOI-421.02', 'TOI-509.01',
                 'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01', 'TOI-4540.01',
-                'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01']
+                'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01', 
+                'TOI-696.01', 'TOI-696.02']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
