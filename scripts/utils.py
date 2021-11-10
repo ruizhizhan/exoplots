@@ -1694,7 +1694,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                 'TOI-4484.01', 'TOI-1431.01', 'TOI-421.02', 'TOI-509.01',
                 'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01', 'TOI-4540.01',
                 'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01', 
-                'TOI-696.01', 'TOI-696.02']
+                'TOI-696.01', 'TOI-696.02', 
+                'TOI-4608.01', 'TOI-4612.01', 'TOI-4615.01', 'TOI-4618.01',
+                'TOI-4619.01', 'TOI-4621.01', 'TOI-4623.01', 'TOI-4624.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
