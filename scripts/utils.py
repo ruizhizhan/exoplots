@@ -1580,7 +1580,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     # these are WASP-30 and LP 261-75, brown dwarfs and not a real planet
     bds = ['TOI-239.01', 'TOI-1779.01', 'TOI-148.01', 'TOI-503.01',
            'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01',
-           'TOI-2119.01', 'TOI-1278.01']
+           'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01']
     for ibd in bds:
         bd = np.where(dftoi['name'] == ibd)[0][0]
         assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
