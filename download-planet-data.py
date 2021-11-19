@@ -12,14 +12,9 @@ NEW_API = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query='
 # archive with parameters derived from a single, published reference
 
 # All confirmed planets
-print('Downloading all confirmed planets from NExSci...')
-df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*')
-df.to_csv('data/confirmed-planets.csv')
-
-# New confirmed planets
-print("Downloading all confirmed planets from NExSci's new table...")
+print("Downloading all confirmed planets from NExSci...")
 df = pd.read_csv(NEW_API + 'select+*+from+pscomppars&format=csv')
-df.to_csv('data/new-confirmed-planets.csv')
+df.to_csv('data/confirmed-planets.csv')
 
 # full KOI table
 print('Downloading full KOI table from NExSci...')
@@ -29,7 +24,7 @@ df.to_csv('data/kepler-kois-full.csv')
 # grab all the K2 candidates (or at least the ones they have put into this
 # not-quite-complete table)
 print('Downloading full K2 candidates table from NExSci...')
-df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*')
+df = pd.read_csv(NEW_API + 'select+*+from+k2pandc&format=csv')
 df.to_csv('data/k2-candidates-table.csv')
 
 # get the TOI list from ExoFOP-TESS.

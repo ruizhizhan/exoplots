@@ -149,7 +149,7 @@ def get_tsm(df, scale: float = 0.19, **kwargs):
     return num / denom
 
 
-def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
+def load_data(updated_koi_params=True, updated_k2_params=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
     ready for use in our interactive figures.
@@ -164,9 +164,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
         If True, for all stars in the K2 fields, use the updated stellar
         parameters from Hardegree-Ullman 2020. Recalculate planet radii,
         insolations, etc using these new Gaia assisted stellar parameters.
-    new : bool
-        Whether we're using the new planetary systems composite table instead
-        of the old/deprecated confirmed planets table
 
     Returns
     -------
@@ -190,10 +187,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     import os
 
     # load the data files
-    if new:
-        datafile = 'data/new-confirmed-planets.csv'
-    else:
-        datafile = 'data/confirmed-planets.csv'
+    datafile = 'data/confirmed-planets.csv'
     k2file = 'data/k2-candidates-table.csv'
     koifile = 'data/kepler-kois-full.csv'
     toifile = 'data/tess-candidates.csv'
@@ -204,17 +198,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     ticparams = 'data/full_tic.txt'
 
     # the dtype is to silence a pandas warning
-    if new:
-        ignore_warns = {'hd_name': 'string', 'hip_name': 'string',
-                        'pl_orbtperstr': 'string', 'pl_occdepstr': 'string',
-                        'pl_projobliqstr': 'string', 'sy_icmagstr': 'string',
-                        'pl_trueobliqstr': 'string', 'pl_msinijstr': 'string',
-                        'pl_msiniestr': 'string',
-                        'pl_occdep_reflink': 'string'}
-        dfcon = pd.read_csv(datafile, dtype=ignore_warns)
-    else:
-        dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string',
-                                             'swasp_id': 'string'})
+    ignore_warns = {'hd_name': 'string', 'hip_name': 'string',
+                    'pl_orbtperstr': 'string', 'pl_occdepstr': 'string',
+                    'pl_projobliqstr': 'string', 'sy_icmagstr': 'string',
+                    'pl_trueobliqstr': 'string', 'pl_msinijstr': 'string',
+                    'pl_msiniestr': 'string',
+                    'pl_occdep_reflink': 'string'}
+    dfcon = pd.read_csv(datafile, dtype=ignore_warns)
+
     dfk2 = pd.read_csv(k2file)
     dfkoi = pd.read_csv(koifile)
     dftoi = pd.read_csv(toifile)
@@ -237,12 +228,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
-    if new:
-        dfcon['facility'] = dfcon['disc_facility']
-        dfcon['facility'].replace(full, 'TESS', inplace=True)
-    else:
-        dfcon['facility'] = dfcon['pl_facility']
-        dfcon['facility'].replace(full, 'TESS', inplace=True)
+    dfcon['facility'] = dfcon['disc_facility']
+    dfcon['facility'].replace(full, 'TESS', inplace=True)
 
     dfcon['pl_bmasse_reflink'].replace(np.nan, '', inplace=True)
     dfcon['pl_bmassj_reflink'].replace(np.nan, '', inplace=True)
@@ -253,16 +240,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfcon['disposition'] = 'Confirmed'
 
     # where do we want to point people to on clicking?
-    if new:
-        dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' +
-                        dfcon['hostname'])
-        dfcon['hostname'] = dfcon['hostname']
-        dfcon['flag_tran'] = dfcon['tran_flag']
-    else:
-        dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' +
-                        dfcon['pl_hostname'])
-        dfcon['hostname'] = dfcon['pl_hostname']
-        dfcon['flag_tran'] = dfcon['pl_tranflag']
+    dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' +
+                    dfcon['hostname'])
+    dfcon['hostname'] = dfcon['hostname']
+    dfcon['flag_tran'] = dfcon['tran_flag']
 
     # all transit flags are 0 or 1
     assert ((dfcon['flag_tran'] == 0) | (dfcon['flag_tran'] == 1)).all()
@@ -271,16 +252,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
 
     # set up a distance field that is the same in all 4 groups and the
     # discovery year
-    if new:
-        dfcon['distance_pc'] = dfcon['sy_dist'].values * 1
-        dfcon['year_discovered'] = dfcon['disc_year'] * 1
-    else:
-        # for confirmed planets, trust Gaia over published values if possible
-        condists = dfcon['gaia_dist'].values * 1
-        ncd = ~np.isfinite(condists)
-        condists[~np.isfinite(condists)] = dfcon['st_dist'][ncd]
-        dfcon['distance_pc'] = condists
-        dfcon['year_discovered'] = dfcon['pl_disc'] * 1
+    dfcon['distance_pc'] = dfcon['sy_dist'].values * 1
+    dfcon['year_discovered'] = dfcon['disc_year'] * 1
 
     # set our common names for all of these
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
@@ -337,8 +310,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     radratio = 11.21
     badrj = (np.isfinite(dfcon['radj']) ^ np.isfinite(dfcon['rade']))
     # XXX: these bad 2 need to be fixed
-    if new:
-        assert badrj.sum() == 2
+    assert badrj.sum() == 2
     dfcon.loc[badrj, 'radj'] = dfcon.loc[badrj, 'rade'] / radratio
 
     # remove calculated values from true masses. we'll make a calculated
@@ -381,38 +353,34 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
     dfcon.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
 
     # set whether or not these were observed by Kepler or K2
-    if new:
-        dfcon['flag_kepler'] = False
-        # these were labeled in the old table as being in the Kepler field
-        # but didn't have default host names indicating such
-        others = ['PH1', 'PH2', 'TrES-2', 'HAT-P-7', 'HAT-P-11',
-                  '2MASS J19383260+4603591']
-        for ind, icon in dfcon.iterrows():
-            iskep = (icon['hostname'][:3] in ['KOI', 'Kep', 'KIC'] or
-                     icon['hostname'] in others)
-            if iskep:
-                dfcon.loc[ind, 'flag_kepler'] = True
+    dfcon['flag_kepler'] = False
+    # these were labeled in the old table as being in the Kepler field
+    # but didn't have default host names indicating such
+    others = ['PH1', 'PH2', 'TrES-2', 'HAT-P-7', 'HAT-P-11',
+              '2MASS J19383260+4603591']
+    for ind, icon in dfcon.iterrows():
+        iskep = (icon['hostname'][:3] in ['KOI', 'Kep', 'KIC'] or
+                 icon['hostname'] in others)
+        if iskep:
+            dfcon.loc[ind, 'flag_kepler'] = True
 
-        dfcon['flag_k2'] = False
-        # these were labeled in the old table as being in the K2 fields
-        # but didn't have default host names indicating such
-        others = ['BD+20 594', 'G 9-40', 'GJ 9827', 'HAT-P-56', 'HATS-11',
-                  'HATS-12', 'HATS-36', 'HATS-9', 'HD 106315', 'HD 3167',
-                  'HD 72490', 'HD 80653', 'HD 89345', 'HIP 116454',
-                  'HIP 41378', 'Qatar-2', 'Ross 128', 'TRAPPIST-1',
-                  'V1298 Tau', 'WASP-151', 'WASP-157', 'WASP-28', 'WASP-47',
-                  'WASP-75', 'WASP-85 A', 'Wolf 503']
-        # note to self: EPIC 211945201 b and HD 3167 d are both in the K2
-        # fields but unlisted as such in the old confirmed planets table
-        for ind, icon in dfcon.iterrows():
-            isk2 = (icon['hostname'][:2] == 'K2' or
-                    icon['hostname'][:4] == 'EPIC' or
-                    icon['hostname'] in others)
-            if isk2:
-                dfcon.loc[ind, 'flag_k2'] = True
-    else:
-        dfcon['flag_kepler'] = dfcon['pl_kepflag'].astype(bool)
-        dfcon['flag_k2'] = dfcon['pl_k2flag'].astype(bool)
+    dfcon['flag_k2'] = False
+    # these were labeled in the old table as being in the K2 fields
+    # but didn't have default host names indicating such
+    others = ['BD+20 594', 'G 9-40', 'GJ 9827', 'HAT-P-56', 'HATS-11',
+              'HATS-12', 'HATS-36', 'HATS-9', 'HD 106315', 'HD 3167',
+              'HD 72490', 'HD 80653', 'HD 89345', 'HIP 116454',
+              'HIP 41378', 'Qatar-2', 'Ross 128', 'TRAPPIST-1',
+              'V1298 Tau', 'WASP-151', 'WASP-157', 'WASP-28', 'WASP-47',
+              'WASP-75', 'WASP-85 A', 'Wolf 503']
+    # note to self: EPIC 211945201 b and HD 3167 d are both in the K2
+    # fields but unlisted as such in the old confirmed planets table
+    for ind, icon in dfcon.iterrows():
+        isk2 = (icon['hostname'][:2] == 'K2' or
+                icon['hostname'][:4] == 'EPIC' or
+                icon['hostname'] in others)
+        if isk2:
+            dfcon.loc[ind, 'flag_k2'] = True
 
     # fill in any missing luminosities with our own calculation
     # (archive claims they already do this)
@@ -958,6 +926,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True, new=True):
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
                'st_j2': 'Jmag'}
     dfk2.rename(columns=renames, inplace=True)
+    breakpoint()
 
     # upper/lower limits are given values at that limit and we need to remove
     # them for now
