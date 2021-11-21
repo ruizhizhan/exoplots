@@ -920,13 +920,13 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     ################
 
     # put these into our keywords
-    renames = {'k2c_disp': 'disposition', 'pl_rade': 'rade',
-               'pl_orbper': 'period', 'pl_radj': 'radj', 'st_k2': 'Kmag',
-               'epic_candname': 'name', 'epic_name': 'hostname',
+    renames = {'pl_rade': 'rade', 'pl_orbsmax': 'semi_au', 'pl_insol': 'insol',
+               'pl_orbper': 'period', 'pl_radj': 'radj', 'sy_kmag': 'Kmag',
+               'pl_name': 'name',
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
-               'st_j2': 'Jmag'}
+               'sy_jmag': 'Jmag', 'disc_year': 'year_discovered',
+               'pl_masse': 'masse', 'pl_massj': 'massj'}
     dfk2.rename(columns=renames, inplace=True)
-    breakpoint()
 
     # upper/lower limits are given values at that limit and we need to remove
     # them for now
@@ -957,7 +957,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # make an int column of EPICs
     epics = []
-    for iep in dfk2['hostname']:
+    for iep in dfk2['epic_hostname']:
         epics.append(int(iep[4:]))
     epics = np.array(epics)
     dfk2['IC'] = epics
@@ -976,42 +976,29 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert len(srch) == 1
     srch = srch[0]
     assert dfk2.at[srch, 'disposition'] == 'Confirmed'
-    assert dfk2.at[srch, 'pl_name'] == 'EPIC 201497682 b'
+    assert dfk2.at[srch, 'name'] == 'EPIC 201497682 b'
     dfk2.at[srch, 'disposition'] = 'Candidate'
-    dfk2.at[srch, 'pl_name'] = float('nan')
+    dfk2.at[srch, 'name'] = float('nan')
     dfk2.at[srch, 'name'] = 'EPIC 201497682.04'
     srch = np.where(dfk2['name'] == 'EPIC 201497682.04')[0]
     assert len(srch) == 1
     srch = srch[0]
     assert dfk2.at[srch, 'disposition'] == 'Candidate'
-    assert ~np.isfinite(dfk2.at[srch, 'pl_name'])
+    assert ~np.isfinite(dfk2.at[srch, 'name'])
     """
-
-    # add in a column for the publication year of the K2 candidates
-    yrs = []
-    for ival in dfk2['k2c_reflink']:
-        yrs.append(int(ival.split('ET_AL__')[1][:4]))
-    dfk2['year_discovered'] = yrs
-    assert (dfk2['year_discovered'] > 2014).all()
-
-    # set the discovery year to be the same for all rows of the same planet
-    for iplan in np.unique(dfk2['name']):
-        srch = dfk2['name'] == iplan
-        myr = np.min(dfk2.loc[srch, 'year_discovered'])
-        dfk2.loc[srch, 'year_discovered'] = myr
 
     # check that we're including all K2 planets, but only counting them once
     k2con = dfk2['disposition'] == 'Confirmed'
     k2can = dfk2['disposition'] == 'Candidate'
 
     # all K2 confirmed planets are already in the confirmed planets table
-    notfound = ~np.in1d(dfk2['pl_name'][k2con], comp['name'])
+    notfound = ~np.in1d(dfk2['name'][k2con], comp['name'])
     assert notfound.sum() == 0
 
     # anything with a planet name in the K2 table but still a candidate hasn't
     # already shown up in the confirmed planets table
-    hasname = ~dfk2['pl_name'][k2can].isna()
-    assert np.in1d(dfk2['pl_name'][k2can][hasname], comp['name']).sum() == 0
+    hasname = ~dfk2['name'][k2can].isna()
+    assert np.in1d(dfk2['name'][k2can][hasname], comp['name']).sum() == 0
 
     # XXX: way too many objects don't have a single disposition
     uobjs = np.unique(dfk2['name'])
@@ -1020,14 +1007,19 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
         vv = np.where(dfk2['name'] == iobj)[0]
         if np.unique(dfk2['disposition'][vv]).size != 1:
             bad.append(iobj)
-        # assert np.unique(dfk2['disposition'][vv]).size == 1
+        assert np.unique(dfk2['disposition'][vv]).size == 1
 
     # also test explicitly by RA/Dec/Period
 
-    # the Kruse sample got 201505350 and 203771098 periods wrong,
-    # Crossfield got 201637175 wrong, Kruse/Mayo disagree on 212394689.02 by 2x
-    k2exclude = ['EPIC 201505350.01', 'EPIC 203771098.01', 'EPIC 201637175.01',
-                 'EPIC 212394689.02']
+    # the Kruse sample got K2-19 and K2-24 periods wrong,
+    # Crossfield got K2-22 wrong, Kruse/Mayo disagree on K2-189 by 2x
+    # the rest are usually a NaN period
+    k2exclude = ['K2-19 c', 'K2-24 c', 'K2-22 b',
+                 'K2-189 b', 'HIP 41378 d', 'WASP-47 b', 'WASP-47 c',
+                 'K2-132 b', 'HD 3167 c', 'K2-97 b', 'HIP 41378 e', 
+                 'HIP 41378 f', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
+                 'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
+                 'TRAPPIST-1 h']
     isexclude = np.zeros(len(k2exclude), dtype=bool)
 
     # make sure all confirmed K2 planets are in the confirmed table exactly once
@@ -1043,11 +1035,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
             assert len(res) == 0
             assert icon['name'] in k2exclude
             isexclude[k2exclude.index(icon['name'])] = True
-            res = np.where(comp['name'] == icon['pl_name'])[0]
+            res = np.where(comp['name'] == icon['name'])[0]
             assert len(res) == 1
         # update and sync the discovery year in both tables
         res = res[0]
-        assert comp.at[res, 'name'] == icon['pl_name']
+        assert comp.at[res, 'name'] == icon['name']
         myr = min(comp.at[res, 'year_discovered'], icon['year_discovered'])
         comp.at[res, 'year_discovered'] = myr
         dfk2.at[index, 'year_discovered'] = myr
@@ -1056,31 +1048,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # these are confirmed planets that aren't listed as such, so match them up
     # and set them as confirmed
-    k2known = ['EPIC 202126849.01', 'EPIC 212555594.02', 'EPIC 201357835.01',
-               'EPIC 212587672.01', 'EPIC 211314705.01', 'EPIC 211401787.01',
-               'EPIC 211579112.01', 'EPIC 211743874.01', 'EPIC 211763214.01',
-               'EPIC 211770696.01', 'EPIC 211779390.01', 'EPIC 211923431.01',
-               'EPIC 212088059.01', 'EPIC 212132195.01', 'EPIC 212161956.01',
-               'EPIC 212297394.01', 'EPIC 212420823.01', 'EPIC 212440430.01',
-               'EPIC 212543933.01', 'EPIC 211611158.02', 'EPIC 211978988.01',
-               'EPIC 211502222.01', 'EPIC 211647930.01', 'EPIC 211730024.01',
-               'EPIC 212058012.01', 'EPIC 212072539.01', 'EPIC 212081533.01',
-               'EPIC 212204403.01', 'EPIC 212204403.02', 'EPIC 251319382.01',
-               'EPIC 251319382.02', 'EPIC 211413752.04', 'EPIC 211413752.03',
-               'EPIC 211413752.05', 'EPIC 211897691.02', 'EPIC 212072539.02',
-               'EPIC 212624936.01', 'EPIC 206024342.01', 'EPIC 206024342.02',
-               'EPIC 206042996.01', 'EPIC 201595106.01', 'EPIC 228836835.01']
-
-    plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b', 'EPIC 212587672 c', 
-              'K2-354 b', 'K2-330 b', 'K2-332 b', 'K2-335 b', 'K2-336 b', 
-              'K2-337 b', 'K2-338 b', 'K2-340 b', 'K2-345 b', 'K2-346 b', 
-              'K2-347 b', 'EPIC 212297394 c', 'K2-349 b', 'K2-350 c', 
-              'K2-351 b', 'K2-185 c', 'K2-341 b', 'K2-331 c', 'K2-333 b', 
-              'K2-334 b', 'K2-342 b', 'K2-343 c', 'K2-344 b', 'K2-348 b', 
-              'K2-348 c', 'K2-352 c', 'K2-352 d', 'K2-268 d', 'K2-268 f', 
-              'K2-268 e', 'K2-339 b', 'K2-343 b', 'EPIC 212624936 c',
-              'EPIC 206024342 d', 'EPIC 206024342 c', 'EPIC 206042996 c',
-              'EPIC 201595106 b', 'EPIC 228836835 b']
+    k2known = ['EPIC 202126849.01', 'EPIC 212555594.02', 'EPIC 201357835.01']
+    plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b']
     reknown = np.zeros(len(k2known), dtype=bool)
 
     # make sure all candidate K2 planets aren't in the confirmed table
@@ -1094,14 +1063,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
             assert ican['name'] in k2known
             pall = dfk2['name'] == ican['name']
             dfk2.loc[pall, 'disposition'] = 'Confirmed'
-            dfk2.loc[pall, 'pl_name'] = plname[k2known.index(ican['name'])]
+            dfk2.loc[pall, 'name'] = plname[k2known.index(ican['name'])]
             reknown[k2known.index(ican['name'])] = True
 
             # EPIC 201357835.01 is K2-245, but that has a different
             # EPIC: 201357643
             if ican['name'] == 'EPIC 201357835.01':
                 dfk2.at[index, 'IC'] = 201357643
-                dfk2.at[index, 'name'] = 'EPIC 201357643.01'
+                dfk2.at[index, 'name'] = 'K2-245 b'
                 dfk2.at[index, 'hostname'] = 'EPIC 201357643'
                 dfk2.at[index, 'k2c_recentflag'] = 0
                 u1 = 'https://exofop.ipac.caltech.edu/k2/edit_target.php?id='
@@ -1130,11 +1099,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
             raise Exception('Multiple distances for EPIC {ik2}?')
     dfk2['distance_pc'] = k2dists
 
-    # all K2 candidates transit
-    dfk2['flag_tran'] = True
-
-    # convert their duration in days to hours
-    dfk2['tran_dur_hr'] *= 24
+    dfk2['flag_tran'] = dfk2['tran_flag'].values.astype(bool)
 
     # convert their depth in % to depth in ppm
     dfk2['tran_depth_ppm'] *= 1e4
@@ -1160,15 +1125,33 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
               (dfk2['tran_depth_ppm'] > tranrat*3)) & (dfk2['rade'] < 4)
     dfk2.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
 
+    # XXX: can now do this
     # fill in missing luminosities with our own calculation
     tmplums = (dfk2['st_rad'] ** 2) * ((dfk2['st_teff'] / 5772) ** 4)
     dfk2['st_log_lum'] = np.log10(tmplums)
 
-    # these columns aren't in the table by default, and we can't calculate
-    # them without a stellar mass
-    dfk2['st_mass'] = np.nan
-    dfk2['semi_au'] = np.nan
-    dfk2['insol'] = np.nan
+
+    # fill in any missing luminosities with our own calculation
+    # (archive claims they already do this)
+    tmplums = (dfk2['st_rad']**2) * ((dfk2['st_teff'] / 5772)**4)
+    toadd = (~np.isfinite(dfk2['st_log_lum'])) & np.isfinite(tmplums)
+    assert toadd.sum() == 0
+
+    # fill in any missing semi-major axes from Kepler's third law first
+    tmpau = (((dfk2['period'] / 365.256)**2) * dfk2['st_mass'])**(1./3.)
+    repau = (~np.isfinite(dfk2['semi_au'])) & np.isfinite(tmpau)
+    dfk2.loc[repau, 'semi_au'] = tmpau[repau]
+
+    # then fill in any missing semi-major axes with a/R* * R*
+    # convert to AU; 1 AU = 215 Rsun
+    tmpau2 = dfk2['pl_ratdor'] * dfk2['st_rad'] / 215.03216
+    repau2 = (~np.isfinite(dfk2['semi_au'])) & np.isfinite(tmpau2)
+    dfk2.loc[repau2, 'semi_au'] = tmpau2[repau2]
+
+    # calculate insolations ourselves and fill in any missing that we can
+    tmpinsol = (10.**dfk2['st_log_lum']) * (dfk2['semi_au']**-2)
+    repinsol = (~np.isfinite(dfk2['insol'])) & np.isfinite(tmpinsol)
+    dfk2.loc[repinsol, 'insol'] = tmpinsol[repinsol]
 
     if updated_k2_params:
         k2paramfile = 'data/k2_params_hardegree-ullman2020.txt'
@@ -1187,22 +1170,17 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
         k2can = dfk2['disposition'] == 'Candidate'
 
         # all K2 confirmed planets are already in the confirmed planets table
-        notfound = ~np.in1d(dfk2['pl_name'][k2con], comp['name'])
+        notfound = ~np.in1d(dfk2['name'][k2con], comp['name'])
         assert notfound.sum() == 0
-        assert dfk2['pl_name'][k2con].isna().sum() == 0
-
-        # anything with a planet name in the K2 table but still a candidate
-        # hasnt' already shown up in the confirmed planets table
-        hasname = ~dfk2['pl_name'][k2can].isna()
-        assert np.in1d(dfk2['pl_name'][k2can][hasname], comp['name']).sum() == 0
-
+        assert dfk2['name'][k2con].isna().sum() == 0
+        
         # keep track of which planets in the confirmed list don't have a K2
         # cand, so we have to find its EPIC/stellar parameters a fancier way
         cononly = comp['flag_k2'] & True
 
         # match the confirmed K2 candidates to the appropriate confirmed planets
         for index, icon in dfk2[k2con].iterrows():
-            res = np.where(icon['pl_name'] == comp['name'])
+            res = np.where(icon['name'] == comp['name'])
             res = res[0]
             assert len(res) == 1
             cononly[res[0]] = False
@@ -1322,9 +1300,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 matches = comp['hostname'][isin]
 
                 # look for those host names in the K2 candidate list
-                haskoi = np.zeros(dfk2['pl_name'].size).astype(bool)
+                haskoi = np.zeros(dfk2['name'].size).astype(bool)
                 for ik in matches:
-                    tmp = dfk2['pl_name'].str.contains(ik + ' ')
+                    tmp = dfk2['name'].str.contains(ik + ' ')
                     tmp.replace(np.nan, False, inplace=True)
                     haskoi |= tmp
 
@@ -1367,9 +1345,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # these have not been confirmed
     dfk2['year_confirmed'] = np.nan
 
-    # all found via transit
-    dfk2['discoverymethod'] = 'Transit'
-
     k2can = (dfk2['disposition'] == 'Candidate') & (dfk2['k2c_recentflag'] == 1)
 
     # XXX: once the dispositions get fixed
@@ -1395,10 +1370,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # at least give it a sky position from MAST
     dfk2.loc[dfk2['IC'] == 229228348, 'ra'] = 289.5273417
     dfk2.loc[dfk2['IC'] == 229228348, 'dec'] = -16.3430889
-
-    # no masses
-    dfk2['masse'] = np.nan
-    dfk2['massj'] = np.nan
 
     # do all the tests to make sure things are working, only focusing on
     # candidates since that's all we're adding to output. FPs can be weird.
@@ -1649,10 +1620,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
-    tobeconf = ['TOI-732.02', 'TOI-2410.01', 'TOI-2425.01', 'TOI-561.03',
-                'TOI-2455.01',
+    tobeconf = ['TOI-732.02', 'TOI-561.03',
                 'TOI-628.01', 'TOI-640.01', 'TOI-1333.01', 'TOI-1478.01',
-                'TOI-1601.01', 'TOI-519.01', 'TOI-2639.01', 'TOI-269.01',
+                'TOI-1601.01', 'TOI-519.01', 'TOI-269.01',
                 'TOI-220.01', 'TOI-1231.01', 'TOI-3534.01', 'TOI-3563.01',
                 'TOI-3597.01', 'TOI-3612.01', 
                 'TOI-3636.01', 'TOI-3846.01', 'TOI-1259.01',
@@ -1661,11 +1631,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-1749.02', 'TOI-3705.01', 'TOI-1062.01', 'TOI-532.01',
                 'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01',
                 'TOI-4484.01', 'TOI-1431.01', 'TOI-421.02', 'TOI-509.01',
-                'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01', 'TOI-4540.01',
+                'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01', 
                 'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01', 
                 'TOI-696.01', 'TOI-696.02', 
-                'TOI-4608.01', 'TOI-4615.01', 
-                'TOI-4619.01', 'TOI-178.04']
+                'TOI-178.04', 'TOI-4628.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
