@@ -1209,6 +1209,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                     comp.at[res, 'rade'] *= srat
                     comp.at[res, 'radj'] *= srat
 
+        newepics = []
         # make sure all candidate K2 planets have the new parameters
         for index, ican in dfk2[k2can].iterrows():
             res = np.where((np.abs(comp['ra'] - ican['ra']) < 1. / 60) &
@@ -1220,7 +1221,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
             fd = np.where(ee == ican['IC'])[0]
             if len(fd) != 1:
-                warnings.warn(f"Can't find parameters for EPIC {ican['IC']}")
+                newepics.append(ican['IC'])
             elif ~np.isfinite(mm[fd[0]]):
                 continue
             else:
@@ -1240,6 +1241,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 if np.isfinite(srat):
                     dfk2.at[index, 'rade'] *= srat
                     dfk2.at[index, 'radj'] *= srat
+        if len(newepics) != 0:
+            warnings.warn(f"Can't find parameters for EPICs {newepics}")
 
         missing = ['GJ 9827 b', 'GJ 9827 c', 'GJ 9827 d', 'HD 72490 b',
                    'HD 89345 b', 'HIP 116454 b', 'HIP 41378 b', 'HIP 41378 c',
@@ -1636,6 +1639,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01', 
                 'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01', 
                 'TOI-696.01', 'TOI-696.02', 'TOI-4628.01',
+                'TOI-1611.01', 'TOI-4549.01', 'TOI-4611.01',
                 # K2 candidates
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01', 
                 'TOI-4540.01', 'TOI-4608.01', 'TOI-4615.01', 'TOI-4619.01',
