@@ -573,10 +573,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     koican = dfkoi['disposition'] == 'Candidate'
 
     # KOI-4441 and 5475 was a KOI at half the period of the confirmed planet
-    # and 5568 a KOI at 1/3 the confirmed period.
-    excluded = ['KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01']
+    # and 5568 a KOI at 1/3 the confirmed period. KOI-2174.03 confirmed at
+    # double the period
+    excluded = ['KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01', 'KOI-2174.03']
     # what the name is in the confirmed planets table
-    real = ['Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b']
+    real = ['Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1802 b']
     fixed = np.zeros(len(excluded), dtype=bool)
 
     # make sure all confirmed KOIs are in the confirmed table exactly once
