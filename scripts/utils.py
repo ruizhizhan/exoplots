@@ -1642,10 +1642,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-1611.01', 'TOI-4549.01', 'TOI-4611.01',
                 'TOI-731.01',
                 'TOI-552.01', 'TOI-730.01', 'TOI-737.01', 'TOI-2109.01',
+                'TOI-4916.01',
                 # K2 candidates
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01', 
                 'TOI-4540.01', 'TOI-4608.01', 'TOI-4615.01', 'TOI-4619.01',
-                'TOI-4634.01'
+                'TOI-4634.01', 'TOI-4838.01'
                 # end K2 candidates
                 ]
     tobeadded = []
