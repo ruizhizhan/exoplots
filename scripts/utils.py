@@ -158,12 +158,12 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     ----------
     updated_koi_params : bool
         If True, for all stars in the Kepler field, use the updated stellar
-        parameters from Berger 2020. Recalculate planet radii, insolations, etc
+        parameters from Berger 2020. Recalculate planet radii, insolations, etc.
         using these new Gaia assisted stellar parameters.
     updated_k2_params : bool
         If True, for all stars in the K2 fields, use the updated stellar
         parameters from Hardegree-Ullman 2020. Recalculate planet radii,
-        insolations, etc using these new Gaia assisted stellar parameters.
+        insolations, etc. using these new Gaia assisted stellar parameters.
 
     Returns
     -------
@@ -263,7 +263,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr'}
     dfcon.rename(columns=renames, inplace=True)
 
-    # upper/lower limits are given values at that limit and we need to remove
+    # upper/lower limits are given values at that limit, and we need to remove
     # them for now
     dfcon.loc[dfcon['pl_orbperlim'] != 0, 'period'] = np.nan
     dfcon.loc[dfcon['pl_radelim'] != 0, 'rade'] = np.nan
@@ -281,7 +281,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfcon.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
 
     ct = 0
-    # 2 planets (OGLE-TR-111 b, Kepler-49 b) have different references 
+    # 2 planets (OGLE-TR-111 b, Kepler-49 b) have different references
     # for the two masses
     for ii in np.arange(dfcon['masse'].size):
         r1 = dfcon.at[ii, 'pl_bmasse_reflink']
@@ -352,7 +352,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
               (dfcon['tran_depth_ppm'] > tranrat*3)) & (dfcon['rade'] < 4)
     dfcon.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
 
-    # set whether or not these were observed by Kepler or K2
+    # set whether these were observed by Kepler or K2
     dfcon['flag_kepler'] = False
     # these were labeled in the old table as being in the Kepler field
     # but didn't have default host names indicating such
@@ -568,7 +568,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert len(dfkoi[dfkoi['name'] == 'KOI-1101.02']) == 0
 
     # there's not an easy way to tie confirmed planets in the KOI table to
-    # entries in the confirmed planets table. instead match by RA/Dec/Period
+    # entries in the confirmed planets table. instead, match by RA/Dec/Period
     koicon = dfkoi['disposition'] == 'Confirmed'
     koican = dfkoi['disposition'] == 'Candidate'
 
@@ -602,7 +602,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     assert fixed.all()
 
-    # these are now confirmed but they didn't update it
+    # these are now confirmed, but they didn't update it
     # in the KOI table
     newconf = []
     newconf2 = []
@@ -929,7 +929,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'pl_masse': 'masse', 'pl_massj': 'massj'}
     dfk2.rename(columns=renames, inplace=True)
 
-    # upper/lower limits are given values at that limit and we need to remove
+    # upper/lower limits are given values at that limit, and we need to remove
     # them for now
     dfk2.loc[dfk2['pl_orbperlim'] != 0, 'period'] = np.nan
     dfk2.loc[dfk2['pl_radelim'] != 0, 'rade'] = np.nan
@@ -1017,7 +1017,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # the rest are usually a NaN period
     k2exclude = ['K2-19 c', 'K2-24 c', 'K2-22 b',
                  'K2-189 b', 'HIP 41378 d', 'WASP-47 b', 'WASP-47 c',
-                 'K2-132 b', 'HD 3167 c', 'K2-97 b', 'HIP 41378 e', 
+                 'K2-132 b', 'HD 3167 c', 'K2-97 b', 'HIP 41378 e',
                  'HIP 41378 f', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
                  'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
                  'TRAPPIST-1 h']
@@ -1131,7 +1131,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     tmplums = (dfk2['st_rad'] ** 2) * ((dfk2['st_teff'] / 5772) ** 4)
     dfk2['st_log_lum'] = np.log10(tmplums)
 
-
     # fill in any missing luminosities with our own calculation
     # (archive claims they already do this)
     tmplums = (dfk2['st_rad']**2) * ((dfk2['st_teff'] / 5772)**4)
@@ -1174,7 +1173,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
         notfound = ~np.in1d(dfk2['name'][k2con], comp['name'])
         assert notfound.sum() == 0
         assert dfk2['name'][k2con].isna().sum() == 0
-        
+
         # keep track of which planets in the confirmed list don't have a K2
         # cand, so we have to find its EPIC/stellar parameters a fancier way
         cononly = comp['flag_k2'] & True
@@ -1408,8 +1407,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # RA and Dec are both valid
     # XXX: for now
     warnings.warn('put K2 ra dec test back when ready.')
-    #assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
-    #assert ((canonly['dec'] >= -90) & (canonly['dec'] <= 90.)).all()
+    # assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
+    # assert ((canonly['dec'] >= -90) & (canonly['dec'] <= 90.)).all()
 
     # planet parameters are either NaN or > 0
     assert ((~np.isfinite(canonly['period'])) | (canonly['period'] > 0)).all()
@@ -1526,10 +1525,12 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # these are WASP-30 and LP 261-75, brown dwarfs and not a real planet
     bds = ['TOI-239.01', 'TOI-1779.01', 'TOI-148.01', 'TOI-503.01',
            'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01',
-           'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01']
+           'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01', 'TOI-5081.01']
     for ibd in bds:
         bd = np.where(dftoi['name'] == ibd)[0][0]
-        assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
+        warnings.warn('temporary BD fix')
+        if ibd != 'TOI-5081.01':
+            assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
         dftoi.loc[bd, 'disposition'] = 'False Positive'
 
     # TOI-515 and 844.01 are also K2 planet candidates, so remove it from
@@ -1554,7 +1555,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # any supposedly confirmed TOIs that aren't in the table get demoted back
     # to candidate
 
-    # these ones we have an explanation for and know they're properly in the
+    # these we have an explanation for and know they're properly in the
     # confirmed table.
     # 1793, 1899, 2011, 2221 are single transits, so no period
     # matching
@@ -1564,9 +1565,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # 351 TESS got the period wrong by 2x
     ignores = ['TOI-1899.01', 'TOI-2011.01', 'TOI-2221.01',
                'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02']
-    conname = ['TOI-1899 b', 'HD 136352 b', 'AU Mic b', 
+    conname = ['TOI-1899 b', 'HD 136352 b', 'AU Mic b',
                'WASP-165 b', 'NGTS-11 b', 'HD 152843 c', 'TOI-216.02']
-    # we know what these are and they have paper trails of submitted papers
+    # we know what these are, and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
     # prematurely marked confirmed on ExoFOP
@@ -1575,7 +1576,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-857.01', 'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01',
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
-               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01', 
+               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1629,25 +1630,33 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-628.01', 'TOI-640.01', 'TOI-1333.01', 'TOI-1478.01',
                 'TOI-1601.01', 'TOI-519.01', 'TOI-269.01',
                 'TOI-220.01', 'TOI-1231.01', 'TOI-3534.01', 'TOI-3563.01',
-                'TOI-3597.01', 'TOI-3612.01', 
+                'TOI-3597.01', 'TOI-3612.01',
                 'TOI-3636.01', 'TOI-3846.01', 'TOI-1259.01',
                 'TOI-1260.01', 'TOI-1260.02', 'TOI-1685.01', 'TOI-1807.01',
                 'TOI-2076.01', 'TOI-1749.01',
                 'TOI-1749.02', 'TOI-1062.01', 'TOI-532.01',
                 'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01',
                 'TOI-4484.01', 'TOI-1431.01', 'TOI-421.02', 'TOI-509.01',
-                'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01', 
-                'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01', 
+                'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01',
+                'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01',
                 'TOI-696.01', 'TOI-696.02', 'TOI-4628.01',
                 'TOI-1611.01', 'TOI-4549.01', 'TOI-4611.01',
                 'TOI-731.01',
                 'TOI-552.01', 'TOI-730.01', 'TOI-737.01', 'TOI-2109.01',
                 # K2 candidates
-                'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01', 
+                'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01',
                 'TOI-4540.01', 'TOI-4608.01', 'TOI-4615.01', 'TOI-4619.01',
-                'TOI-4634.01', 'TOI-4838.01'
+                'TOI-4634.01', 'TOI-4838.01', 'TOI-5073.01',
+                'TOI-5102.01', 'TOI-5103.01',
                 # end K2 candidates
-                ]
+
+                # new KP should be fixed soon
+                'TOI-5065.01', 'TOI-5067.01', 'TOI-5068.01',
+                'TOI-5071.01', 'TOI-5072.01',  'TOI-5074.01',
+                'TOI-5080.01', 'TOI-5083.01', 'TOI-5086.01',
+                'TOI-5087.01', 'TOI-5089.01', 'TOI-5093.01', 'TOI-5094.01',
+                'TOI-5095.01', 'TOI-5096.01', 'TOI-5097.01', 'TOI-5098.01',
+                'TOI-5101.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
