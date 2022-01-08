@@ -1525,12 +1525,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # these are WASP-30 and LP 261-75, brown dwarfs and not a real planet
     bds = ['TOI-239.01', 'TOI-1779.01', 'TOI-148.01', 'TOI-503.01',
            'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01',
-           'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01', 'TOI-5081.01']
+           'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01', 'TOI-5081.01',
+           'TOI-5090.01']
     for ibd in bds:
         bd = np.where(dftoi['name'] == ibd)[0][0]
-        warnings.warn('temporary BD fix')
-        if ibd != 'TOI-5081.01':
-            assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
+        assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
         dftoi.loc[bd, 'disposition'] = 'False Positive'
 
     # TOI-515 and 844.01 are also K2 planet candidates, so remove it from
@@ -1647,16 +1646,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01',
                 'TOI-4540.01', 'TOI-4608.01', 'TOI-4615.01', 'TOI-4619.01',
                 'TOI-4634.01', 'TOI-4838.01', 'TOI-5073.01',
-                'TOI-5102.01', 'TOI-5103.01',
+                'TOI-5102.01', 'TOI-5103.01'
                 # end K2 candidates
-
-                # new KP should be fixed soon
-                'TOI-5065.01', 'TOI-5067.01', 'TOI-5068.01',
-                'TOI-5071.01', 'TOI-5072.01',  'TOI-5074.01',
-                'TOI-5080.01', 'TOI-5083.01', 'TOI-5086.01',
-                'TOI-5087.01', 'TOI-5089.01', 'TOI-5093.01', 'TOI-5094.01',
-                'TOI-5095.01', 'TOI-5096.01', 'TOI-5097.01', 'TOI-5098.01',
-                'TOI-5101.01']
+                ]
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
