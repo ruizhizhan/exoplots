@@ -1576,7 +1576,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
-               'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01']
+               'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
+               'TOI-1064.01', 'TOI-1064.02']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1625,30 +1626,13 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
-    tobeconf = ['TOI-732.02', 'TOI-561.03',
-                'TOI-628.01', 'TOI-640.01', 'TOI-1333.01', 'TOI-1478.01',
-                'TOI-1601.01', 'TOI-519.01', 'TOI-269.01',
-                'TOI-220.01', 'TOI-1231.01', 'TOI-3534.01', 'TOI-3563.01',
-                'TOI-3597.01', 'TOI-3612.01',
-                'TOI-3636.01', 'TOI-3846.01', 'TOI-1259.01',
-                'TOI-1260.01', 'TOI-1260.02', 'TOI-1685.01', 'TOI-1807.01',
-                'TOI-2076.01', 'TOI-1749.01',
-                'TOI-1749.02', 'TOI-1062.01', 'TOI-532.01',
-                'TOI-4411.01', 'TOI-1518.01', 'TOI-4433.01', 'TOI-4444.01',
-                'TOI-4484.01', 'TOI-1431.01', 'TOI-421.02', 'TOI-509.01',
-                'TOI-509.02', 'TOI-1789.01', 'TOI-3362.01',
-                'TOI-4587.01', 'TOI-4588.01', 'TOI-4593.01', 'TOI-4594.01',
-                'TOI-696.01', 'TOI-696.02', 'TOI-4628.01',
-                'TOI-1611.01', 'TOI-4549.01', 'TOI-4611.01',
-                'TOI-731.01',
-                'TOI-552.01', 'TOI-730.01', 'TOI-737.01', 'TOI-2109.01',
+    tobeconf = [  # KOIs
+                'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01',
-                'TOI-4540.01', 'TOI-4608.01', 'TOI-4615.01', 'TOI-4619.01',
-                'TOI-4634.01', 'TOI-4838.01', 'TOI-5073.01',
-                'TOI-5102.01', 'TOI-5103.01'
-                # end K2 candidates
-                ]
+                'TOI-4540.01', 'TOI-4549.01', 'TOI-4608.01', 'TOI-4611.01',
+                'TOI-4615.01', 'TOI-4619.01', 'TOI-4634.01', 'TOI-4838.01',
+                'TOI-5073.01', 'TOI-5102.01', 'TOI-5103.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
