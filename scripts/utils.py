@@ -575,9 +575,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # KOI-4441 and 5475 was a KOI at half the period of the confirmed planet
     # and 5568 a KOI at 1/3 the confirmed period. KOI-2174.03 confirmed at
     # double the period
-    excluded = ['KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01', 'KOI-2174.03']
+    excluded = ['KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01', 'KOI-2174.03',
+                'KOI-4777.01']
     # what the name is in the confirmed planets table
-    real = ['Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1802 b']
+    real = ['Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1802 b',
+            'KOI-4777.01']
     fixed = np.zeros(len(excluded), dtype=bool)
 
     # make sure all confirmed KOIs are in the confirmed table exactly once
@@ -750,11 +752,12 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                    'PH1 b', 'KOI-55 b', 'KOI-55 c', 'Kepler-1647 b',
                    'Kepler-413 b', '2MASS J19383260+4603591 b', 'Kepler-453 b',
                    'Kepler-1654 b', 'Kepler-1661 b', 'Kepler-448 c',
-                   'Kepler-88 d', 'Kepler-47 d', 'HAT-P-11 c', 'Kepler-90 i']
+                   'Kepler-88 d', 'Kepler-47 d', 'HAT-P-11 c', 'Kepler-90 i',
+                   'Kepler-1708 b']
         fillkics = [5446285, 8435766, 12644769, 8572936, 9837578, 6762829,
                     10020423, 10020423, 4862625, 5807616, 5807616, 5473556,
                     12351927, 9472174, 9632895, 8410697, 6504534, 5812701,
-                    5446285, 10020423, 10748390, 11442793]
+                    5446285, 10020423, 10748390, 11442793, 7906827]
 
         # for Kepler planets only on the confirmed list, try to find their KIC
         # from other KOIs in the system
@@ -1636,8 +1639,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = []
-    confmatch = []
+    nopermatch = ['TOI-2180.01']
+    confmatch = ['TOI-2180 b']
     singconf = np.zeros(len(nopermatch), dtype=bool)
 
     # any candidates in the confirmed table get set as such

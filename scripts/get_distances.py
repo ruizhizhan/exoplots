@@ -20,12 +20,12 @@ if run:
 
     dists = []
     ukics = np.unique(dfkoi['IC'])
-    
+
     # these are KICs of confirmed planets in the Kepler field but not KOIs
     fillkics = [5446285, 8435766, 12644769, 8572936, 9837578, 6762829, 10020423,
                 10020423, 4862625, 5807616, 5807616, 5473556, 12351927, 9472174,
                 9632895, 8410697, 6504534, 5812701, 5446285, 10020423, 10748390,
-                11442793]
+                11442793, 7906827]
     # these are confirmed only planets with planet names KIC ##### b
     morekics = [5951458, 10001893, 7917485, 5479689, 8121913]
 
@@ -79,7 +79,7 @@ if run:
     gk2 = fits.open('data/k2_dr2_1arcsec.fits')
     k2dists = []
     uepics = np.unique(dfk2['IC'])
-    
+
     # these are EPICs of confirmed planets in the K2 fields but not K2 cands
     fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
                  60021410, 211311380, 211311380, 211311380, 211311380,
@@ -100,12 +100,13 @@ if run:
                  249384674, 249384674, 249557502, 249826231, 201663879,
                  201796690, 248480671, 248558190, 248616368, 248639308,
                  246074965, 246472939, 251554286, 211914998, 211730267,
-                 211537087, 211525753, 228724232, 228724232]
-    
+                 211537087, 211525753, 228724232, 228724232, 201729655,
+                 220299658]
+
     # these are confirmed only planets with planet names EPIC ##### b
-    moreepics = [249893012, 248847494, 246851721, 201170410, 201757695, 
+    moreepics = [249893012, 248847494, 246851721, 201170410, 201757695,
                  246193072, 201427007, 220492298]
-    
+
     uepics = np.unique(np.concatenate((uepics, fillepics, moreepics)))
 
     for ik2 in uepics:
