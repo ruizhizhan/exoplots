@@ -1630,13 +1630,17 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
-    tobeconf = [  # KOIs
+    tobeconf = ['TOI-5111.01', 'TOI-5121.01', 'TOI-5123.02', 'TOI-5136.01',
+                'TOI-5138.01', 'TOI-5141.01', 'TOI-5142.01', 'TOI-5144.01',
+                'TOI-5145.01', 'TOI-5146.01',
+                # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01',
                 'TOI-4540.01', 'TOI-4549.01', 'TOI-4608.01', 'TOI-4611.01',
                 'TOI-4615.01', 'TOI-4619.01', 'TOI-4634.01', 'TOI-4838.01',
-                'TOI-5073.01', 'TOI-5102.01', 'TOI-5103.01']
+                'TOI-5073.01', 'TOI-5102.01', 'TOI-5103.01', 'TOI-5105.01',
+                'TOI-5116.01', 'TOI-5137.01', 'TOI-5140.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
