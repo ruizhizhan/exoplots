@@ -40,12 +40,14 @@ jobs:
       # update the planet parameters tables
       - name: Download files
         run: |
+          shell: bash -l {0}
           conda info
           conda list
           python download-planet-data.py
       # regenerate all the figures
       - name: Update plots
         run: |
+          shell: bash -l {0}
           ./update.sh
       # push the changes back to the GitHub repository
       # from https://github.com/marketplace/actions/git-auto-commit
