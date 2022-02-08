@@ -39,15 +39,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
       # update the planet parameters tables
       - name: Download files
+        shell: bash -l {0}
         run: |
-          shell: bash -l {0}
           conda info
           conda list
           python download-planet-data.py
       # regenerate all the figures
       - name: Update plots
+        shell: bash -l {0}
         run: |
-          shell: bash -l {0}
           ./update.sh
       # push the changes back to the GitHub repository
       # from https://github.com/marketplace/actions/git-auto-commit
