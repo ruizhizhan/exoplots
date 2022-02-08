@@ -23,7 +23,8 @@ jobs:
 
     steps:
     # check out the repository to make changes
-    - uses: actions/checkout@v2
+    - name: Checkout the repo
+      uses: actions/checkout@v2
     # get a local python going
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -31,8 +32,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     # get all the up to date packages needed
     - name: Install dependencies
-      run: |
-        $CONDA/bin/conda env update --file environment.yml --name base
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        environment-file: environment.yml
     # update the planet parameters tables
     - name: Download files
       run: |
@@ -43,7 +45,8 @@ jobs:
         ./update.sh
     # push the changes back to the GitHub repository
     # from https://github.com/marketplace/actions/git-auto-commit
-    - uses: stefanzweifel/git-auto-commit-action@v4.1.0
+    - name: Commit back the changes
+      uses: stefanzweifel/git-auto-commit-action@v4.1.0
       with:
         commit_message: Rerun with updated planet lists
         branch: master
