@@ -41,8 +41,6 @@ jobs:
       - name: Download files
         shell: bash -l {0}
         run: |
-          conda info
-          conda list
           python download-planet-data.py
       # regenerate all the figures
       - name: Update plots
