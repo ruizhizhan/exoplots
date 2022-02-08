@@ -1580,8 +1580,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
-               'TOI-1064.01', 'TOI-1064.02', 'TOI-1442.01', 'TOI-2445.01',
-               'TOI-1227.01']
+               'TOI-1442.01', 'TOI-2445.01', 'TOI-1227.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1630,7 +1629,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
-    tobeconf = [# KOIs
+    tobeconf = ['TOI-2184.01',
+                # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01',
