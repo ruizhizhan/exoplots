@@ -917,7 +917,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # add the KOIs to our final composite table
     koiadd = dfkoi[cols][koican].copy()
-    comp = comp.append(koiadd, verify_integrity=True, ignore_index=True)
+    comp = pd.concat((comp, koiadd), verify_integrity=True, ignore_index=True)
 
     ################
     # K2 LIST PREP #
@@ -1444,7 +1444,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # add the K2 candidates to our final composite table
     k2add = dfk2[cols][k2can].copy()
-    comp = comp.append(k2add, verify_integrity=True, ignore_index=True)
+    comp = pd.concat((comp, k2add), verify_integrity=True, ignore_index=True)
 
     #################
     # TOI LIST PREP #
@@ -1580,7 +1580,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
-               'TOI-1442.01', 'TOI-2445.01', 'TOI-1227.01']
+               'TOI-1227.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1630,6 +1630,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-2184.01',
+                'TOI-206.01', 'TOI-500.01', 'TOI-544.01', 'TOI-833.01',
+                'TOI-1075.01', 'TOI-1268.01', 'TOI-1411.01', 'TOI-1693.01',
+                'TOI-1860.01', 'TOI-2260.01', 'TOI-2337.01', 'TOI-2411.01',
+                'TOI-2427.01', 'TOI-2669.01', 'TOI-4329.01',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
@@ -1832,7 +1836,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # add the K2 candidates to our final composite table
     toiadd = dftoi[cols][newcan].copy()
-    comp = comp.append(toiadd, verify_integrity=True, ignore_index=True)
+    comp = pd.concat((comp, toiadd), verify_integrity=True, ignore_index=True)
 
     ###################
     # FINAL ADDITIONS #
