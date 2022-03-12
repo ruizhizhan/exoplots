@@ -1538,7 +1538,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # TOI-515 and 844.01 are also K2 planet candidates, so remove it from
     # counting as a TESS planet. should I do anything else about this?
     # TOI-1241 is KOI-5
-    prevs = ['TOI-515.01', 'TOI-844.01', 'TOI-1241.01']
+    prevs = ['TOI-515.01', 'TOI-1241.01']
     for ipr in prevs:
         pr = np.where(dftoi['name'] == ipr)[0][0]
         assert dftoi.loc[pr, 'disposition'] == 'Candidate'
