@@ -12,23 +12,27 @@ NEW_API = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query='
 # archive with parameters derived from a single, published reference
 
 # All confirmed planets
-print("Downloading all confirmed planets from NExSci...")
+tt = datetime.now().strftime('%H:%M:%S')
+print(f"{tt} Downloading all confirmed planets from NExSci...")
 df = pd.read_csv(NEW_API + 'select+*+from+pscomppars&format=csv')
 df.to_csv('data/confirmed-planets.csv')
 
 # full KOI table
-print('Downloading full KOI table from NExSci...')
+tt = datetime.now().strftime('%H:%M:%S')
+print(f'{tt} Downloading full KOI table from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*')
 df.to_csv('data/kepler-kois-full.csv')
 
 # grab all the K2 candidates (or at least the ones they have put into this
 # not-quite-complete table)
-print('Downloading full K2 candidates table from NExSci...')
+tt = datetime.now().strftime('%H:%M:%S')
+print(f'{tt} Downloading full K2 candidates table from NExSci...')
 df = pd.read_csv(NEW_API + 'select+*+from+k2pandc&format=csv')
 df.to_csv('data/k2-candidates-table.csv')
 
 # get the TOI list from ExoFOP-TESS.
-print('Downloading full TESS candidates table from ExoFOP...')
+tt = datetime.now().strftime('%H:%M:%S')
+print(f'{tt} Downloading full TESS candidates table from ExoFOP...')
 df = pd.read_csv('https://exofop.ipac.caltech.edu/tess/download_toi.php?sort'
                  '=toi&output=csv')
 df.to_csv('data/tess-candidates.csv')
@@ -37,9 +41,11 @@ with open('data/last_update_time.txt', 'w') as ff:
     ff.write(str(datetime.now()))
 
 # create the master data frame used in all the plots
-print('Creating master data frame and testing all planet properties.')
+tt = datetime.now().strftime('%H:%M:%S')
+print(f'{tt} Creating master data frame and testing all planet properties.')
 load_data()
-
+tt = datetime.now().strftime('%H:%M:%S')
+print(f'{tt} Done.')
 """
 # all old KOI releases. Should only have to download these once
 print('Downloading full KOI table from NExSci...')
