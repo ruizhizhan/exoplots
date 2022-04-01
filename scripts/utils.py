@@ -343,7 +343,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # K2-22 b
     getrad = (dfcon['flag_tran'] & np.isfinite(dfcon['tran_depth_ppm']) &
               (~np.isfinite(dfcon['rade'])) & np.isfinite(dfcon['st_rad']))
-    assert getrad.sum() == 1
+    assert getrad.sum() == 0
     # don't assume radius from depth because it's a disintegrating planet
     # where depth doesn't equal true radius
 
@@ -1052,8 +1052,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # these are confirmed planets that aren't listed as such, so match them up
     # and set them as confirmed
-    k2known = ['EPIC 202126849.01', 'EPIC 212555594.02', 'EPIC 201357835.01']
-    plname = ['HAT-P-54 b', 'K2-192 b', 'K2-245 b']
+    k2known = ['EPIC 212555594.02', 'EPIC 201357835.01']
+    plname = ['K2-192 b', 'K2-245 b']
     reknown = np.zeros(len(k2known), dtype=bool)
 
     # make sure all candidate K2 planets aren't in the confirmed table
@@ -1580,7 +1580,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
-               'TOI-1227.01', 'TOI-3757.01']
+               'TOI-3757.01']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
@@ -1640,10 +1640,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 # K2 candidates
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01',
                 'TOI-4540.01', 'TOI-4549.01', 'TOI-4608.01', 'TOI-4611.01',
-                'TOI-4615.01', 'TOI-4619.01', 'TOI-4634.01', 'TOI-4838.01',
+                'TOI-4615.01', 'TOI-4619.01', 'TOI-4838.01',
                 'TOI-5073.01', 'TOI-5102.01', 'TOI-5103.01', 'TOI-5105.01',
                 'TOI-5116.01', 'TOI-5137.01', 'TOI-5140.01', 'TOI-5154.01',
-                'TOI-5157.01', 'TOI-5158.01', 'TOI-5161.01', 'TOI-5165.01',
+                'TOI-5158.01', 'TOI-5161.01', 'TOI-5165.01',
                 'TOI-5167.01', 'TOI-5171.01', 'TOI-5175.01', 'TOI-5176.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
