@@ -197,16 +197,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     ticparams = 'data/full_tic.txt'
 
-    # the dtype is to silence a pandas warning
-    ignore_warns = {'hd_name': 'string', 'hip_name': 'string',
-                    'pl_orbtperstr': 'string', 'pl_occdepstr': 'string',
-                    'pl_projobliqstr': 'string', 'sy_icmagstr': 'string',
-                    'pl_trueobliqstr': 'string', 'pl_msinijstr': 'string',
-                    'pl_msiniestr': 'string',
-                    'pl_occdep_reflink': 'string'}
-    dfcon = pd.read_csv(datafile, dtype=ignore_warns)
+    dfcon = pd.read_csv(datafile, low_memory=False)
 
-    dfk2 = pd.read_csv(k2file)
+    dfk2 = pd.read_csv(k2file, low_memory=False)
     dfkoi = pd.read_csv(koifile)
     dftoi = pd.read_csv(toifile)
     if os.path.exists(ticparams):
@@ -1650,7 +1643,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-5116.01', 'TOI-5137.01', 'TOI-5140.01', 'TOI-5154.01',
                 'TOI-5158.01', 'TOI-5161.01', 'TOI-5165.01',
                 'TOI-5167.01', 'TOI-5171.01', 'TOI-5175.01', 'TOI-5176.01',
-                'TOI-5115.01', 'TOI-5480.01', 'TOI-5485.01', 'TOI-5522.01']
+                'TOI-5115.01', 'TOI-5480.01', 'TOI-5485.01', 'TOI-5522.01',
+                'TOI-5538.01', 'TOI-5539.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed

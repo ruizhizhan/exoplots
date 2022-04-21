@@ -14,7 +14,8 @@ NEW_API = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query='
 # All confirmed planets
 tt = datetime.now().strftime('%H:%M:%S')
 print(f"{tt} Downloading all confirmed planets from NExSci...")
-df = pd.read_csv(NEW_API + 'select+*+from+pscomppars&format=csv')
+df = pd.read_csv(NEW_API + 'select+*+from+pscomppars&format=csv',
+                 low_memory=False)
 df.to_csv('data/confirmed-planets.csv')
 
 # full KOI table
@@ -27,7 +28,7 @@ df.to_csv('data/kepler-kois-full.csv')
 # not-quite-complete table)
 tt = datetime.now().strftime('%H:%M:%S')
 print(f'{tt} Downloading full K2 candidates table from NExSci...')
-df = pd.read_csv(NEW_API + 'select+*+from+k2pandc&format=csv')
+df = pd.read_csv(NEW_API + 'select+*+from+k2pandc&format=csv', low_memory=False)
 df.to_csv('data/k2-candidates-table.csv')
 
 # get the TOI list from ExoFOP-TESS.
