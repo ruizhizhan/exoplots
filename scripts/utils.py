@@ -753,11 +753,12 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                    'Kepler-413 b', '2MASS J19383260+4603591 b', 'Kepler-453 b',
                    'Kepler-1654 b', 'Kepler-1661 b', 'Kepler-448 c',
                    'Kepler-88 d', 'Kepler-47 d', 'HAT-P-11 c', 'Kepler-90 i',
-                   'Kepler-1708 b']
+                   'Kepler-1708 b', 'Kepler-451 c', 'Kepler-451 d']
         fillkics = [5446285, 8435766, 12644769, 8572936, 9837578, 6762829,
                     10020423, 10020423, 4862625, 5807616, 5807616, 5473556,
                     12351927, 9472174, 9632895, 8410697, 6504534, 5812701,
-                    5446285, 10020423, 10748390, 11442793, 7906827]
+                    5446285, 10020423, 10748390, 11442793, 7906827, 9472174,
+                    9472174]
 
         # for Kepler planets only on the confirmed list, try to find their KIC
         # from other KOIs in the system
@@ -1636,6 +1637,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-2427.01', 'TOI-2669.01', 'TOI-4329.01', 'TOI-1670.01',
                 'TOI-1670.02', 'TOI-2257.01', 'TOI-1842.01', 'TOI-2180.01',
                 'TOI-620.01',
+                'TOI-2011.02', 'TOI-4304.03', 'TOI-4411.01', 'TOI-5520.01',
+                'TOI-5520.02', 'TOI-5523.02', 'TOI-5524.01', 'TOI-5528.01',
+                'TOI-5529.01', 'TOI-5534.01', 'TOI-5535.01',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
@@ -1645,13 +1649,16 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-5073.01', 'TOI-5102.01', 'TOI-5103.01', 'TOI-5105.01',
                 'TOI-5116.01', 'TOI-5137.01', 'TOI-5140.01', 'TOI-5154.01',
                 'TOI-5158.01', 'TOI-5161.01', 'TOI-5165.01',
-                'TOI-5167.01', 'TOI-5171.01', 'TOI-5175.01', 'TOI-5176.01']
+                'TOI-5167.01', 'TOI-5171.01', 'TOI-5175.01', 'TOI-5176.01',
+                'TOI-5115.01', 'TOI-5480.01', 'TOI-5485.01', 'TOI-5522.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
     nopermatch = []
     confmatch = []
     singconf = np.zeros(len(nopermatch), dtype=bool)
+    singcands = ['TOI-5523.01']
+    singc = np.zeros(len(singcands), dtype=bool)
 
     # any candidates in the confirmed table get set as such
     for index, ican in dftoi[toican].iterrows():
@@ -1679,6 +1686,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 res = np.where((np.abs(comp['ra'] - ican['ra']) < 1. / 60) &
                                (np.abs(comp['dec'] - ican['dec']) < 1. / 60))[0]
                 if len(res) > 0:
+                    # keep it as a single transit candidate
+                    if ican['name'] in singcands:
+                        singc[singcands.index(ican['name'])] = True
+                        continue
                     assert ican['name'] in nopermatch
                     res = np.where(comp['name'] ==
                                    confmatch[nopermatch.index(ican['name'])])[0]
@@ -1695,6 +1706,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     assert tbc.all()
     assert singconf.all()
+    assert singc.all()
     assert len(tobeadded) == 0
 
     newcan = dftoi['disposition'] == 'Candidate'
