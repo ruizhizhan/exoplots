@@ -219,6 +219,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # CONFIRMED PLANET PREP #
     #########################
 
+    print('Handling confirmed planets.')
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
     dfcon['facility'] = dfcon['disc_facility']
@@ -476,6 +477,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # KOI LIST PREP #
     #################
 
+    print('Handling KOIs.')
     # make these not all caps
     dfkoi['disposition'] = dfkoi['koi_disposition'].str.title()
     assert np.unique(dfkoi['disposition']).size == 3
@@ -917,6 +919,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # K2 LIST PREP #
     ################
 
+    print('Handling K2OIs.')
     # put these into our keywords
     renames = {'pl_rade': 'rade', 'pl_orbsmax': 'semi_au', 'pl_insol': 'insol',
                'pl_orbper': 'period', 'pl_radj': 'radj', 'sy_kmag': 'Kmag',
@@ -1444,6 +1447,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # TOI LIST PREP #
     #################
 
+    print('Handling TOIs.')
     # get easier to reference names for things in the ExoFOP listing
     renames = {'TFOPWG Disposition': 'disposition', 'TIC ID': 'IC',
                'Period (days)': 'period',
@@ -1574,7 +1578,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
                'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
-               'TOI-3757.01']
+               'TOI-3757.01', 'TOI-4599.01', 'TOI-4599.02']
 
     stillbad = np.zeros(len(ignores), dtype=bool)
     stillwaiting = np.zeros(len(waiting), dtype=bool)
