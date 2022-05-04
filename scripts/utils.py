@@ -1635,7 +1635,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-2184.01', 'TOI-1759.01', 'TOI-2013.01',
-                'TOI-206.01', 'TOI-500.01', 'TOI-544.01', 'TOI-833.01',
+                'TOI-206.01', 'TOI-544.01', 'TOI-833.01',
                 'TOI-1075.01', 'TOI-1268.01', 'TOI-1411.01', 'TOI-1693.01',
                 'TOI-1860.01', 'TOI-2260.01', 'TOI-2337.01', 'TOI-2411.01',
                 'TOI-2427.01', 'TOI-2669.01', 'TOI-4329.01', 'TOI-1670.01',
