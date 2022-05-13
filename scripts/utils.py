@@ -1580,7 +1580,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
                'TOI-3757.01', 'TOI-4599.01', 'TOI-4599.02', 'TOI-1811.01',
                'TOI-2025.01', 'TOI-2145.01', 'TOI-2152.01', 'TOI-2154.01',
-               'TOI-2497.01', 'TOI-4399.01']
+               'TOI-2497.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1639,7 +1639,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-1860.01', 'TOI-2260.01', 'TOI-2337.01', 'TOI-2411.01',
                 'TOI-2427.01', 'TOI-2669.01', 'TOI-4329.01', 'TOI-1670.01',
                 'TOI-1670.02', 'TOI-2257.01', 'TOI-1842.01', 'TOI-2180.01',
-                'TOI-620.01', 'TOI-4411.01',
+                'TOI-620.01', 'TOI-4411.01', 'TOI-1696.01', 'TOI-1710.01',
+                'TOI-2136.01',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
