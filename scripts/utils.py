@@ -748,12 +748,12 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                    'Kepler-413 b', '2MASS J19383260+4603591 b', 'Kepler-453 b',
                    'Kepler-1654 b', 'Kepler-1661 b', 'Kepler-448 c',
                    'Kepler-88 d', 'Kepler-47 d', 'HAT-P-11 c', 'Kepler-90 i',
-                   'Kepler-1708 b', 'Kepler-451 c', 'Kepler-451 d']
+                   'Kepler-1708 b', 'Kepler-451 c', 'Kepler-451 d', 'KOI-984 c']
         fillkics = [5446285, 8435766, 12644769, 8572936, 9837578, 6762829,
                     10020423, 10020423, 4862625, 5807616, 5807616, 5473556,
                     12351927, 9472174, 9632895, 8410697, 6504534, 5812701,
                     5446285, 10020423, 10748390, 11442793, 7906827, 9472174,
-                    9472174]
+                    9472174, 1161345]
 
         # for Kepler planets only on the confirmed list, try to find their KIC
         # from other KOIs in the system
@@ -1580,7 +1580,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
                'TOI-3757.01', 'TOI-1811.01',
                'TOI-2025.01', 'TOI-2145.01', 'TOI-2152.01', 'TOI-2154.01',
-               'TOI-2497.01', 'TOI-1422.01', 'TOI-5152.01', 'TOI-5153.01']
+               'TOI-2497.01', 'TOI-1422.01', 'TOI-5153.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1635,6 +1635,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-282.01', 'TOI-282.03', 'TOI-282.04', 'TOI-1107.01',
                 'TOI-3629.01', 'TOI-3714.01',
+                'TOI-1272.01', 'TOI-5680.01', 'TOI-5685.01',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
