@@ -303,8 +303,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # jupiter/earth radius ratio
     radratio = 11.21
     badrj = (np.isfinite(dfcon['radj']) ^ np.isfinite(dfcon['rade']))
-    # XXX: these bad 2 need to be fixed
-    assert badrj.sum() == 2
+    # XXX: this bad 1 needs to be fixed
+    assert badrj.sum() == 1
     dfcon.loc[badrj, 'radj'] = dfcon.loc[badrj, 'rade'] / radratio
 
     # remove calculated values from true masses. we'll make a calculated
