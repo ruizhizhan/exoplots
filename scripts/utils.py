@@ -562,6 +562,12 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfkoi.drop(dfkoi[dfkoi['name'] == 'KOI-1101.02'].index, inplace=True)
     assert len(dfkoi[dfkoi['name'] == 'KOI-1101.02']) == 0
 
+    # these were removed as FPs from the confirmed talbe, but not the KOI list
+    newfps = ['Kepler-699 b', 'Kepler-840 b', 'Kepler-854 b']
+    badrows = np.in1d(dfkoi['kepler_name'], newfps)
+    assert (dfkoi.loc[badrows, 'disposition'] == 'Confirmed').all()
+    dfkoi.loc[badrows, 'disposition'] = 'False Positive'
+
     # there's not an easy way to tie confirmed planets in the KOI table to
     # entries in the confirmed planets table. instead, match by RA/Dec/Period
     koicon = dfkoi['disposition'] == 'Confirmed'
@@ -1571,17 +1577,15 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
     # prematurely marked confirmed on ExoFOP
-    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01',
-               'TOI-626.01', 'TOI-657.01', 'TOI-834.01', 'TOI-840.01',
-               'TOI-857.01', 'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01',
-               'TOI-261.02', 'TOI-262.01', 'TOI-469.01',
-               'TOI-682.01', 'TOI-836.01', 'TOI-1054.01', 'TOI-1203.01',
-               'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
-               'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-177.01',
-               'TOI-3757.01', 'TOI-1811.01',
-               'TOI-2025.01', 'TOI-2145.01', 'TOI-2152.01', 'TOI-2154.01',
-               'TOI-2497.01', 'TOI-5153.01', 'TOI-1228.01', 'TOI-1452.01',
-               'TOI-4406.01']
+    waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01', 'TOI-626.01',
+               'TOI-657.01', 'TOI-834.01', 'TOI-840.01', 'TOI-857.01',
+               'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01', 'TOI-261.02',
+               'TOI-262.01', 'TOI-469.01', 'TOI-682.01', 'TOI-836.01',
+               'TOI-1054.01', 'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01',
+               'TOI-1774.01', 'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01',
+               'TOI-177.01', 'TOI-1811.01', 'TOI-2025.01', 'TOI-2145.01',
+               'TOI-2152.01', 'TOI-2154.01', 'TOI-2497.01', 'TOI-5153.01',
+               'TOI-1228.01', 'TOI-4406.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1635,8 +1639,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-282.01', 'TOI-282.03', 'TOI-282.04', 'TOI-1107.01',
-                'TOI-3629.01', 'TOI-3714.01',
-                'TOI-1272.01', 'TOI-5680.01',
+                'TOI-3629.01', 'TOI-3714.01', 'TOI-1272.01', 'TOI-5680.01',
+                'TOI-712.01', 'TOI-712.02', 'TOI-712.04', 'TOI-2193.01',
+                'TOI-2207.01', 'TOI-2236.01', 'TOI-2421.01', 'TOI-2567.01',
+                'TOI-2570.01', 'TOI-3331.01', 'TOI-3540.01', 'TOI-3693.01',
+                'TOI-4137.01',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
