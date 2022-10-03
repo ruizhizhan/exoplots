@@ -210,6 +210,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # what columns do we want/need in the final dataframe
     cols = ['name', 'hostname', 'IC', 'disposition', 'period', 'rade', 'radj',
             'masse', 'massj', 'tran_depth_ppm', 'tran_dur_hr', 'semi_au',
+            'eccen',
             'insol', 'distance_pc', 'year_discovered', 'year_confirmed',
             'discoverymethod', 'facility', 'st_mass', 'st_rad', 'st_teff',
             'st_log_lum', 'Jmag', 'Kmag', 'ra', 'dec', 'flag_tran',
@@ -254,7 +255,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
                'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
                'pl_bmassj': 'massj', 'sy_kmag': 'Kmag', 'sy_jmag': 'Jmag',
-               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr'}
+               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
+               'pl_orbeccen': 'eccen'}
     dfcon.rename(columns=renames, inplace=True)
 
     # upper/lower limits are given values at that limit, and we need to remove
@@ -468,6 +470,14 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # discovery and confirmation years make sense
     assert (dfcon['year_discovered'] >= 1989).all()
     assert np.allclose(dfcon['year_confirmed'], dfcon['year_discovered'])
+
+    # eccentricity check. ignore these 3 bad ones
+    # HD 155918 b: -0.08
+    # HD 217786 c: -0.52
+    # HD 93351 b: -0.13
+    goodecc = (~np.isfinite(dfcon['eccen']) |
+               ((dfcon['eccen'] >= 0) & (dfcon['eccen'] < 1)))
+    assert (~goodecc).sum() == 3
 
     # create the composite, single data frame for all the planets and
     # planet candidates
@@ -854,6 +864,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfkoi['masse'] = np.nan
     dfkoi['massj'] = np.nan
 
+    # no eccentricity
+    dfkoi['eccen'] = np.nan
+
     # do all the tests to make sure things are working, only focusing on
     # candidates since that's all we're adding to output. FPs can be weird.
     canonly = dfkoi[koican]
@@ -896,6 +909,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
+    assert (~np.isfinite(canonly['eccen'])).all()
     assert (~np.isfinite(canonly['tran_depth_ppm']) |
             (canonly['tran_depth_ppm'] >= 0)).all()
     assert (canonly['tran_dur_hr'] > 0).all()
@@ -929,7 +943,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # put these into our keywords
     renames = {'pl_rade': 'rade', 'pl_orbsmax': 'semi_au', 'pl_insol': 'insol',
                'pl_orbper': 'period', 'pl_radj': 'radj', 'sy_kmag': 'Kmag',
-               'pl_name': 'name',
+               'pl_name': 'name', 'pl_orbeccen': 'eccen',
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
                'sy_jmag': 'Jmag', 'disc_year': 'year_discovered',
                'pl_masse': 'masse', 'pl_massj': 'massj'}
@@ -1363,7 +1377,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # go through the ones we're going to add to the table and fill in any
     # missing values if possible from other entries in the table
     ichk = ['period', 'rade', 'radj', 'st_rad', 'st_teff', 'st_log_lum',
-            'st_mass', 'insol', 'semi_au', 'tran_depth_ppm']
+            'st_mass', 'insol', 'semi_au', 'tran_depth_ppm', 'eccen']
 
     for index, ican in dfk2[k2can].iterrows():
         srch = np.where((dfk2['name'] == ican['name']) &
@@ -1395,6 +1409,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # Input Catalog numbers are correct
     assert (canonly['IC'] > 0).all()
     assert (canonly['discoverymethod'] == 'Transit').all()
+
+    assert (~np.isfinite(canonly['eccen']) |
+            ((canonly['eccen'] >= 0) & (canonly['eccen'] < 1))).all()
 
     # distances are either NaN or > 1 pc
     assert (~np.isfinite(canonly['distance_pc']) |
@@ -1790,6 +1807,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dftoi['masse'] = np.nan
     dftoi['massj'] = np.nan
 
+    dftoi['eccen'] = np.nan
+
     # all found via transit
     dftoi['discoverymethod'] = 'Transit'
 
@@ -1835,6 +1854,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
+    assert (~np.isfinite(canonly['eccen'])).all()
     assert (~np.isfinite(canonly['tran_depth_ppm']) |
             (canonly['tran_depth_ppm'] > 0)).all()
     assert (canonly['tran_dur_hr'] > 0).all()
