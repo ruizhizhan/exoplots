@@ -298,7 +298,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfcon.loc[badme, ['masse', 'massj']] = np.nan
 
     massrat = 317.83
-    # XXX: because earth and jup radii don't always agree, make them
+    # because earth and jup masses don't always agree, make them
     # uniform and treat Earth as truth
     dfcon['massj'] = dfcon['masse'] / massrat
 
@@ -316,7 +316,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert not (badre ^ badrj).any()
     dfcon.loc[badre, ['rade', 'radj']] = np.nan
 
-    # XXX: because earth and jup radii use different sources, make them
+    # because earth and jup radii use different sources, make them
     # uniform and treat Earth as truth
     dfcon['radj'] = dfcon['rade'] / radratio
 
@@ -946,7 +946,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'pl_name': 'name', 'pl_orbeccen': 'eccen',
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
                'sy_jmag': 'Jmag', 'disc_year': 'year_discovered',
-               'pl_masse': 'masse', 'pl_massj': 'massj'}
+               'pl_masse': 'masse', 'pl_massj': 'massj', 'st_lum': 'st_log_lum'}
     dfk2.rename(columns=renames, inplace=True)
 
     # upper/lower limits are given values at that limit, and we need to remove
@@ -968,7 +968,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     nojup = (np.isfinite(dfk2['rade']) & (~np.isfinite(dfk2['radj'])))
     dfk2.loc[nojup, 'radj'] = dfk2.loc[nojup, 'rade'] / radratio
 
-    # XXX: because earth and jup radii don't always agree, make them
+    # because earth and jup radii don't always agree, make them
     # uniform and treat Earth as truth
     dfk2['radj'] = dfk2['rade'] / radratio
 
@@ -990,24 +990,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfk2['url'] = ('https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' +
                    dfk2['hostname'].str.slice(5))
 
-    """
-    XXX: they deleted this candidate from the K2 table?
-    # until this is fixed (the Kruse and Heller .03 are different planets)
-    srch = np.where(dfk2['name'] == 'EPIC 201497682.03')[0]
-    assert len(srch) == 1
-    srch = srch[0]
-    assert dfk2.at[srch, 'disposition'] == 'Confirmed'
-    assert dfk2.at[srch, 'name'] == 'EPIC 201497682 b'
-    dfk2.at[srch, 'disposition'] = 'Candidate'
-    dfk2.at[srch, 'name'] = float('nan')
-    dfk2.at[srch, 'name'] = 'EPIC 201497682.04'
-    srch = np.where(dfk2['name'] == 'EPIC 201497682.04')[0]
-    assert len(srch) == 1
-    srch = srch[0]
-    assert dfk2.at[srch, 'disposition'] == 'Candidate'
-    assert ~np.isfinite(dfk2.at[srch, 'name'])
-    """
-
     # check that we're including all K2 planets, but only counting them once
     k2con = dfk2['disposition'] == 'Confirmed'
     k2can = dfk2['disposition'] == 'Candidate'
@@ -1021,7 +1003,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     hasname = ~dfk2['name'][k2can].isna()
     assert np.in1d(dfk2['name'][k2can][hasname], comp['name']).sum() == 0
 
-    # XXX: way too many objects don't have a single disposition
     uobjs = np.unique(dfk2['name'])
     bad = []
     for iobj in uobjs:
@@ -1146,16 +1127,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
               (dfk2['tran_depth_ppm'] > tranrat*3)) & (dfk2['rade'] < 4)
     dfk2.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
 
-    # XXX: can now do this
-    # fill in missing luminosities with our own calculation
-    tmplums = (dfk2['st_rad'] ** 2) * ((dfk2['st_teff'] / 5772) ** 4)
-    dfk2['st_log_lum'] = np.log10(tmplums)
-
     # fill in any missing luminosities with our own calculation
-    # (archive claims they already do this)
+    # (archive claims they already do this, but lots are missing)
     tmplums = (dfk2['st_rad']**2) * ((dfk2['st_teff'] / 5772)**4)
     toadd = (~np.isfinite(dfk2['st_log_lum'])) & np.isfinite(tmplums)
-    assert toadd.sum() == 0
+    dfk2.loc[toadd, 'st_log_lum'] = np.log10(tmplums[toadd])
 
     # fill in any missing semi-major axes from Kepler's third law first
     tmpau = (((dfk2['period'] / 365.256)**2) * dfk2['st_mass'])**(1./3.)
@@ -1370,9 +1346,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     k2can = (dfk2['disposition'] == 'Candidate') & (dfk2['default_flag'] == 1)
 
-    # XXX: once the dispositions get fixed
-    # assert k2can.sum() == np.unique(dfk2[dfk2['disposition'] ==
-    #                                 'Candidate']['name']).size
+    assert k2can.sum() == np.unique(dfk2[dfk2['disposition'] ==
+                                    'Candidate']['name']).size
 
     # go through the ones we're going to add to the table and fill in any
     # missing values if possible from other entries in the table
@@ -1649,12 +1624,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert stillwaiting.all()
     assert len(earlycps) == 0
 
-    # any candidates that appear in the confirmed table need to be upgraded
-
-    # XXX: 2410.01, 2425.01, 2455.01 is a K2 candidate. how to handle that?
-    # XXX: TOI-4433, 4444, 4484 is a KOI
-
-    # XXX: look at 2076.02 / b and c
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-282.01', 'TOI-282.03', 'TOI-282.04', 'TOI-1107.01',
                 'TOI-3629.01', 'TOI-3714.01', 'TOI-1272.01', 'TOI-5680.01',
