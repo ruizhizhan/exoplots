@@ -1021,7 +1021,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                  'K2-132 b', 'HD 3167 c', 'K2-97 b', 'HIP 41378 e',
                  'HIP 41378 f', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
                  'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
-                 'TRAPPIST-1 h']
+                 'TRAPPIST-1 h', 'WASP-107 b']
     isexclude = np.zeros(len(k2exclude), dtype=bool)
 
     # make sure all confirmed K2 planets are in the confirmed table exactly once
@@ -1577,8 +1577,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-1774.01', 'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01',
                'TOI-1811.01', 'TOI-2145.01', 'TOI-2152.01',
                'TOI-2154.01', 'TOI-2497.01', 'TOI-5153.01', 'TOI-4406.01',
-               'TOI-1694.01', 'TOI-5205.01', 'TOI-174.03', 'TOI-174.04',
-               'TOI-174.05']
+               'TOI-1694.01', 'TOI-5205.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1631,7 +1630,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-2207.01', 'TOI-2236.01', 'TOI-2421.01', 'TOI-2567.01',
                 'TOI-2570.01', 'TOI-3331.01', 'TOI-3540.01', 'TOI-3693.01',
                 'TOI-4137.01', 'TOI-2076.02', 'TOI-2048.01', 'TOI-4306.01',
-                'TOI-1820.01', 'TOI-2158.01',
+                'TOI-1820.01', 'TOI-2158.01', 'TOI-2545.01', 'TOI-5174.01',
+                'TOI-5238.01', 'TOI-5398.01',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
