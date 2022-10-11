@@ -143,6 +143,8 @@ concumul['Predicted'] = conpreds
 pcexp = np.polyfit(np.arange(pcscaled.size), np.log(pcscaled),
                    1, w=np.log(pcscaled))
 pcpreds = np.exp(np.polyval(pcexp, np.arange(pcscaled.size)))
+# to use the confirmed fit, just need to replace these two lines with the
+# confirmed values above.
 pctdouble = np.log(2) / pcexp[0]
 pccumul['Predicted'] = pcpreds
 
