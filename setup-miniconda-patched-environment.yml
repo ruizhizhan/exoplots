@@ -7,4 +7,4 @@ dependencies:
   - bokeh==2.4.2
   - astropy
   - astroquery
-  - python=3.9
+  - python=3.10
