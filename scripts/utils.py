@@ -1577,9 +1577,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-1774.01', 'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01',
                'TOI-1811.01', 'TOI-2145.01', 'TOI-2152.01',
                'TOI-2154.01', 'TOI-2497.01', 'TOI-5153.01', 'TOI-4406.01',
-               'TOI-1694.01', 'TOI-5205.01', 'TOI-179.01', 'TOI-5812.01',
-               'TOI-1136.01', 'TOI-1136.02', 'TOI-1136.03', 'TOI-1136.04',
-               'TOI-4524.01']
+               'TOI-1694.01', 'TOI-5205.01', 'TOI-5812.01', 'TOI-1136.01',
+               'TOI-1136.02', 'TOI-1136.03', 'TOI-1136.04', 'TOI-4524.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1634,7 +1633,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-4137.01', 'TOI-2076.02', 'TOI-2048.01', 'TOI-4306.01',
                 'TOI-1820.01', 'TOI-2158.01', 'TOI-2545.01', 'TOI-5174.01',
                 'TOI-5238.01', 'TOI-5398.01', 'TOI-411.01', 'TOI-411.02',
-                'TOI-5542.01', 'TOI-969.01', 'TOI-3884.01',
+                'TOI-5542.01', 'TOI-969.01', 'TOI-3884.01', 'TOI-1468.01',
+                'TOI-1468.02',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
@@ -1645,8 +1645,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-5137.01', 'TOI-5140.01', 'TOI-5154.01', 'TOI-5158.01',
                 'TOI-5161.01', 'TOI-5165.01', 'TOI-5167.01', 'TOI-5171.01',
                 'TOI-5175.01', 'TOI-5176.01', 'TOI-5115.01', 'TOI-5480.01',
-                'TOI-5485.01', 'TOI-5522.01', 'TOI-5538.01', 'TOI-5539.01',
-                'TOI-5544.01', 'TOI-5545.01', 'TOI-5561.01']
+                'TOI-5522.01', 'TOI-5538.01', 'TOI-5539.01', 'TOI-5544.01',
+                'TOI-5545.01', 'TOI-5561.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
