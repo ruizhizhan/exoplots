@@ -266,5 +266,5 @@ plotting.show(layout)
 # html page
 script, div = components(layout, theme=theme)
 with open(embedfile, 'w') as ff:
-    ff.write(script().strip())
+    ff.write(script.strip())
     ff.write(div)
