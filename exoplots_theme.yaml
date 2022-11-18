@@ -1,9 +1,9 @@
 attrs:
-    Figure:
+    figure:
         outline_line_color: "black"
         outline_line_width: 2.5
-        plot_width: 750
-        plot_height: 600
+        width: 750
+        height: 600
     Grid:
         grid_line_width: 2.5
     Title:

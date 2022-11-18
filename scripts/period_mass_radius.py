@@ -7,7 +7,7 @@ from bokeh.embed import components
 from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool, Toggle
+from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool, Toggle
 from bokeh.models import Button, LogAxis, Range1d, RangeSlider
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.themes import Theme
@@ -72,7 +72,7 @@ for ifig in np.arange(4):
 
     # create the figure
     fig = plotting.figure(x_axis_type='log', y_axis_type='log',
-                          plot_height=700, plot_width=750, tooltips=TOOLTIPS)
+                          height=700, width=750, tooltips=TOOLTIPS)
 
     # need to store min and max radius values to create the second axis
     ymin = 1
@@ -221,11 +221,11 @@ for ifig in np.arange(4):
         fig.yaxis.axis_label = 'Radius (Earth Radii)'
     else:
         fig.yaxis.axis_label = 'Mass (Earth Masses)'
-    fig.yaxis.formatter = FuncTickFormatter(code=log_axis_labels())
+    fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
     # add the x-axis's label and use our custom log formatting
     fig.xaxis.axis_label = 'Period (days)'
-    fig.xaxis.formatter = FuncTickFormatter(code=log_axis_labels())
+    fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
     # add the second y-axis's label
     if ifig < 2:
@@ -318,8 +318,8 @@ for ifig in np.arange(4):
         fig.js_on_event(SelectionGeometry, des)
         uns = CustomJS(args=jargs, code=unselect)
         fig.js_on_event(DoubleTap, uns)
-        for iglyph in glyphs:
-            iglyph.js_on_change('visible', des)
+        # for iglyph in glyphs:
+        #     iglyph.js_on_change('visible', des)
         layout = column(button, fig)
     else:
         if ifig == 1:
@@ -349,9 +349,9 @@ for ifig in np.arange(4):
         sls = CustomJS(args=jargs, code=sliderselect)
         fig.js_on_event(SelectionGeometry, sls)
         fig.js_on_event(DoubleTap, yrsel)
-        for iglyph in glyphs:
-            nw = CustomJS(args=jargs, code=nowvis)
-            iglyph.js_on_change('visible', nw)
+        # for iglyph in glyphs:
+        #     nw = CustomJS(args=jargs, code=nowvis)
+        #     iglyph.js_on_change('visible', nw)
 
         playbutton = Toggle(label="\u25b6 Play", width=150, width_policy='fit',
                             button_type='success')

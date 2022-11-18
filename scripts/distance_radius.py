@@ -5,7 +5,7 @@ from bokeh.embed import components
 from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool
+from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.models import LogAxis, Range1d
 from bokeh.models.widgets import Button
@@ -55,7 +55,7 @@ TOOLTIPS = [
 
 # create the figure
 fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS,
-                      plot_height=700, plot_width=750)
+                      height=700, width=750)
 
 # need to store min and max radius values to create the second axis
 ymin = 1
@@ -142,11 +142,11 @@ fig.add_layout(LogAxis(y_range_name="jup"), 'right')
 
 # add the first y-axis's label and use our custom log formatting for both axes
 fig.yaxis.axis_label = 'Radius (Earth Radii)'
-fig.yaxis.formatter = FuncTickFormatter(code=log_axis_labels())
+fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
 # add the x-axis's label and use our custom log formatting
 fig.xaxis.axis_label = 'Distance (parsec)'
-fig.xaxis.formatter = FuncTickFormatter(code=log_axis_labels())
+fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
 # add the second y-axis's label
 fig.right[0].axis_label = 'Radius (Jupiter Radii)'

@@ -5,7 +5,7 @@ from bokeh.embed import components
 from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import BoxSelectTool, FuncTickFormatter, TapTool
+from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
@@ -111,12 +111,12 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             # create the figure
             if ixx == 0:
                 fig = plotting.figure(x_axis_type='linear', y_axis_type='log',
-                                      tooltips=TOOLTIPS, plot_height=700,
-                                      plot_width=750)
+                                      tooltips=TOOLTIPS, height=700,
+                                      width=750)
             else:
                 fig = plotting.figure(x_axis_type='log', y_axis_type='log',
-                                      tooltips=TOOLTIPS, plot_height=700,
-                                      plot_width=750)
+                                      tooltips=TOOLTIPS, height=700,
+                                      width=750)
 
             # need to store min and max radius values to create the second axis
             ymin = 1
@@ -247,14 +247,14 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                 fig.yaxis.axis_label = f'ESM ({refwavs[ifig]} micron)'
             else:
                 fig.yaxis.axis_label = 'TSM'
-            fig.yaxis.formatter = FuncTickFormatter(code=log_axis_labels())
+            fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
             # add the x-axis's label and use our custom log formatting
             if ixx == 0:
                 fig.xaxis.axis_label = 'Equilibrium Temp (K)'
             else:
                 fig.xaxis.axis_label = 'Insolation (Earths)'
-                fig.xaxis.formatter = FuncTickFormatter(code=log_axis_labels())
+                fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
             # make high teqs on the left
             fig.x_range.flipped = True
 

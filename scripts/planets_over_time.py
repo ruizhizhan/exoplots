@@ -5,7 +5,7 @@ import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.io import curdoc
-from bokeh.models import FuncTickFormatter, Label, NumeralTickFormatter
+from bokeh.models import CustomJSTickFormatter, Label, NumeralTickFormatter
 from bokeh.themes import Theme
 
 from utils import get_update_time, log_axis_labels, palette
@@ -44,7 +44,7 @@ fullfilecumlog_name = '_includes/per_year_{0}_cumul_log.html'
 # load the data
 dfpl = pd.read_csv('data/exoplots_data.csv')
 
-years = range(dfpl['year_discovered'].min(), datetime.now().year+1)
+years = np.arange(dfpl['year_discovered'].min(), datetime.now().year+1)
 
 condata = {'years': years}
 concumul = {'years': years}
@@ -191,8 +191,8 @@ for xx in np.arange(4):
         plotting.output_file(fullfile_name.format(txt),
                              title='Planets Per Year')
         # '@years $name: @$name; Total: @total'
-        fig = plotting.figure(tooltips=fancytool0, plot_width=750,
-                              plot_height=600, y_range=(0, tots.max()*1.05))
+        fig = plotting.figure(tooltips=fancytool0, width=750,
+                              height=600, y_range=(0, tots.max()*1.05))
         fig.vbar_stack(methods, x='years', width=0.9, color=colors, source=data,
                        legend_label=leglab, line_width=0)
     else:
@@ -214,8 +214,8 @@ for xx in np.arange(4):
             tdouble = pctdouble
         plotting.output_file(fullfilecum_name.format(txt),
                              title='Cumulative Planets')
-        fig = plotting.figure(tooltips=fancytool1, plot_width=750,
-                              plot_height=600, y_range=(0, cumtots.max()*1.05))
+        fig = plotting.figure(tooltips=fancytool1, width=750,
+                              height=600, y_range=(0, cumtots.max()*1.05))
         # plot the exponential growth
         fig.line('years', 'Predicted', source=cumul, line_width=5,
                  line_color='black', name='Predicted',
@@ -342,8 +342,8 @@ for xx in np.arange(4):
                      0.05*(np.log10(tots.max()) - np.log10(ymin)))
         plotting.output_file(fullfilelog_name.format(txt),
                              title='Planets Per Year Log')
-        fig2 = plotting.figure(tooltips=fancytool0, plot_width=750,
-                               plot_height=600, y_range=(ymin, ymax),
+        fig2 = plotting.figure(tooltips=fancytool0, width=750,
+                               height=600, y_range=(ymin, ymax),
                                y_axis_type='log')
         fig2.vbar_stack(methods, x='years', width=0.9, color=colors,
                         source=data, legend_label=leglab, line_width=0)
@@ -368,8 +368,8 @@ for xx in np.arange(4):
                      0.065*(np.log10(cumtots.max()) - np.log10(ymin)))
         plotting.output_file(fullfilecumlog_name.format(txt),
                              title='Planets Per Year Log')
-        fig2 = plotting.figure(tooltips=fancytool1, plot_width=750,
-                               plot_height=600, y_range=(ymin, ymax),
+        fig2 = plotting.figure(tooltips=fancytool1, width=750,
+                               height=600, y_range=(ymin, ymax),
                                y_axis_type='log')
         # plot the exponential growth
         fig2.line('years', 'Predicted', source=cumul, line_width=5,
@@ -381,7 +381,7 @@ for xx in np.arange(4):
     # add the first y-axis's label and use our custom log formatting
     # for both axes
     fig2.yaxis.axis_label = 'Number'
-    fig2.yaxis.formatter = FuncTickFormatter(code=log_axis_labels(max_tick=5.1))
+    fig2.yaxis.formatter =  CustomJSTickFormatter(code=log_axis_labels(max_tick=5.1))
 
     # add the x-axis's label and use our custom log formatting
     if xx < 2:
