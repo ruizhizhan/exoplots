@@ -18,7 +18,7 @@ from utils import deselect, openurl, palette, reset
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
-# what order to plot things and what the legend labels will say
+# in what order to plot things and what the legend labels will say
 missions = ['Kepler', 'K2', 'Other', 'TESS']
 
 # markers and colors in the same order as the missions above
@@ -71,7 +71,7 @@ for ii, imiss in enumerate(missions):
                 (dfpl['disposition'] == 'Confirmed') & dfpl['flag_tran'] &
                 np.isfinite(dfpl['period']))
 
-    # make the alpha of large groups lower so they don't dominate so much
+    # make the alpha of large groups lower, so they don't dominate so much
     alpha = 1. - good.sum()/1000.
     alpha = max(0.2, alpha)
 
@@ -122,11 +122,11 @@ fig.add_layout(LogAxis(y_range_name="jup"), 'right')
 
 # add the first y-axis's label and use our custom log formatting for both axes
 fig.yaxis.axis_label = 'Radius (Earth Radii)'
-fig.yaxis.formatter =  CustomJSTickFormatter(code=log_axis_labels(max_tick=5))
+fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels(max_tick=5))
 
 # add the x-axis's label and use our custom log formatting
 fig.xaxis.axis_label = 'Period (days)'
-fig.xaxis.formatter =  CustomJSTickFormatter(code=log_axis_labels(max_tick=5))
+fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels(max_tick=5))
 
 # add the second y-axis's label
 fig.right[0].axis_label = 'Radius (Jupiter Radii)'
@@ -210,9 +210,9 @@ plotting.save(layout)
 
 plotting.show(layout)
 
-# save the individual pieces so we can just embed the figure without the whole
+# save the individual pieces, so we can just embed the figure without the whole
 # html page
 script, div = components(layout, theme=theme)
 with open(embedfile, 'w') as ff:
-    ff.write(script)
+    ff.write(script.strip())
     ff.write(div)

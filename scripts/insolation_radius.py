@@ -18,7 +18,7 @@ from utils import deselect, palette, reset
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
-# what order to plot things and what the legend labels will say
+# in what order to plot things and what the legend labels will say
 missions = ['Kepler Candidate', 'Kepler Confirmed', 'K2 Candidate',
             'K2 Confirmed', 'TESS Candidate', 'Other Confirmed',
             'TESS Confirmed']
@@ -316,9 +316,9 @@ for ifig in np.arange(2):
 
     plotting.show(layout)
 
-    # save the individual pieces so we can just embed the figure without the
+    # save the individual pieces, so we can just embed the figure without the
     # whole html page
     script, div = components(layout, theme=theme)
     with open(embedfile, 'w') as ff:
-        ff.write(script)
+        ff.write(script.strip())
         ff.write(div)

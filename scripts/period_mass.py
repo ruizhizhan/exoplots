@@ -18,7 +18,7 @@ from utils import deselect, openurl, palette, reset
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
-# what order to plot things and what the legend labels will say
+# in what order to plot things and what the legend labels will say
 methods = ['Transit', 'Radial Velocity', 'Timing Variations', 'Other']
 
 # markers and colors in the same order as the missions above
@@ -76,7 +76,7 @@ for ii, imeth in enumerate(methods):
                 np.isfinite(dfpl['masse']) & np.isfinite(dfpl['period']) &
                 (dfpl['disposition'] == 'Confirmed'))
 
-    # make the alpha of large groups lower so they don't dominate so much
+    # make the alpha of large groups lower, so they don't dominate so much
     alpha = 1. - good.sum()/1000.
     alpha = max(0.2, alpha)
 
@@ -213,9 +213,9 @@ plotting.save(layout)
 
 plotting.show(layout)
 
-# save the individual pieces so we can just embed the figure without the whole
+# save the individual pieces, so we can just embed the figure without the whole
 # html page
 script, div = components(layout, theme=theme)
 with open(embedfile, 'w') as ff:
-    ff.write(script)
+    ff.write(script.strip())
     ff.write(div)

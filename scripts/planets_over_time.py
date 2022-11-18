@@ -17,7 +17,7 @@ theme = Theme(filename="./exoplots_theme.yaml")
 theme._json['attrs']['Legend']['orientation'] = 'vertical'
 curdoc().theme = theme
 
-# what order to plot things and what the legend labels will say
+# in what order to plot things and what the legend labels will say
 methods = ['Other', 'Radial Velocity', 'Transit']
 
 # colorblind friendly palette from https://personal.sron.nl/~pault/
@@ -302,16 +302,16 @@ for xx in np.arange(4):
     plotting.show(fig)
     plotting.save(fig)
 
-    # save the individual pieces so we can just embed the figure without the
+    # save the individual pieces, so we can just embed the figure without the
     # whole html page
     script, div = components(fig, theme=theme)
     if (xx % 2) == 0:
         with open(embedfile_name.format(txt), 'w') as ff:
-            ff.write(script)
+            ff.write(script.strip())
             ff.write(div)
     else:
         with open(embedfilecum_name.format(txt), 'w') as ff:
-            ff.write(script)
+            ff.write(script.strip())
             ff.write(div)
 
 # now do the same thing but on log scale
@@ -381,7 +381,8 @@ for xx in np.arange(4):
     # add the first y-axis's label and use our custom log formatting
     # for both axes
     fig2.yaxis.axis_label = 'Number'
-    fig2.yaxis.formatter =  CustomJSTickFormatter(code=log_axis_labels(max_tick=5.1))
+    ctf = CustomJSTickFormatter(code=log_axis_labels(max_tick=5.1))
+    fig2.yaxis.formatter = ctf
 
     # add the x-axis's label and use our custom log formatting
     if xx < 2:
@@ -462,14 +463,14 @@ for xx in np.arange(4):
     plotting.show(fig2)
     plotting.save(fig2)
 
-    # save the individual pieces so we can just embed the figure without the
+    # save the individual pieces, so we can just embed the figure without the
     # whole html page
     script, div = components(fig2, theme=theme)
     if (xx % 2) == 0:
         with open(embedfilelog_name.format(txt), 'w') as ff:
-            ff.write(script)
+            ff.write(script.strip())
             ff.write(div)
     else:
         with open(embedfilecumlog_name.format(txt), 'w') as ff:
-            ff.write(script)
+            ff.write(script.strip())
             ff.write(div)

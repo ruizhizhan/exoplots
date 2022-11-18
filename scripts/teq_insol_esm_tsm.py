@@ -18,7 +18,7 @@ from utils import openurl, palette
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
-# what order to plot things and what the legend labels will say
+# in what order to plot things and what the legend labels will say
 missions = ['Kepler Candidate', 'Kepler Confirmed', 'K2 Candidate',
             'K2 Confirmed', 'TESS Candidate', 'Other Confirmed',
             'TESS Confirmed']
@@ -81,7 +81,8 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             ("Insolation", "@insolation{0,0[.][00]} Earths"),
             ("Equilibrium Temp", "@teq{0,0[.][0]} K"),
             (ttstr, "@met{0,0[.][00]}"),
-            ("Radius", "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup"),
+            ("Radius", "@radius{0,0[.][00]} Earth; "
+                       "@jupradius{0,0[.][0000]} Jup"),
             ("Period", "@period{0,0[.][0000]} days"),
             ("Measured Mass", "@mass{0,0[.][00]} Earth"),
             ("Estimated Mass", "@massest{0,0[.][00]} Earth"),
@@ -247,14 +248,15 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                 fig.yaxis.axis_label = f'ESM ({refwavs[ifig]} micron)'
             else:
                 fig.yaxis.axis_label = 'TSM'
-            fig.yaxis.formatter =  CustomJSTickFormatter(code=log_axis_labels())
+            fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
             # add the x-axis's label and use our custom log formatting
             if ixx == 0:
                 fig.xaxis.axis_label = 'Equilibrium Temp (K)'
             else:
                 fig.xaxis.axis_label = 'Insolation (Earths)'
-                fig.xaxis.formatter =  CustomJSTickFormatter(code=log_axis_labels())
+                ctf = CustomJSTickFormatter(code=log_axis_labels())
+                fig.xaxis.formatter = ctf
             # make high teqs on the left
             fig.x_range.flipped = True
 
@@ -389,9 +391,9 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
 
             plotting.show(layout)
 
-            # save the individual pieces so we can just embed the figure
+            # save the individual pieces, so we can just embed the figure
             # without the whole html page
             script, div = components(layout, theme=theme)
             with open(embedfile, 'w') as ff:
-                ff.write(script)
+                ff.write(script.strip())
                 ff.write(div)

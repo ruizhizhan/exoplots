@@ -13,14 +13,14 @@ from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.themes import Theme
 
 from utils import csv_creation, get_update_time, log_axis_labels
-from utils import deselect, nowvis, reset, sliderselect, unselect, yearselect
+from utils import deselect, reset, sliderselect, unselect, yearselect
 from utils import openurl, palette, playpause
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
-# what order to plot things and what the legend labels will say
+# in what order to plot things and what the legend labels will say
 discovery = ['Transit', 'Radial Velocity', 'Other']
 
 # markers and colors in the same order as the missions above
@@ -148,7 +148,7 @@ for ifig in np.arange(4):
         # plot the planets
         # nonselection stuff is needed to prevent planets in that category from
         # disappearing when you click on a data point ("select" it)
-        # selection_alpha is just requiring it to make its own selection glyph
+        # selection_alpha is just requiring it to make its own selection glyph,
         # so we can better control that later
         if ifig == 0:
             glyph = fig.scatter('period', 'radius_plot', color=colors[ii],
@@ -365,9 +365,9 @@ for ifig in np.arange(4):
 
     plotting.show(layout)
 
-    # save the individual pieces so we can just embed the figure without the
+    # save the individual pieces, so we can just embed the figure without the
     # whole html page
     script, div = components(layout, theme=theme)
     with open(embedfile, 'w') as ff:
-        ff.write(script)
+        ff.write(script.strip())
         ff.write(div)
