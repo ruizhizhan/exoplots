@@ -1561,6 +1561,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # 1456 was a single obvious transit and the second hidden in scattered
     # light causing SPOC to miss it and get the period wrong
     # 351 TESS got the period wrong by 2x
+    # XXX: look if any TESS candidates are in systems with known planets.
+    # TOI-5980 should not be a candidate and needs to be removed.
     ignores = ['TOI-2011.01', 'TOI-2221.01',
                'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02']
     conname = ['HD 136352 b', 'AU Mic b',
@@ -1635,6 +1637,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-5238.01', 'TOI-5398.01', 'TOI-411.01', 'TOI-411.02',
                 'TOI-5542.01', 'TOI-3884.01', 'TOI-1468.01',
                 'TOI-1468.02', 'TOI-4270.01', 'TOI-5970.01',
+                'TOI-5979.01', 'TOI-5982.01', 'TOI-5984.01', 'TOI-5986.01',
+                'TOI-5988.01', 'TOI-5992.01', 'TOI-5993.01', 'TOI-5994.01',
+                'TOI-5995.01', 'TOI-5999.01', 'TOI-6001.01', 'TOI-6003.01',
+                'TOI-6004.01', 'TOI-6005.01', 'TOI-6006.01',
                 # KOIs
                 'TOI-4433.01', 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
@@ -1650,8 +1656,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = []
-    confmatch = []
+    nopermatch = ['TOI-4581.02']
+    confmatch = ['KOI-94 e']
     singconf = np.zeros(len(nopermatch), dtype=bool)
     singcands = ['TOI-5523.01']
     singc = np.zeros(len(singcands), dtype=bool)
