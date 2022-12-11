@@ -1563,9 +1563,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # 351 TESS got the period wrong by 2x
     # XXX: look if any TESS candidates are in systems with known planets.
     # TOI-5980 should not be a candidate and needs to be removed.
-    ignores = ['TOI-2011.01', 'TOI-2221.01',
+    ignores = ['TOI-2011.01', 'TOI-2221.01', 'TOI-4581.02', 'TOI-5980.01',
                'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02']
-    conname = ['HD 136352 b', 'AU Mic b',
+    conname = ['HD 136352 b', 'AU Mic b', 'KOI-94 e', 'Kepler-37 d',
                'WASP-165 b', 'NGTS-11 b', 'HD 152843 c', 'TOI-216.02']
     # we know what these are, and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
@@ -1638,10 +1638,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-5542.01', 'TOI-3884.01', 'TOI-1468.01',
                 'TOI-1468.02', 'TOI-4270.01', 'TOI-5970.01', 'TOI-277.01',
                 'TOI-1288.01', 'TOI-1695.01',
-                'TOI-5979.01', 'TOI-5982.01', 'TOI-5984.01', 'TOI-5986.01',
-                'TOI-5988.01', 'TOI-5992.01', 'TOI-5993.01', 'TOI-5994.01',
-                'TOI-5995.01', 'TOI-5999.01', 'TOI-6001.01', 'TOI-6003.01',
-                'TOI-6004.01', 'TOI-6005.01', 'TOI-6006.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
@@ -1657,8 +1653,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = ['TOI-4581.02']
-    confmatch = ['KOI-94 e']
+    nopermatch = []
+    confmatch = []
     singconf = np.zeros(len(nopermatch), dtype=bool)
     singcands = ['TOI-5523.01']
     singc = np.zeros(len(singcands), dtype=bool)
