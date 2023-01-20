@@ -393,8 +393,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # convert to AU; 1 AU = 215 Rsun
     tmpau2 = dfcon['pl_ratdor'] * dfcon['st_rad'] / 215.03216
     repau2 = (~np.isfinite(dfcon['semi_au'])) & np.isfinite(tmpau2)
-    # this so far isn't actually necessary
-    assert repau2.sum() == 0
+    # this so far is only necessary for HIP 41378 d
+    assert repau2.sum() == 1
     dfcon.loc[repau2, 'semi_au'] = tmpau2[repau2]
 
     # calculate insolations ourselves and fill in any missing that we can
@@ -573,7 +573,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert len(dfkoi[dfkoi['name'] == 'KOI-1101.02']) == 0
 
     # these were removed as FPs from the confirmed talbe, but not the KOI list
-    newfps = ['Kepler-699 b', 'Kepler-840 b', 'Kepler-854 b']
+    newfps = ['Kepler-699 b', 'Kepler-840 b', 'Kepler-854 b', 'Kepler-486 b',
+              'Kepler-492 b']
     badrows = np.in1d(dfkoi['kepler_name'], newfps)
     assert (dfkoi.loc[badrows, 'disposition'] == 'Confirmed').all()
     dfkoi.loc[badrows, 'disposition'] = 'False Positive'
@@ -1522,10 +1523,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert (np.array(yrs) > 2017).all()
 
     # these are WASP-30 and LP 261-75, brown dwarfs and not a real planet
+    # TOI-4571 is a demoted KOI
     bds = ['TOI-239.01', 'TOI-1779.01', 'TOI-148.01', 'TOI-503.01',
            'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01',
            'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01', 'TOI-5081.01',
-           'TOI-5090.01']
+           'TOI-5090.01', 'TOI-4571.01']
     for ibd in bds:
         bd = np.where(dftoi['name'] == ibd)[0][0]
         assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
@@ -1580,7 +1582,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-1811.01', 'TOI-2145.01', 'TOI-2152.01',
                'TOI-2154.01', 'TOI-2497.01', 'TOI-5153.01', 'TOI-4406.01',
                'TOI-1694.01', 'TOI-5205.01', 'TOI-5812.01', 'TOI-1260.03',
-               'TOI-2338.01', 'TOI-2589.01', 'TOI-700.04']
+               'TOI-2338.01', 'TOI-2589.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
