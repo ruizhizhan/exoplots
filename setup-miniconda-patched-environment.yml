@@ -1,0 +1,10 @@
+name: condaenv
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - pandas
+  - bokeh==3.0.3
+  - astropy
+  - astroquery
+  - python=3.10
