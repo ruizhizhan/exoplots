@@ -11,10 +11,11 @@ from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool, Toggle
 from bokeh.models import Button, LogAxis, Range1d, RangeSlider
 from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
 from bokeh.themes import Theme
+from bokeh.models import ColorPicker, Div
 
 from utils import csv_creation, get_update_time, log_axis_labels
 from utils import deselect, reset, sliderselect, unselect, yearselect
-from utils import openurl, palette, playpause
+from utils import openurl, palette, playpause, change_color
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -180,7 +181,7 @@ for ifig in np.arange(2):
     fig.add_layout(LogAxis(y_range_name="jup"), 'right')
 
     # add the first y-axis's label and use our custom log formatting for both
-    fig.yaxis.axis_label = 'Radius (Earth Radii)'
+    fig.yaxis.axis_label = r'\[\text{Radius} (\mathrm{R_\oplus})\]'
     fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
     # add the x-axis's label and use our custom log formatting
@@ -188,7 +189,7 @@ for ifig in np.arange(2):
     fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
     # add the second y-axis's label
-    fig.right[0].axis_label = 'Radius (Jupiter Radii)'
+    fig.right[0].axis_label = r'\[\text{Radius} (\mathrm{R_J})\]'
 
     # which order to place the legend labels
     topleg = ['Kepler Confirmed', 'K2 Confirmed', 'TESS Confirmed']
@@ -250,8 +251,9 @@ for ifig in np.arange(2):
     fig.add_layout(caption4, 'below')
 
     # add the download button
+    vertcent = {'margin': 'auto 5px'}
     button = Button(label="Download CSV of Selected Data",
-                    button_type="primary")
+                    button_type="primary", styles=vertcent)
     # what is the header and what keys correspond to those columns for
     # output CSV files
     keys = source.column_names
@@ -275,6 +277,24 @@ for ifig in np.arange(2):
     uclick = CustomJS(args=dict(sources=sources), code=openurl)
     fig.js_on_event(Tap, uclick)
 
+    titlecent = {'margin': 'auto -3px auto 5px'}
+    # allow the user to choose the colors
+    keplerpar = Div(text='Kepler:', styles=titlecent)
+    keplercolor = ColorPicker(color=colors[0], width=60, height=30,
+                              styles=vertcent)
+    change_color(keplercolor, glyphs[:2])
+    k2par = Div(text='K2:', styles=titlecent)
+    k2color = ColorPicker(color=colors[2], width=60, height=30, styles=vertcent)
+    change_color(k2color, glyphs[2:4])
+    tesspar = Div(text='TESS:', styles=titlecent)
+    tesscolor = ColorPicker(color=colors[4], width=60, height=30,
+                            styles=vertcent)
+    change_color(tesscolor, glyphs[4:7:2])
+    confpar = Div(text='Other:', styles=titlecent)
+    confcolor = ColorPicker(color=colors[5], width=60, height=30,
+                            styles=vertcent)
+    change_color(confcolor, [glyphs[5]])
+
     if ifig == 0:
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems)
         fig.js_on_event('reset', CustomJS(args=jargs, code=reset))
@@ -284,7 +304,9 @@ for ifig in np.arange(2):
         fig.js_on_event(DoubleTap, uns)
         # for iglyph in glyphs:
         #     iglyph.js_on_change('visible', des)
-        layout = column(button, fig)
+        optrow = row(button, keplerpar, keplercolor, k2par, k2color, tesspar,
+                     tesscolor, confpar, confcolor, styles={'margin': '3px'})
+        layout = column(optrow, fig)
     else:
         yrlabelopts = dict(x=520, y=410, x_units='screen', y_units='screen',
                            text_align='right', text_font_size='20pt',
@@ -313,12 +335,12 @@ for ifig in np.arange(2):
         #     iglyph.js_on_change('visible', nw)
 
         playbutton = Toggle(label="\u25b6 Play", width=150, width_policy='fit',
-                            button_type='success')
+                            button_type='success', styles=vertcent)
         playbutton.js_on_change('active', CustomJS(args=jargs, code=playpause))
-
-        anirow = row(range_slider, playbutton)
-
-        layout = column(button, anirow, fig)
+        optrow = row(button, keplerpar, keplercolor, k2par, k2color, tesspar,
+                     tesscolor, confpar, confcolor, styles={'margin': '3px'})
+        anirow = row(range_slider, playbutton, styles={'margin': '3px'})
+        layout = column(optrow, anirow, fig)
 
     plotting.save(layout)
 

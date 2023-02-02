@@ -3,12 +3,26 @@ Utility functions needed for every figure. Load and process the data in a
 uniform way as well as run tests to ensure sensible results.
 """
 
+from bokeh.models import ColorPicker
+
 # order is green, salmon, gold, purple, blue, cyan
 palette = {'C0': '#228833', 'C1': '#ee6677', 'C2': '#ccbb44', 'C3': '#aa3377',
            'C4': '#4477aa', 'C5': '#66ccee'}
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
+
+
+def change_color(picker: ColorPicker, glyphs: list):
+    # all possible glyphs and what we need to update
+    allglyph = ['glyph', 'selection_glyph', 'nonselection_glyph',
+                'muted_glyph']
+    allprops = ['fill_color', 'hatch_color', 'line_color']
+    for iglyph in glyphs:
+        for ag in allglyph:
+            for prop in allprops:
+                picker.js_link('color', vars(iglyph)['_property_values'][ag],
+                               prop)
 
 
 def get_update_time():
@@ -2076,15 +2090,19 @@ if (some == 0){
 
 openurl = """
 const nsources = sources.length;
+const urls = [];
 for (let nn = 0; nn < nsources; nn++) {
     var source = sources[nn];
     const nrows = source.selected.indices.length;
     
     for (let ii = 0; ii < nrows; ii++) {
         var ind = source.selected.indices[ii];
-        window.open(source.data['url'][ind]);
+        urls.push(source.data['url'][ind]);
         
     }
+}
+if (urls.length == 1){
+    window.open(urls[0]);
 }
 """
 
