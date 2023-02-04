@@ -4,15 +4,15 @@ from bokeh import plotting
 from bokeh.embed import components
 from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
-from bokeh.layouts import column
-from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool
-from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
-from bokeh.models import LogAxis, Range1d
+from bokeh.layouts import column, row
+from bokeh.models import BoxSelectTool, ColorPicker, CustomJS
+from bokeh.models import CustomJSTickFormatter, Div, Label, LassoSelectTool
+from bokeh.models import Legend, LegendItem, LogAxis, Range1d, TapTool
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
-from utils import csv_creation, get_update_time, log_axis_labels
-from utils import deselect, openurl, palette, reset
+from utils import change_color, csv_creation, deselect, get_update_time
+from utils import log_axis_labels, openurl, palette, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -141,15 +141,15 @@ fig.extra_y_ranges = {"jup": Range1d(start=ystart/radratio, end=yend/radratio)}
 fig.add_layout(LogAxis(y_range_name="jup"), 'right')
 
 # add the first y-axis's label and use our custom log formatting for both axes
-fig.yaxis.axis_label = 'Radius (Earth Radii)'
+fig.yaxis.axis_label = r'\[\text{Radius} (\mathrm{R_\oplus})\]'
 fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
 # add the x-axis's label and use our custom log formatting
-fig.xaxis.axis_label = 'Distance (parsec)'
+fig.xaxis.axis_label = 'Distance (pc)'
 fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
 # add the second y-axis's label
-fig.right[0].axis_label = 'Radius (Jupiter Radii)'
+fig.right[0].axis_label = r'\[\text{Radius} (\mathrm{R_J})\]'
 
 # which order to place the legend labels
 topleg = ['Kepler Confirmed', 'K2 Confirmed', 'TESS Confirmed']
@@ -226,7 +226,9 @@ fig.add_layout(caption3, 'below')
 fig.add_layout(caption4, 'below')
 
 # add the download button
-button = Button(label="Download CSV of Selected Data", button_type="primary")
+vertcent = {'margin': 'auto 5px'}
+button = Button(label="Download CSV of Selected Data", button_type="primary",
+                styles=vertcent)
 # what is the header and what keys correspond to those columns for
 # output CSV files
 keys = source.column_names
@@ -256,7 +258,28 @@ fig.add_tools(TapTool())
 uclick = CustomJS(args=dict(sources=sources), code=openurl)
 fig.js_on_event(Tap, uclick)
 
-layout = column(button, fig)
+# allow the user to choose the colors
+titlecent = {'margin': 'auto -3px auto 5px'}
+
+keplerpar = Div(text='Kepler:', styles=titlecent)
+keplercolor = ColorPicker(color=colors[0], width=60, height=30,
+                          styles=vertcent)
+change_color(keplercolor, glyphs[:2])
+k2par = Div(text='K2:', styles=titlecent)
+k2color = ColorPicker(color=colors[2], width=60, height=30, styles=vertcent)
+change_color(k2color, glyphs[2:4])
+tesspar = Div(text='TESS:', styles=titlecent)
+tesscolor = ColorPicker(color=colors[4], width=60, height=30,
+                        styles=vertcent)
+change_color(tesscolor, glyphs[4:7:2])
+confpar = Div(text='Other:', styles=titlecent)
+confcolor = ColorPicker(color=colors[5], width=60, height=30,
+                        styles=vertcent)
+change_color(confcolor, [glyphs[5]])
+
+optrow = row(button, keplerpar, keplercolor, k2par, k2color, tesspar,
+             tesscolor, confpar, confcolor, styles={'margin': '3px'})
+layout = column(optrow, fig)
 
 plotting.save(layout)
 

@@ -7,15 +7,15 @@ from bokeh.embed import components
 from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool, Toggle
-from bokeh.models import Button, LogAxis, Range1d, RangeSlider
-from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
+from bokeh.models import BoxSelectTool, Button, ColorPicker, CustomJS
+from bokeh.models import CustomJSTickFormatter, Div, Label, LassoSelectTool
+from bokeh.models import Legend, LegendItem, LogAxis, Range1d, RangeSlider
+from bokeh.models import TapTool, Toggle
 from bokeh.themes import Theme
-from bokeh.models import ColorPicker, Div
 
-from utils import csv_creation, get_update_time, log_axis_labels
-from utils import deselect, reset, sliderselect, unselect, yearselect
-from utils import openurl, palette, playpause, change_color
+from utils import change_color, csv_creation, deselect, get_update_time
+from utils import log_axis_labels, openurl, palette, playpause, reset
+from utils import sliderselect, unselect, yearselect
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -277,8 +277,8 @@ for ifig in np.arange(2):
     uclick = CustomJS(args=dict(sources=sources), code=openurl)
     fig.js_on_event(Tap, uclick)
 
-    titlecent = {'margin': 'auto -3px auto 5px'}
     # allow the user to choose the colors
+    titlecent = {'margin': 'auto -3px auto 5px'}
     keplerpar = Div(text='Kepler:', styles=titlecent)
     keplercolor = ColorPicker(color=colors[0], width=60, height=30,
                               styles=vertcent)

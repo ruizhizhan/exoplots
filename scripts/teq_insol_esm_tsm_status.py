@@ -4,15 +4,16 @@ from bokeh import plotting
 from bokeh.embed import components
 from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
-from bokeh.layouts import column
-from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool
-from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
+from bokeh.layouts import column, row
+from bokeh.models import BoxSelectTool, ColorPicker, CustomJS
+from bokeh.models import CustomJSTickFormatter, Div, Label, LassoSelectTool
+from bokeh.models import Legend, LegendItem, TapTool
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
-from utils import csv_creation, get_update_time, log_axis_labels, reset
-from utils import deselect, get_equilibrium_temperature, get_esm, get_tsm
-from utils import openurl, palette
+from utils import change_color, csv_creation, deselect
+from utils import get_equilibrium_temperature, get_esm, get_tsm
+from utils import get_update_time, log_axis_labels, openurl, palette, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -236,7 +237,8 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
 
             # add the first y-axis's label and use our custom log formatting
             if imet == 'esm':
-                fig.yaxis.axis_label = f'ESM ({refwavs[ifig]} micron)'
+                fig.yaxis.axis_label = f'\\[\\text{{ESM}} (\\mathrm{{' \
+                                       f'{refwavs[ifig]} \\mu m}})\\]'
             else:
                 fig.yaxis.axis_label = 'TSM'
             fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
@@ -245,7 +247,8 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             if ixx == 0:
                 fig.xaxis.axis_label = 'Equilibrium Temp (K)'
             else:
-                fig.xaxis.axis_label = 'Insolation (Earths)'
+                fig.xaxis.axis_label = r'\[\text{Instellation} (\mathrm' \
+                                       r'{F_\oplus})\]'
                 ctf = CustomJSTickFormatter(code=log_axis_labels())
                 fig.xaxis.formatter = ctf
             # make high teqs on the left
@@ -344,8 +347,9 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             fig.add_layout(caption5, 'below')
 
             # add the download button
+            vertcent = {'margin': 'auto 5px'}
             button = Button(label="Download CSV of Selected Data",
-                            button_type="primary")
+                            button_type="primary", styles=vertcent)
             # what is the header and what keys correspond to those columns for
             # output CSV files
             keys = source.column_names
@@ -373,7 +377,25 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
             for iglyph in glyphs:
                 iglyph.js_on_change('visible', des)
 
-            layout = column(button, fig)
+            # allow the user to choose the colors
+            titlecent = {'margin': 'auto -3px auto 5px'}
+
+            keplerpar = Div(text='Candidate:', styles=titlecent)
+            keplercolor = ColorPicker(color=colors[0], width=60, height=30,
+                                      styles=vertcent)
+            change_color(keplercolor, [glyphs[0]])
+            k2par = Div(text='Confirmed:', styles=titlecent)
+            k2color = ColorPicker(color=colors[1], width=60, height=30,
+                                  styles=vertcent)
+            change_color(k2color, [glyphs[1]])
+            tesspar = Div(text='Confirmed Mass:', styles=titlecent)
+            tesscolor = ColorPicker(color=colors[2], width=60, height=30,
+                                    styles=vertcent)
+            change_color(tesscolor, [glyphs[2]])
+
+            optrow = row(button, keplerpar, keplercolor, k2par, k2color,
+                         tesspar, tesscolor, styles={'margin': '3px'})
+            layout = column(optrow, fig)
 
             plotting.save(layout)
 

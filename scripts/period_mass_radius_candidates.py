@@ -7,33 +7,34 @@ from bokeh.embed import components
 from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, CustomJSTickFormatter, TapTool, Toggle
-from bokeh.models import Button, LogAxis, Range1d, RangeSlider
-from bokeh.models import CustomJS, Label, LassoSelectTool, Legend, LegendItem
+from bokeh.models import BoxSelectTool, Button, ColorPicker, CustomJS
+from bokeh.models import CustomJSTickFormatter, Div, Label, LassoSelectTool
+from bokeh.models import Legend, LegendItem, LogAxis, Range1d, RangeSlider
+from bokeh.models import TapTool, Toggle
 from bokeh.themes import Theme
 
-from utils import csv_creation, get_update_time, log_axis_labels
-from utils import deselect, reset, sliderselect, unselect, yearselect
-from utils import openurl, palette, playpause
+from utils import change_color, csv_creation, deselect, get_update_time
+from utils import log_axis_labels, openurl, palette, playpause, reset
+from utils import sliderselect, unselect, yearselect
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
 # in what order to plot things and what the legend labels will say
-missions = ['Radial Velocity', 'Other Transit', 'Kepler Candidate',
-            'Kepler Confirmed', 'K2 Candidate', 'K2 Confirmed',
-            'TESS Candidate', 'Other Methods', 'TESS Confirmed']
+missions = ['Kepler Candidate', 'K2 Candidate', 'TESS Candidate',
+            'Radial Velocity', 'Other Transit', 'Kepler Confirmed',
+            'K2 Confirmed', 'TESS Confirmed', 'Other Methods']
 
 # markers and colors in the same order as the missions above
-markers = ['plus', 'square_pin',  'circle_cross', 'circle', 'square_cross',
-           'square', 'inverted_triangle', 'diamond', 'triangle']
+markers = ['circle_cross', 'square_cross', 'inverted_triangle', 'plus',
+           'square_pin', 'circle', 'square', 'triangle', 'diamond']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = [palette['C4'], palette['C5'], palette['C0'], palette['C0'],
-          palette['C1'], palette['C1'], palette['C2'], palette['C3'],
-          palette['C2']]
+colors = [palette['C0'], palette['C1'], palette['C2'], palette['C4'],
+          palette['C5'], palette['C0'], palette['C1'], palette['C2'],
+          palette['C3']]
 
 # load the data
 dfpl = pd.read_csv('data/exoplots_data.csv')
@@ -251,9 +252,9 @@ for ifig in np.arange(4):
 
     # add the first y-axis's label and use our custom log formatting for both
     if ifig < 2:
-        fig.yaxis.axis_label = 'Radius (Earth Radii)'
+        fig.yaxis.axis_label = r'\[\text{Radius} (\mathrm{R_\oplus})\]'
     else:
-        fig.yaxis.axis_label = 'Mass (Earth Masses)'
+        fig.yaxis.axis_label = r'\[\text{Mass} (\mathrm{M_\oplus})\]'
     fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
 
     # add the x-axis's label and use our custom log formatting
@@ -262,9 +263,9 @@ for ifig in np.arange(4):
 
     # add the second y-axis's label
     if ifig < 2:
-        fig.right[0].axis_label = 'Radius (Jupiter Radii)'
+        fig.right[0].axis_label = r'\[\text{Radius} (\mathrm{R_J})\]'
     else:
-        fig.right[0].axis_label = 'Mass (Jupiter Masses)'
+        fig.right[0].axis_label = r'\[\text{Mass} (\mathrm{M_J})\]'
 
     # which order to place the legend labels
     topleg = ['Kepler Confirmed', 'K2 Confirmed', 'TESS Confirmed']
@@ -299,7 +300,7 @@ for ifig in np.arange(4):
         fig.add_layout(legend, 'above')
 
     # overall figure title
-    fig.title.text = 'All Confirmed Planets'
+    fig.title.text = 'All Confirmed and Candidate Planets'
 
     # create the four lines of credit text in the two bottom corners
     if ifig < 2:
@@ -334,8 +335,9 @@ for ifig in np.arange(4):
     fig.add_layout(caption4, 'below')
 
     # add the download button
+    vertcent = {'margin': 'auto 5px'}
     button = Button(label="Download CSV of Selected Data",
-                    button_type="primary")
+                    button_type="primary", styles=vertcent)
     # what is the header and what keys correspond to those columns for
     # output CSV files
     keys = source.column_names
@@ -357,6 +359,31 @@ for ifig in np.arange(4):
     uclick = CustomJS(args=dict(sources=sources), code=openurl)
     fig.js_on_event(Tap, uclick)
 
+    # allow the user to choose the colors
+    titlecent = {'margin': 'auto -3px auto 5px'}
+    keplerpar = Div(text='Kepler:', styles=titlecent)
+    keplercolor = ColorPicker(color=colors[0], width=60, height=30,
+                              styles=vertcent)
+    change_color(keplercolor, [glyphs[0], glyphs[5]])
+    k2par = Div(text='K2:', styles=titlecent)
+    k2color = ColorPicker(color=colors[1], width=60, height=30, styles=vertcent)
+    change_color(k2color, [glyphs[1], glyphs[6]])
+    tesspar = Div(text='TESS:', styles=titlecent)
+    tesscolor = ColorPicker(color=colors[2], width=60, height=30,
+                            styles=vertcent)
+    change_color(tesscolor, [glyphs[2], glyphs[7]])
+    confpar = Div(text='Other Transit:', styles=titlecent)
+    confcolor = ColorPicker(color=colors[4], width=60, height=30,
+                            styles=vertcent)
+    change_color(confcolor, [glyphs[4]])
+    rvpar = Div(text='RV:', styles=titlecent)
+    rvcolor = ColorPicker(color=colors[3], width=60, height=30, styles=vertcent)
+    change_color(rvcolor, [glyphs[3]])
+    othpar = Div(text='Other:', styles=titlecent)
+    othcolor = ColorPicker(color=colors[8], width=60, height=30,
+                           styles=vertcent)
+    change_color(othcolor, [glyphs[8]])
+
     if ifig in [0, 2]:
         jargs = dict(glyphs=glyphs, alphas=alphas, legends=legitems)
         fig.js_on_event('reset', CustomJS(args=jargs, code=reset))
@@ -366,7 +393,10 @@ for ifig in np.arange(4):
         fig.js_on_event(DoubleTap, uns)
         # for iglyph in glyphs:
         #     iglyph.js_on_change('visible', des)
-        layout = column(button, fig)
+        optrow = row(button, keplerpar, keplercolor, k2par, k2color, tesspar,
+                     tesscolor, styles={'margin': '3px'})
+        optrow2 = row(confpar, confcolor, rvpar, rvcolor, othpar, othcolor)
+        layout = column(optrow, optrow2, fig)
     else:
         if ifig == 1:
             yrlabelopts = dict(x=520, y=410, x_units='screen', y_units='screen',
@@ -400,12 +430,15 @@ for ifig in np.arange(4):
         #     iglyph.js_on_change('visible', nw)
 
         playbutton = Toggle(label="\u25b6 Play", width=150, width_policy='fit',
-                            button_type='success')
+                            button_type='success', styles=vertcent)
         playbutton.js_on_change('active', CustomJS(args=jargs, code=playpause))
 
-        anirow = row(range_slider, playbutton)
+        optrow = row(button, keplerpar, keplercolor, k2par, k2color, tesspar,
+                     tesscolor, styles={'margin': '3px'})
+        anirow = row(range_slider, playbutton, confpar, confcolor, rvpar,
+                     rvcolor, othpar, othcolor)
 
-        layout = column(button, anirow, fig)
+        layout = column(optrow, anirow, fig)
 
     plotting.save(layout)
 

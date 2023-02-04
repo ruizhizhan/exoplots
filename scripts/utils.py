@@ -20,6 +20,8 @@ def change_color(picker: ColorPicker, glyphs: list):
     allprops = ['fill_color', 'hatch_color', 'line_color']
     for iglyph in glyphs:
         for ag in allglyph:
+            if ag not in vars(iglyph)['_property_values']:
+                continue
             for prop in allprops:
                 picker.js_link('color', vars(iglyph)['_property_values'][ag],
                                prop)

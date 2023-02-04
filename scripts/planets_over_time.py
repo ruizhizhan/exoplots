@@ -5,10 +5,12 @@ import pandas as pd
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.io import curdoc
-from bokeh.models import CustomJSTickFormatter, Label, NumeralTickFormatter
+from bokeh.layouts import column, row
+from bokeh.models import ColorPicker, CustomJSTickFormatter, Div, Label
+from bokeh.models import NumeralTickFormatter
 from bokeh.themes import Theme
 
-from utils import get_update_time, log_axis_labels, palette
+from utils import change_color, get_update_time, log_axis_labels, palette
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -193,8 +195,8 @@ for xx in np.arange(4):
         # '@years $name: @$name; Total: @total'
         fig = plotting.figure(tooltips=fancytool0, width=750,
                               height=600, y_range=(0, tots.max()*1.05))
-        fig.vbar_stack(methods, x='years', width=0.9, color=colors, source=data,
-                       legend_label=leglab, line_width=0)
+        glyphs = fig.vbar_stack(methods, x='years', width=0.9, color=colors,
+                                source=data, legend_label=leglab, line_width=0)
     else:
         if xx == 1:
             txt = 'confirmed'
@@ -220,8 +222,8 @@ for xx in np.arange(4):
         fig.line('years', 'Predicted', source=cumul, line_width=5,
                  line_color='black', name='Predicted',
                  legend_label=f'Doubling Time: {tdouble:.2f} years')
-        fig.vbar_stack(methods, x='years', width=0.9, color=colors,
-                       source=cumul, legend_label=leglab, line_width=0)
+        glyphs = fig.vbar_stack(methods, x='years', width=0.9, color=colors,
+                                source=cumul, legend_label=leglab, line_width=0)
 
     # add the first y-axis's label and use our custom log formatting
     # for both axes
@@ -299,12 +301,31 @@ for xx in np.arange(4):
     if xx > 1:
         fig.add_layout(caption4, 'below')
 
-    plotting.show(fig)
-    plotting.save(fig)
+    # allow the user to choose the colors
+    titlecent = {'margin': 'auto -3px auto 5px'}
+    vertcent = {'margin': 'auto 5px'}
+    keplerpar = Div(text='Transit:', styles=titlecent)
+    keplercolor = ColorPicker(color=colors[2], width=60, height=30,
+                              styles=vertcent)
+    change_color(keplercolor, [glyphs[2]])
+    k2par = Div(text='RV:', styles=titlecent)
+    k2color = ColorPicker(color=colors[1], width=60, height=30, styles=vertcent)
+    change_color(k2color, [glyphs[1]])
+    tesspar = Div(text='Other:', styles=titlecent)
+    tesscolor = ColorPicker(color=colors[0], width=60, height=30,
+                            styles=vertcent)
+    change_color(tesscolor, [glyphs[0]])
+
+    optrow = row(keplerpar, keplercolor, k2par, k2color, tesspar,
+                 tesscolor, styles={'margin': '3px'})
+    layout = column(optrow, fig)
+
+    plotting.show(layout)
+    plotting.save(layout)
 
     # save the individual pieces, so we can just embed the figure without the
     # whole html page
-    script, div = components(fig, theme=theme)
+    script, div = components(layout, theme=theme)
     if (xx % 2) == 0:
         with open(embedfile_name.format(txt), 'w') as ff:
             ff.write(script.strip())
@@ -345,8 +366,8 @@ for xx in np.arange(4):
         fig2 = plotting.figure(tooltips=fancytool0, width=750,
                                height=600, y_range=(ymin, ymax),
                                y_axis_type='log')
-        fig2.vbar_stack(methods, x='years', width=0.9, color=colors,
-                        source=data, legend_label=leglab, line_width=0)
+        glyphs = fig2.vbar_stack(methods, x='years', width=0.9, color=colors,
+                                 source=data, legend_label=leglab, line_width=0)
     else:
         if xx == 1:
             txt = 'confirmed'
@@ -375,8 +396,9 @@ for xx in np.arange(4):
         fig2.line('years', 'Predicted', source=cumul, line_width=5,
                   line_color='black', name='Predicted',
                   legend_label=f'Doubling Time: {tdouble:.2f} years')
-        fig2.vbar_stack(methods, x='years', width=0.9, color=colors,
-                        source=cumul, legend_label=leglab, line_width=0)
+        glyphs = fig2.vbar_stack(methods, x='years', width=0.9, color=colors,
+                                 source=cumul, legend_label=leglab,
+                                 line_width=0)
 
     # add the first y-axis's label and use our custom log formatting
     # for both axes
@@ -460,12 +482,31 @@ for xx in np.arange(4):
     if xx > 1:
         fig2.add_layout(caption4, 'below')
 
-    plotting.show(fig2)
-    plotting.save(fig2)
+    # allow the user to choose the colors
+    titlecent = {'margin': 'auto -3px auto 5px'}
+    vertcent = {'margin': 'auto 5px'}
+    keplerpar = Div(text='Transit:', styles=titlecent)
+    keplercolor = ColorPicker(color=colors[3], width=60, height=30,
+                              styles=vertcent)
+    change_color(keplercolor, [glyphs[3]])
+    k2par = Div(text='RV:', styles=titlecent)
+    k2color = ColorPicker(color=colors[2], width=60, height=30, styles=vertcent)
+    change_color(k2color, [glyphs[2]])
+    tesspar = Div(text='Other:', styles=titlecent)
+    tesscolor = ColorPicker(color=colors[1], width=60, height=30,
+                            styles=vertcent)
+    change_color(tesscolor, [glyphs[1]])
+
+    optrow = row(keplerpar, keplercolor, k2par, k2color, tesspar,
+                 tesscolor, styles={'margin': '3px'})
+    layout = column(optrow, fig2)
+
+    plotting.show(layout)
+    plotting.save(layout)
 
     # save the individual pieces, so we can just embed the figure without the
     # whole html page
-    script, div = components(fig2, theme=theme)
+    script, div = components(layout, theme=theme)
     if (xx % 2) == 0:
         with open(embedfilelog_name.format(txt), 'w') as ff:
             ff.write(script.strip())
