@@ -221,8 +221,10 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     koifile = 'data/kepler-kois-full.csv'
     toifile = 'data/tess-candidates.csv'
 
-    k2distfile = 'data/k2oi_distances.txt'
     koidistfile = 'data/koi_distances.txt'
+    k2distfile = 'data/k2oi_distances.txt'
+    koistarsfile = 'data/GKTHCatalog_Table4.csv'
+    koiplanetsfile = 'data/GKTHCatalog_Table5.csv'
 
     ticparams = 'data/full_tic.txt'
 
@@ -669,7 +671,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # set up a distance field that is the same in all 4 groups
     koidists = np.zeros(dfkoi['IC'].size)
 
-    # breakpoint()
     kics, k1dists = np.loadtxt(koidistfile, unpack=True)
     kics = kics.astype(int)
     for ii, ikoi in enumerate(dfkoi['IC']):
@@ -689,13 +690,16 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # KOI insolations only go to 2 sig figs so gets the distant ones wrong
     # so calculate our own in a consistent way
-    tmpau = (((dfkoi['period'] / 365.256)**2) * dfkoi['st_mass'])**(1./3.)
+    tmpau = (((dfkoi['period'] / 365.25)**2) * dfkoi['st_mass'])**(1./3.)
     dfkoi.loc[np.isfinite(tmpau), 'semi_au'] = tmpau[np.isfinite(tmpau)]
 
     tmpinsol = (10.**dfkoi['st_log_lum']) * (dfkoi['semi_au']**-2)
     dfkoi.loc[np.isfinite(tmpinsol), 'insol'] = tmpinsol[np.isfinite(tmpinsol)]
 
     if updated_koi_params:
+        # load the Berger 2023 data
+        koistars = pd.read_csv(koistarsfile)
+        koiplanets = pd.read_csv(koiplanetsfile)
         # load the new parameters using Gaia etc
         kk, mm, rr, tt, ll, dd = np.loadtxt('data/koi_params_berger2020.txt',
                                             unpack=True)
@@ -851,7 +855,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     badfit = dfkoi['koi_ror'] > 1
     assert not (badfit & koicon).any()
     # use depth instead of r/R for radius
-    sunearth = 109.1
     rr = np.sqrt(dfkoi['tran_depth_ppm'] / 1e6) * dfkoi['st_rad'] * sunearth
     badfit = badfit & koican & np.isfinite(rr)
     dfkoi.loc[badfit, 'rade'] = rr[badfit]
@@ -863,7 +866,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert cons == 0
 
     # fix these inconsistencies by hand for now
-    tranrat = dfkoi['rade']**2 / (dfkoi['st_rad'] * 109.1)**2
+    tranrat = dfkoi['rade']**2 / (dfkoi['st_rad'] * sunearth)**2
     tranrat *= 1e6
     baddep = ((dfkoi['tran_depth_ppm'] < tranrat/3) |
               (dfkoi['tran_depth_ppm'] > tranrat*3)) & (dfkoi['rade'] < 4)
