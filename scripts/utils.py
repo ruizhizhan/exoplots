@@ -14,6 +14,18 @@ palette = {'C0': '#228833', 'C1': '#ee6677', 'C2': '#ccbb44', 'C3': '#aa3377',
 
 
 def change_color(picker: ColorPicker, glyphs: list):
+    """
+    Link up the color tool to the glyphs we want it to control.
+
+    Parameters
+    ----------
+    picker
+    glyphs
+
+    Returns
+    -------
+
+    """
     # all possible glyphs and what we need to update
     allglyph = ['glyph', 'selection_glyph', 'nonselection_glyph',
                 'muted_glyph']
@@ -198,6 +210,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     import pandas as pd
     import numpy as np
     from astropy.coordinates import Angle
+    from astropy import constants as const
     import warnings
     from glob import glob
     import os
@@ -226,20 +239,28 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # what columns do we want/need in the final dataframe
     cols = ['name', 'hostname', 'IC', 'disposition', 'period', 'rade', 'radj',
             'masse', 'massj', 'tran_depth_ppm', 'tran_dur_hr', 'semi_au',
-            'eccen',
-            'insol', 'distance_pc', 'year_discovered', 'year_confirmed',
-            'discoverymethod', 'facility', 'st_mass', 'st_rad', 'st_teff',
-            'st_log_lum', 'Jmag', 'Kmag', 'ra', 'dec', 'flag_tran',
-            'flag_kepler', 'flag_k2', 'url']
+            'eccen', 'insol', 'distance_pc', 'year_discovered',
+            'year_confirmed', 'discoverymethod', 'facility', 'st_mass',
+            'st_rad', 'st_teff', 'st_log_lum', 'Jmag', 'Kmag', 'ra', 'dec',
+            'flag_tran', 'flag_kepler', 'flag_k2', 'url']
 
     #########################
     # CONFIRMED PLANET PREP #
     #########################
 
     print('Handling confirmed planets.')
+    # set our common names for all of these
+    renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
+               'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
+               'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
+               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag', 'sy_jmag': 'Jmag',
+               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
+               'pl_orbeccen': 'eccen', 'disc_facility': 'facility',
+               'tran_flag': 'flag_tran', 'sy_dist': 'distance_pc',
+               'disc_year': 'year_discovered'}
+    dfcon.rename(columns=renames, inplace=True)
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
-    dfcon['facility'] = dfcon['disc_facility']
     dfcon['facility'].replace(full, 'TESS', inplace=True)
 
     dfcon['pl_bmasse_reflink'].replace(np.nan, '', inplace=True)
@@ -253,27 +274,11 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # where do we want to point people to on clicking?
     dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' +
                     dfcon['hostname'])
-    dfcon['hostname'] = dfcon['hostname']
-    dfcon['flag_tran'] = dfcon['tran_flag']
 
     # all transit flags are 0 or 1
     assert ((dfcon['flag_tran'] == 0) | (dfcon['flag_tran'] == 1)).all()
     # now make them bool flags as desired
     dfcon['flag_tran'] = dfcon['flag_tran'].astype(bool)
-
-    # set up a distance field that is the same in all 4 groups and the
-    # discovery year
-    dfcon['distance_pc'] = dfcon['sy_dist'].values * 1
-    dfcon['year_discovered'] = dfcon['disc_year'] * 1
-
-    # set our common names for all of these
-    renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
-               'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
-               'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
-               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag', 'sy_jmag': 'Jmag',
-               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
-               'pl_orbeccen': 'eccen'}
-    dfcon.rename(columns=renames, inplace=True)
 
     # upper/lower limits are given values at that limit, and we need to remove
     # them for now
@@ -313,19 +318,19 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert not (badme ^ badmj).any()
     dfcon.loc[badme, ['masse', 'massj']] = np.nan
 
-    massrat = 317.83
+    massrat = (const.M_jup/const.M_earth).value
     # because earth and jup masses don't always agree, make them
     # uniform and treat Earth as truth
     dfcon['massj'] = dfcon['masse'] / massrat
 
     # jupiter/earth radius ratio
-    radratio = 11.21
+    radratio = (const.R_jup/const.R_earth).value
     badrj = (np.isfinite(dfcon['radj']) ^ np.isfinite(dfcon['rade']))
     # XXX: this bad 1 needs to be fixed
     assert badrj.sum() == 1
     dfcon.loc[badrj, 'radj'] = dfcon.loc[badrj, 'rade'] / radratio
 
-    # remove calculated values from true masses. we'll make a calculated
+    # remove calculated values from true radii. we'll make a calculated
     # column later
     badre = dfcon['pl_rade_reflink'].str.contains('Calculated')
     badrj = dfcon['pl_radj_reflink'].str.contains('Calculated')
@@ -342,7 +347,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     getdep = (dfcon['flag_tran'] & (~np.isfinite(dfcon['tran_depth_ppm'])) &
               np.isfinite(dfcon['rade']) & np.isfinite(dfcon['st_rad']))
 
-    tranrat = dfcon['rade']**2 / (dfcon['st_rad'] * 109.1)**2
+    sunearth = (const.R_sun/const.R_earth).value
+    tranrat = dfcon['rade']**2 / (dfcon['st_rad'] * sunearth)**2
     tranrat *= 1e6
     dfcon.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep]
 
@@ -352,18 +358,16 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
               np.isfinite(dfcon['rade']) & np.isfinite(dfcon['st_rad']))
     assert getdep.sum() == 0
 
-    # K2-22 b
     getrad = (dfcon['flag_tran'] & np.isfinite(dfcon['tran_depth_ppm']) &
               (~np.isfinite(dfcon['rade'])) & np.isfinite(dfcon['st_rad']))
     assert getrad.sum() == 0
-    # don't assume radius from depth because it's a disintegrating planet
-    # where depth doesn't equal true radius
 
+    """
     # fix these inconsistencies by hand for now
     baddep = ((dfcon['tran_depth_ppm'] < tranrat/3) |
               (dfcon['tran_depth_ppm'] > tranrat*3)) & (dfcon['rade'] < 4)
     dfcon.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
-
+    """
     # set whether these were observed by Kepler or K2
     dfcon['flag_kepler'] = False
     # these were labeled in the old table as being in the Kepler field
@@ -385,8 +389,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
               'HIP 41378', 'Qatar-2', 'Ross 128', 'TRAPPIST-1',
               'V1298 Tau', 'WASP-151', 'WASP-157', 'WASP-28', 'WASP-47',
               'WASP-75', 'WASP-85 A', 'Wolf 503']
-    # note to self: EPIC 211945201 b and HD 3167 d are both in the K2
-    # fields but unlisted as such in the old confirmed planets table
     for ind, icon in dfcon.iterrows():
         isk2 = (icon['hostname'][:2] == 'K2' or
                 icon['hostname'][:4] == 'EPIC' or
@@ -401,13 +403,13 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     assert toadd.sum() == 0
 
     # fill in any missing semi-major axes from Kepler's third law first
-    tmpau = (((dfcon['period'] / 365.256)**2) * dfcon['st_mass'])**(1./3.)
+    tmpau = (((dfcon['period'] / 365.25)**2) * dfcon['st_mass'])**(1./3.)
     repau = (~np.isfinite(dfcon['semi_au'])) & np.isfinite(tmpau)
     dfcon.loc[repau, 'semi_au'] = tmpau[repau]
 
     # then fill in any missing semi-major axes with a/R* * R*
     # convert to AU; 1 AU = 215 Rsun
-    tmpau2 = dfcon['pl_ratdor'] * dfcon['st_rad'] / 215.03216
+    tmpau2 = dfcon['pl_ratdor'] * dfcon['st_rad'] / (const.au/const.R_sun).value
     repau2 = (~np.isfinite(dfcon['semi_au'])) & np.isfinite(tmpau2)
     # this so far is only necessary for HIP 41378 d
     assert repau2.sum() == 1
@@ -491,6 +493,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     # HD 155918 b: -0.08
     # HD 217786 c: -0.52
     # HD 93351 b: -0.13
+    # XXX: These were fixed in publication, but archive hasn't updated
     goodecc = (~np.isfinite(dfcon['eccen']) |
                ((dfcon['eccen'] >= 0) & (dfcon['eccen'] < 1)))
     assert (~goodecc).sum() == 3
@@ -665,6 +668,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # set up a distance field that is the same in all 4 groups
     koidists = np.zeros(dfkoi['IC'].size)
+
+    # breakpoint()
     kics, k1dists = np.loadtxt(koidistfile, unpack=True)
     kics = kics.astype(int)
     for ii, ikoi in enumerate(dfkoi['IC']):
@@ -1656,6 +1661,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-5542.01', 'TOI-3884.01', 'TOI-1468.01',
                 'TOI-1468.02', 'TOI-4270.01', 'TOI-5970.01', 'TOI-277.01',
                 'TOI-1288.01', 'TOI-1695.01', 'TOI-1097.02', 'TOI-4582.01',
+                'TOI-6043.01', 'TOI-6049.01', 'TOI-6052.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
                 # K2 candidates
