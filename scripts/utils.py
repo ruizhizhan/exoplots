@@ -986,7 +986,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfk2.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
     dfk2.loc[dfcon['pl_ratrorlim'] != 0, 'pl_ratror'] = np.nan
 
-    # K2 tables don't have both columns always filled in
+    # The K2 tables don't have both columns always filled in
     noearth = (~np.isfinite(dfk2['rade']) & np.isfinite(dfk2['radj']))
     dfk2.loc[noearth, 'rade'] = dfk2.loc[noearth, 'radj'] * radratio
 
@@ -1603,10 +1603,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                'TOI-262.01', 'TOI-469.01', 'TOI-682.01', 'TOI-836.01',
                'TOI-1054.01', 'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01',
                'TOI-1774.01', 'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01',
-               'TOI-1811.01', 'TOI-2145.01', 'TOI-2152.01',
-               'TOI-2154.01', 'TOI-2497.01', 'TOI-5153.01', 'TOI-4406.01',
-               'TOI-1694.01', 'TOI-5205.01', 'TOI-5812.01', 'TOI-1260.03',
-               'TOI-2338.01', 'TOI-2589.01']
+               'TOI-1811.01', 'TOI-2145.01', 'TOI-2152.01', 'TOI-2154.01',
+               'TOI-2497.01', 'TOI-5153.01', 'TOI-4406.01', 'TOI-5205.01',
+               'TOI-5812.01', 'TOI-1260.03', 'TOI-2338.01', 'TOI-2589.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1664,6 +1663,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 'TOI-5542.01', 'TOI-3884.01', 'TOI-1468.01',
                 'TOI-1468.02', 'TOI-4270.01', 'TOI-5970.01', 'TOI-277.01',
                 'TOI-1288.01', 'TOI-1695.01', 'TOI-1097.02', 'TOI-4582.01',
+                'TOI-4342.01', 'TOI-4342.02', 'TOI-4562.01',
                 'TOI-6043.01', 'TOI-6049.01', 'TOI-6052.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
