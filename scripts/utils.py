@@ -177,7 +177,7 @@ def get_tsm(df, scale: float = 0.19, **kwargs):
     return num / denom
 
 
-def load_data(updated_koi_params=True, updated_k2_params=True):
+def load_data(updated_koi_params=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
     ready for use in our interactive figures.
@@ -185,13 +185,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     Parameters
     ----------
     updated_koi_params : bool
-        If True, for all stars in the Kepler field, use the updated stellar
-        parameters from Berger 2020. Recalculate planet radii, insolations, etc.
-        using these new Gaia assisted stellar parameters.
-    updated_k2_params : bool
-        If True, for all stars in the K2 fields, use the updated stellar
-        parameters from Hardegree-Ullman 2020. Recalculate planet radii,
-        insolations, etc. using these new Gaia assisted stellar parameters.
+        If True, for all stars in the Kepler field, use the updated stellar and
+        planet parameters from Berger 2023. Recalculate planet radii,
+        insolations, etc. using these new Gaia assisted parameters.
 
     Returns
     -------
@@ -217,8 +213,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     # load the data files
     datafile = 'data/confirmed-planets.csv'
-    k2file = 'data/k2-candidates-table.csv'
     koifile = 'data/kepler-kois-full.csv'
+    k2file = 'data/k2-candidates-table.csv'
     toifile = 'data/tess-candidates.csv'
 
     koidistfile = 'data/koi_distances.txt'
@@ -230,8 +226,8 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     dfcon = pd.read_csv(datafile, low_memory=False)
 
-    dfk2 = pd.read_csv(k2file, low_memory=False)
     dfkoi = pd.read_csv(koifile)
+    dfk2 = pd.read_csv(k2file, low_memory=False)
     dftoi = pd.read_csv(toifile)
     if os.path.exists(ticparams):
         fulltic = pd.read_csv(ticparams)
@@ -700,10 +696,9 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
         # load the Berger 2023 data
         koistars = pd.read_csv(koistarsfile)
         koiplanets = pd.read_csv(koiplanetsfile)
-        # load the new parameters using Gaia etc
-        kk, mm, rr, tt, ll, dd = np.loadtxt('data/koi_params_berger2020.txt',
-                                            unpack=True)
-        kk = kk.astype(int)
+
+        koiplanets['id_planet'].replace(to_replace='K0+', value='KOI-',
+                                        regex=True, inplace=True)
 
         koicon = dfkoi['disposition'] == 'Confirmed'
         koican = dfkoi['disposition'] == 'Candidate'
@@ -727,30 +722,27 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                 res = np.where(comp['name'] == rname)[0]
                 assert len(res) == 1
 
-            cononly[res[0]] = False
+            res = res[0]
+            cononly[res] = False
 
-            fd = np.where(kk == icon['IC'])[0]
-            if len(fd) != 1:
-                warnings.warn(f"Can't find parameters for KIC {icon['IC']}")
-            elif ~np.isfinite(mm[fd[0]]):
-                continue
+            fdp = np.where(koiplanets['id_planet'] == icon['name'])[0]
+            fds = np.where(koistars['id_starname'] == f'kic{icon["IC"]}')[0]
+            # at least update the distance with DR3/TIC values
+            if len(fdp) != 1 or len(fds) != 1:
+                comp.at[res, 'distance_pc'] = icon['distance_pc']
             else:
                 # only care about updating the confirmed table
-                res = res[0]
-                comp.at[res, 'st_mass'] = mm[fd]
-                oldrad = comp.at[res, 'st_rad'] * 1
-                comp.at[res, 'st_rad'] = rr[fd]
-                comp.at[res, 'st_teff'] = tt[fd]
-                comp.at[res, 'st_log_lum'] = ll[fd]
-                comp.at[res, 'distance_pc'] = dd[fd]
-                iau = (((comp.at[res, 'period'] / 365.256)**2) * mm[fd])**(1./3)
-                iinsol = (10.**ll[fd]) * (iau**-2)
-                comp.at[res, 'semi_au'] = iau
-                comp.at[res, 'insol'] = iinsol
-                srat = rr[fd] / oldrad
-                if np.isfinite(srat):
-                    comp.at[res, 'rade'] *= srat
-                    comp.at[res, 'radj'] *= srat
+                comp.at[res, 'st_mass'] = koistars.loc[fds, 'iso_mass']
+                comp.at[res, 'st_rad'] = koistars.loc[fds, 'iso_rad']
+                comp.at[res, 'st_teff'] = koistars.loc[fds, 'iso_teff']
+                l10 = np.log10(koistars.loc[fds, 'iso_lum'])
+                comp.at[res, 'st_log_lum'] = l10
+                comp.at[res, 'distance_pc'] = koistars.loc[fds, 'iso_dis']
+
+                comp.at[res, 'semi_au'] = koiplanets.loc[fdp, 'sma']
+                comp.at[res, 'insol'] = koiplanets.loc[fdp, 'insol']
+                comp.at[res, 'rade'] = koiplanets.loc[fdp, 'prad']
+                comp.at[res, 'radj'] = koiplanets.loc[fdp, 'prad'] / radratio
 
         # make sure all candidate KOIs have the new parameters
         for index, ican in dfkoi[koican].iterrows():
@@ -761,29 +753,25 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
             res = res[0]
             assert len(res) == 0
 
-            fd = np.where(kk == ican['IC'])[0]
-            if len(fd) != 1:
-                warnings.warn(f"Can't find parameters for KIC {ican['IC']}")
-            elif ~np.isfinite(mm[fd[0]]):
+            fdp = np.where(koiplanets['id_planet'] == ican['name'])[0]
+            fds = np.where(koistars['id_starname'] == f'kic{ican["IC"]}')[0]
+            if len(fdp) != 1 or len(fds) != 1:
                 continue
             else:
-                fd = fd[0]
-                dfkoi.at[index, 'st_mass'] = mm[fd]
-                oldrad = dfkoi.at[index, 'st_rad'] * 1
-                dfkoi.at[index, 'st_rad'] = rr[fd]
-                dfkoi.at[index, 'st_teff'] = tt[fd]
-                dfkoi.at[index, 'st_log_lum'] = ll[fd]
-                dfkoi.at[index, 'distance_pc'] = dd[fd]
-                iau = (((dfkoi.at[index, 'period'] / 365.256)**2) * mm[fd])
-                iau = iau**(1./3.)
-                iinsol = (10.**ll[fd]) * (iau**-2)
-                dfkoi.at[index, 'semi_au'] = iau
-                dfkoi.at[index, 'insol'] = iinsol
-                srat = rr[fd] / oldrad
-                if np.isfinite(srat):
-                    dfkoi.at[index, 'rade'] *= srat
-                    dfkoi.at[index, 'radj'] *= srat
+                dfkoi.at[index, 'st_mass'] = koistars.loc[fds, 'iso_mass']
+                dfkoi.at[index, 'st_rad'] = koistars.loc[fds, 'iso_rad']
+                dfkoi.at[index, 'st_teff'] = koistars.loc[fds, 'iso_teff']
+                l10 = np.log10(koistars.loc[fds, 'iso_lum'])
+                dfkoi.at[index, 'st_log_lum'] = l10
+                dfkoi.at[index, 'distance_pc'] = koistars.loc[fds, 'iso_dis']
 
+                dfkoi.at[index, 'semi_au'] = koiplanets.loc[fdp, 'sma']
+                dfkoi.at[index, 'insol'] = koiplanets.loc[fdp, 'insol']
+                dfkoi.at[index, 'rade'] = koiplanets.loc[fdp, 'prad']
+                dfkoi.at[index, 'radj'] = koiplanets.loc[fdp, 'prad'] / radratio
+
+        # by definition these are missing from the Berger sample, but I'm
+        # keeping this cross-match in case we need it later.
         missing = ['KOI-142 c', 'Kepler-78 b', 'Kepler-16 b', 'Kepler-34 b',
                    'Kepler-35 b', 'Kepler-38 b', 'Kepler-47 b', 'Kepler-47 c',
                    'PH1 b', 'KOI-55 b', 'KOI-55 c', 'Kepler-1647 b',
@@ -797,80 +785,24 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
                     5446285, 10020423, 10748390, 11442793, 7906827, 9472174,
                     9472174, 1161345]
 
-        # for Kepler planets only on the confirmed list, try to find their KIC
-        # from other KOIs in the system
-        for index, icon in comp[cononly].iterrows():
-            # include the trailing space so we match Kepler 90 & not Kepler 900
-            iname = icon['name'][:-1]
-            # easy case where the planet name is KIC #### b
-            if iname[:3] == 'KIC':
-                iskic = int(iname[4:])
-            else:
-                # get the host name of all similar planets
-                isin = comp['name'].str.contains(iname, regex=False)
-                matches = comp['hostname'][isin]
-
-                # look for those host names in the KOI list
-                haskoi = np.zeros(dfkoi['kepler_name'].size).astype(bool)
-                for ik in matches:
-                    tmp = dfkoi['kepler_name'].str.contains(ik + ' ')
-                    tmp.replace(np.nan, False, inplace=True)
-                    haskoi |= tmp
-
-                # make sure they all agree on the KIC
-                if haskoi.sum() > 0:
-                    iskic = np.unique(dfkoi['IC'][haskoi])
-                    assert iskic.size == 1
-                # we can't find it, so it's one of these special cases
-                else:
-                    assert icon['name'] in missing
-                    iskic = fillkics[missing.index(icon['name'])]
-
-            fd = np.where(kk == iskic)[0]
-            if len(fd) != 1:
-                warnings.warn(f"Can't find parameters for {icon['name']}")
-            elif ~np.isfinite(mm[fd[0]]):
-                continue
-            else:
-                fd = fd[0]
-                comp.at[index, 'st_mass'] = mm[fd]
-                oldrad = comp.at[index, 'st_rad'] * 1
-                comp.at[index, 'st_rad'] = rr[fd]
-                comp.at[index, 'st_teff'] = tt[fd]
-                comp.at[index, 'st_log_lum'] = ll[fd]
-                comp.at[index, 'distance_pc'] = dd[fd]
-                iau = (((comp.at[index, 'period'] / 365.256)**2) * mm[fd])
-                iau = iau**(1./3.)
-                iinsol = (10.**ll[fd]) * (iau**-2)
-                comp.at[index, 'semi_au'] = iau
-                comp.at[index, 'insol'] = iinsol
-                srat = rr[fd] / oldrad
-                if np.isfinite(srat):
-                    comp.at[index, 'rade'] *= srat
-                    comp.at[index, 'radj'] *= srat
-
     koicon = dfkoi['disposition'] == 'Confirmed'
     koican = dfkoi['disposition'] == 'Candidate'
     # candidates where the planet is bigger than the star shouldn't exist
     badfit = dfkoi['koi_ror'] > 1
     assert not (badfit & koicon).any()
-    # use depth instead of r/R for radius
-    rr = np.sqrt(dfkoi['tran_depth_ppm'] / 1e6) * dfkoi['st_rad'] * sunearth
-    badfit = badfit & koican & np.isfinite(rr)
-    dfkoi.loc[badfit, 'rade'] = rr[badfit]
-    dfkoi.loc[badfit, 'radj'] = rr[badfit] / radratio
-
     # make sure things that have radii also have depths and vice versa
     cons = ((~np.isfinite(dfkoi['tran_depth_ppm'])) &
             np.isfinite(dfkoi['rade'])).sum()
     assert cons == 0
 
+    """
     # fix these inconsistencies by hand for now
     tranrat = dfkoi['rade']**2 / (dfkoi['st_rad'] * sunearth)**2
     tranrat *= 1e6
     baddep = ((dfkoi['tran_depth_ppm'] < tranrat/3) |
               (dfkoi['tran_depth_ppm'] > tranrat*3)) & (dfkoi['rade'] < 4)
     dfkoi.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
+    """
 
     # all KOIs transit
     dfkoi['flag_tran'] = True
@@ -1001,19 +933,33 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfk2['disposition'] = dfk2['disposition'].str.title()
     assert np.unique(dfk2['disposition']).size == 3
 
+    # set the appropriate discovery facility for candidates
+    dfk2['facility'] = 'K2'
+
     # make an int column of EPICs
     epics = []
     for iep in dfk2['epic_hostname']:
         epics.append(int(iep[4:]))
     epics = np.array(epics)
     dfk2['IC'] = epics
+    dfk2['TIC'] = 0
+    dfk2['distance_pc'] = 0.0
 
-    # set the appropriate discovery facility for candidates
-    dfk2['facility'] = 'K2'
+    # match EPICs to TICs and Gaia distances
+    epics, tics, epdists = np.loadtxt(k2distfile, unpack=True)
+    epics = epics.astype(int)
+    tics = tics.astype(int)
+
+    mtics = dfk2['IC'].values * 0
+    for ii in np.arange(mtics.size):
+        match = dfk2.loc[ii, 'IC'] == epics
+        assert match.sum() == 1
+        dfk2.loc[ii, 'TIC'] = tics[match]
+        dfk2.loc[ii, 'distance_pc'] = epdists[match]
 
     # where do we want to point people to on clicking?
-    dfk2['url'] = ('https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' +
-                   dfk2['hostname'].str.slice(5))
+    u2 = 'https://exofop.ipac.caltech.edu/tess/target.php?id='
+    dfk2['url'] = (u2 + dfk2['TIC'].astype(str))
 
     # check that we're including all K2 planets, but only counting them once
     k2con = dfk2['disposition'] == 'Confirmed'
@@ -1111,21 +1057,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
 
     assert reknown.all()
 
-    # set up a distance field that is the same in all 4 groups
-    k2dists = np.zeros(dfk2['IC'].size)
-    epics, epdists = np.loadtxt(k2distfile, unpack=True)
-    epics = epics.astype(int)
-    for ii, ik2 in enumerate(dfk2['IC']):
-        srch = np.where(epics == ik2)[0]
-        if len(srch) == 1:
-            k2dists[ii] = epdists[srch[0]]
-        elif len(srch) == 0:
-            warnings.warn(f'Can not find distance for EPIC {ik2}')
-            k2dists[ii] = np.nan
-        else:
-            raise Exception('Multiple distances for EPIC {ik2}?')
-    dfk2['distance_pc'] = k2dists
-
     dfk2['flag_tran'] = dfk2['tran_flag'].values.astype(bool)
 
     # convert their depth in % to depth in ppm
@@ -1134,23 +1065,25 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     getdep = (dfk2['flag_tran'] & (~np.isfinite(dfk2['tran_depth_ppm'])) &
               np.isfinite(dfk2['rade']) & np.isfinite(dfk2['st_rad']))
 
-    tranrat = dfk2['rade']**2 / (dfk2['st_rad'] * 109.1)**2
+    tranrat = dfk2['rade']**2 / (dfk2['st_rad'] * sunearth)**2
     dfk2.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep] * 1e6
 
     # we should have a radius if they gave a depth
     getrad = (dfk2['flag_tran'] & np.isfinite(dfk2['tran_depth_ppm']) &
               (~np.isfinite(dfk2['rade'])) & np.isfinite(dfk2['st_rad']))
     tranrad = np.sqrt((dfk2['tran_depth_ppm']/1e6) * (dfk2['st_rad']**2))
-    tranrad *= 109.1
+    tranrad *= sunearth
     dfk2.loc[getrad, 'rade'] = tranrad[getrad]
     dfk2.loc[getrad, 'radj'] = tranrad[getrad] / radratio
 
+    """
     # fix these inconsistencies by hand for now
-    tranrat = dfk2['rade']**2 / (dfk2['st_rad'] * 109.1)**2
+    tranrat = dfk2['rade']**2 / (dfk2['st_rad'] * sunearth)**2
     tranrat *= 1e6
     baddep = ((dfk2['tran_depth_ppm'] < tranrat/3) |
               (dfk2['tran_depth_ppm'] > tranrat*3)) & (dfk2['rade'] < 4)
     dfk2.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
+    """
 
     # fill in any missing luminosities with our own calculation
     # (archive claims they already do this, but lots are missing)
@@ -1159,13 +1092,13 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dfk2.loc[toadd, 'st_log_lum'] = np.log10(tmplums[toadd])
 
     # fill in any missing semi-major axes from Kepler's third law first
-    tmpau = (((dfk2['period'] / 365.256)**2) * dfk2['st_mass'])**(1./3.)
+    tmpau = (((dfk2['period'] / 365.25)**2) * dfk2['st_mass'])**(1./3.)
     repau = (~np.isfinite(dfk2['semi_au'])) & np.isfinite(tmpau)
     dfk2.loc[repau, 'semi_au'] = tmpau[repau]
 
     # then fill in any missing semi-major axes with a/R* * R*
     # convert to AU; 1 AU = 215 Rsun
-    tmpau2 = dfk2['pl_ratdor'] * dfk2['st_rad'] / 215.03216
+    tmpau2 = dfk2['pl_ratdor'] * dfk2['st_rad'] / (const.au/const.R_sun).value
     repau2 = (~np.isfinite(dfk2['semi_au'])) & np.isfinite(tmpau2)
     dfk2.loc[repau2, 'semi_au'] = tmpau2[repau2]
 
@@ -1173,194 +1106,6 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     tmpinsol = (10.**dfk2['st_log_lum']) * (dfk2['semi_au']**-2)
     repinsol = (~np.isfinite(dfk2['insol'])) & np.isfinite(tmpinsol)
     dfk2.loc[repinsol, 'insol'] = tmpinsol[repinsol]
-
-    if updated_k2_params:
-        k2paramfile = 'data/k2_params_hardegree-ullman2020.txt'
-        ee, mm, rr, tt, ll, dd = np.loadtxt(k2paramfile, unpack=True)
-        ee = ee.astype(int)
-
-        # these are bad fits
-        hubad = np.where(mm < 0.06)
-        mm[hubad] = np.nan
-        rr[hubad] = np.nan
-        tt[hubad] = np.nan
-        ll[hubad] = np.nan
-        dd[hubad] = np.nan
-
-        k2con = dfk2['disposition'] == 'Confirmed'
-        k2can = dfk2['disposition'] == 'Candidate'
-
-        # all K2 confirmed planets are already in the confirmed planets table
-        notfound = ~np.in1d(dfk2['name'][k2con], comp['name'])
-        assert notfound.sum() == 0
-        assert dfk2['name'][k2con].isna().sum() == 0
-
-        # keep track of which planets in the confirmed list don't have a K2
-        # cand, so we have to find its EPIC/stellar parameters a fancier way
-        cononly = comp['flag_k2'] & True
-
-        # match the confirmed K2 candidates to the appropriate confirmed planets
-        for index, icon in dfk2[k2con].iterrows():
-            res = np.where(icon['name'] == comp['name'])
-            res = res[0]
-            assert len(res) == 1
-            cononly[res[0]] = False
-            # make sure both tables have the new parameters
-            fd = np.where(ee == icon['IC'])[0]
-            if len(fd) != 1:
-                warnings.warn(f"Can't find parameters for EPIC {icon['IC']}")
-            elif ~np.isfinite(mm[fd[0]]):
-                continue
-            else:
-                # only care about updating the confirmed table
-                res = res[0]
-                comp.at[res, 'st_mass'] = mm[fd]
-                oldrad = comp.at[res, 'st_rad'] * 1
-                comp.at[res, 'st_rad'] = rr[fd]
-                comp.at[res, 'st_teff'] = tt[fd]
-                comp.at[res, 'st_log_lum'] = ll[fd]
-                comp.at[res, 'distance_pc'] = dd[fd]
-                iau = (((comp.at[res, 'period'] / 365.256)**2) * mm[fd])
-                iau = iau**(1./3.)
-                iinsol = (10.**ll[fd]) * (iau**-2)
-                comp.at[res, 'semi_au'] = iau
-                comp.at[res, 'insol'] = iinsol
-                srat = rr[fd] / oldrad
-                if np.isfinite(srat):
-                    comp.at[res, 'rade'] *= srat
-                    comp.at[res, 'radj'] *= srat
-
-        newepics = []
-        # make sure all candidate K2 planets have the new parameters
-        for index, ican in dfk2[k2can].iterrows():
-            res = np.where((np.abs(comp['ra'] - ican['ra']) < 1. / 60) &
-                           (np.abs(comp['dec'] - ican['dec']) < 1. / 60) &
-                           (np.abs((comp['period'] - ican['period']) /
-                                   ican['period']) < 0.01))
-            res = res[0]
-            assert len(res) == 0
-
-            fd = np.where(ee == ican['IC'])[0]
-            if len(fd) != 1:
-                newepics.append(ican['IC'])
-            elif ~np.isfinite(mm[fd[0]]):
-                continue
-            else:
-                fd = fd[0]
-                dfk2.at[index, 'st_mass'] = mm[fd]
-                oldrad = dfk2.at[index, 'st_rad'] * 1
-                dfk2.at[index, 'st_rad'] = rr[fd]
-                dfk2.at[index, 'st_teff'] = tt[fd]
-                dfk2.at[index, 'st_log_lum'] = ll[fd]
-                dfk2.at[index, 'distance_pc'] = dd[fd]
-                iau = (((dfk2.at[index, 'period'] / 365.256)**2) * mm[fd])
-                iau = iau**(1./3.)
-                iinsol = (10.**ll[fd]) * (iau**-2)
-                dfk2.at[index, 'semi_au'] = iau
-                dfk2.at[index, 'insol'] = iinsol
-                srat = rr[fd] / oldrad
-                if np.isfinite(srat):
-                    dfk2.at[index, 'rade'] *= srat
-                    dfk2.at[index, 'radj'] *= srat
-        if len(newepics) != 0:
-            warnings.warn(f"Can't find parameters for EPICs {newepics}")
-
-        missing = ['GJ 9827 b', 'GJ 9827 c', 'GJ 9827 d', 'HD 72490 b',
-                   'HD 89345 b', 'HIP 116454 b', 'HIP 41378 b', 'HIP 41378 c',
-                   'HIP 41378 d', 'HIP 41378 e', 'HIP 41378 f', 'K2-133 b',
-                   'K2-133 c', 'K2-133 d', 'K2-133 e', 'K2-136 b', 'K2-136 c',
-                   'K2-136 d', 'K2-137 b', 'K2-138 b', 'K2-138 c', 'K2-138 d',
-                   'K2-138 e', 'K2-138 f', 'K2-141 b', 'K2-141 c', 'K2-149 b',
-                   'K2-155 b', 'K2-155 c', 'K2-155 d', 'K2-232 b', 'K2-233 b',
-                   'K2-233 c', 'K2-233 d', 'K2-237 b', 'K2-238 b', 'K2-239 b',
-                   'K2-239 c', 'K2-239 d', 'K2-240 b', 'K2-240 c', 'K2-260 b',
-                   'K2-261 b', 'K2-264 b', 'K2-264 c', 'K2-266 b', 'K2-266 c',
-                   'K2-266 d', 'K2-266 e', 'K2-284 b', 'K2-285 b', 'K2-285 c',
-                   'K2-285 d', 'K2-285 e', 'K2-286 b', 'K2-287 b', 'K2-290 b',
-                   'K2-290 c', 'K2-291 b', 'K2-292 b', 'K2-293 b', 'K2-294 b',
-                   'K2-308 b', 'Ross 128 b', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
-                   'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f',
-                   'TRAPPIST-1 g', 'TRAPPIST-1 h', 'V1298 Tau b', 'V1298 Tau c',
-                   'V1298 Tau d', 'V1298 Tau e', 'WASP-151 b', 'WASP-28 b',
-                   'Wolf 503 b', 'K2-315 b', 'K2-316 b', 'K2-316 c', 'K2-317 b',
-                   'K2-318 b', 'K2-319 b', 'K2-320 b', 'K2-321 b', 'K2-322 b',
-                   'K2-323 b', 'K2-324 b', 'K2-325 b', 'K2-326 b', 'K2-329 b',
-                   'K2-138 g', 'K2-353 b', 'K2-358 b', 'K2-357 b', 'K2-356 b',
-                   'K2-355 b']
-        fillepics = [246389858, 246389858, 246389858, 211529129, 248777106,
-                     60021410, 211311380, 211311380, 211311380, 211311380,
-                     211311380, 247887989, 247887989, 247887989, 247887989,
-                     247589423, 247589423, 247589423, 228813918, 245950175,
-                     245950175, 245950175, 245950175, 245950175, 246393474,
-                     246393474, 220522664, 210897587, 210897587, 210897587,
-                     247098361, 249622103, 249622103, 249622103, 229426032,
-                     246067459, 248545986, 248545986, 248545986, 249801827,
-                     249801827, 246911830, 201498078, 211964830, 211964830,
-                     248435473, 248435473, 248435473, 248435473, 247267267,
-                     246471491, 246471491, 246471491, 246471491, 249889081,
-                     249451861, 249624646, 249624646, 247418783, 212628254,
-                     246151543, 246078672, 246865365, 201518346, 246199087,
-                     246199087, 246199087, 246199087, 246199087, 246199087,
-                     246199087, 210818897, 210818897, 210818897, 210818897,
-                     246441449, 60017806, 212779563, 249631677,
-                     249384674, 249384674, 249557502, 249826231, 201663879,
-                     201796690, 248480671, 248558190, 248616368, 248639308,
-                     246074965, 246472939, 246193072, 245950175, 251554286,
-                     211914998, 211730267, 211537087, 211525753]
-
-        # for K2 planets only on the confirmed list, try to find their EPIC
-        # from other KOIs in the system
-        for index, icon in comp[cononly].iterrows():
-            # include the trailing space so we match K2 23 but not K2 230
-            iname = icon['name'][:-1]
-            # easy case where the planet name is EPIC #### b
-            if iname[:4] == 'EPIC':
-                # sometimes now it's XX.02 which fails to go straight from
-                # string to int
-                isepic = int(float(iname[4:]))
-            else:
-                # get the host name of all similar planets
-                isin = comp['name'].str.contains(iname, regex=False)
-                matches = comp['hostname'][isin]
-
-                # look for those host names in the K2 candidate list
-                haskoi = np.zeros(dfk2['name'].size).astype(bool)
-                for ik in matches:
-                    tmp = dfk2['name'].str.contains(ik + ' ')
-                    tmp.replace(np.nan, False, inplace=True)
-                    haskoi |= tmp
-
-                # make sure they all agree on the KIC
-                if haskoi.sum() > 0:
-                    isepic = np.unique(dfk2['IC'][haskoi])
-                    assert isepic.size == 1
-                # we can't find it, so it's one of these special cases
-                else:
-                    assert icon['name'] in missing
-                    isepic = fillepics[missing.index(icon['name'])]
-
-            fd = np.where(ee == isepic)[0]
-            if len(fd) != 1:
-                warnings.warn(f"Can't find parameters for {icon['name']}")
-            elif ~np.isfinite(mm[fd[0]]):
-                continue
-            else:
-                fd = fd[0]
-                comp.at[index, 'st_mass'] = mm[fd]
-                oldrad = comp.at[index, 'st_rad'] * 1
-                comp.at[index, 'st_rad'] = rr[fd]
-                comp.at[index, 'st_teff'] = tt[fd]
-                comp.at[index, 'st_log_lum'] = ll[fd]
-                comp.at[index, 'distance_pc'] = dd[fd]
-                iau = (((comp.at[index, 'period'] / 365.256)**2) * mm[fd])
-                iau = iau**(1./3.)
-                iinsol = (10.**ll[fd]) * (iau**-2)
-                comp.at[index, 'semi_au'] = iau
-                comp.at[index, 'insol'] = iinsol
-                srat = rr[fd] / oldrad
-                if np.isfinite(srat):
-                    comp.at[index, 'rade'] *= srat
-                    comp.at[index, 'radj'] *= srat
 
     # no K2 candidate observed by Kepler prime but all by K2
     dfk2['flag_kepler'] = False
@@ -1769,7 +1514,7 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     dftoi.loc[tofill, 'st_log_lum'] = np.log10(tmplums[tofill])
 
     # get the semi-major axes and insolations
-    iau = (((dftoi['period'] / 365.256)**2) * dftoi['st_mass'])**(1./3.)
+    iau = (((dftoi['period'] / 365.25)**2) * dftoi['st_mass'])**(1./3.)
     iinsol = (10.**dftoi['st_log_lum']) * (iau**-2)
 
     # all TESS candidates transit
@@ -1780,19 +1525,19 @@ def load_data(updated_koi_params=True, updated_k2_params=True):
     getdep = (dftoi['flag_tran'] & (~np.isfinite(dftoi['tran_depth_ppm'])) &
               np.isfinite(dftoi['rade']) & np.isfinite(dftoi['st_rad']))
     assert getdep.sum() == 0
-    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * 109.1)**2
+    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * sunearth)**2
     dftoi.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep] * 1e6
 
     # we should have a radius if they gave a depth
     getrad = (dftoi['flag_tran'] & np.isfinite(dftoi['tran_depth_ppm']) &
               (~np.isfinite(dftoi['rade'])) & np.isfinite(dftoi['st_rad']))
     tranrad = np.sqrt((dftoi['tran_depth_ppm']/1e6) * (dftoi['st_rad']**2))
-    tranrad *= 109.1
+    tranrad *= sunearth
     dftoi.loc[getrad, 'rade'] = tranrad[getrad]
     dftoi.loc[getrad, 'radj'] = tranrad[getrad] / radratio
 
     # fix these by hand for now
-    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * 109.1)**2
+    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * sunearth)**2
     tranrat *= 1e6
     baddep = ((dftoi['tran_depth_ppm'] < tranrat/3) |
               (dftoi['tran_depth_ppm'] > tranrat*3)) & (dftoi['rade'] < 4)

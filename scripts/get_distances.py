@@ -5,17 +5,16 @@ import pandas as pd
 from astroquery.mast import Catalogs
 from astroquery.simbad import Simbad
 
-from utils import load_data
-
 # this is saved as a record of where the distances came from, but not intended
 # to be run nightly. The TIC queries take a significant amount of time.
 run = False
 
 if run:
-    _, dfkoi, dfk2, _, _ = load_data(updated_koi_params=False,
-                                     updated_k2_params=False)
+    koifile = 'data/kepler-kois-full.csv'
+    k2file = 'data/k2-candidates-table.csv'
 
-    ukics = np.unique(dfkoi['IC'])
+    dfkoi = pd.read_csv(koifile)
+    ukics = np.unique(dfkoi['kepid'])
 
     # these are KICs of confirmed planets in the Kepler field but not KOIs
     fillkics = [3526061, 4862625, 5446285, 5473556, 5807616, 5812701, 6504534,
@@ -48,7 +47,22 @@ if run:
     np.savetxt('data/koi_distances.txt', np.vstack((ukics, dists)).T,
                fmt='%d  %f')
 
-    uepics = np.unique(dfk2['IC'])
+    dfk2 = pd.read_csv(k2file, low_memory=False)
+    epics = []
+    for iep in dfk2['epic_hostname']:
+        epics.append(int(iep[4:]))
+    epics = np.array(epics)
+    tics = []
+    for itic in dfk2['tic_id']:
+        if type(itic) == str:
+            assert itic[:3] == 'TIC'
+            tics.append(int(itic[3:]))
+        else:
+            assert np.isnan(itic)
+            tics.append(0)
+    tics = np.array(tics)
+
+    uepics = np.unique(epics)
 
     # these are EPICs of confirmed planets in the K2 fields but not K2 cands
     fillepics = [60017806, 60021410, 201498078, 201518346, 201663879, 201729655,
@@ -78,33 +92,42 @@ if run:
     knownbadepic = [251809286, 251809628]
     knownbadtic = [-251809286, -251809628]
     k2dists = []
+    k2tics = []
     for ii, ik2 in enumerate(uepics):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            names = Simbad.query_objectids(f"EPIC {ik2}")
-        itic = 0
-        if names is not None:
-            for iname in names:
-                if iname[0][:3] == 'TIC':
-                    assert itic == 0
-                    itic = int(iname[0][3:])
-        if itic == 0:
-            assert ((xmatch['epic'] == ik2).sum() == 1) or ik2 in knownbadepic
-            if ik2 in knownbadepic:
-                itic = -1 * ik2
-            else:
-                itic = int(xmatch.loc[xmatch['epic'] == ik2, 'tid'])
+        itics = tics[epics == ik2]
+        if len(itics) == 0 or itics[0] == 0:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                names = Simbad.query_objectids(f"EPIC {ik2}")
+            itic = 0
+            if names is not None:
+                for iname in names:
+                    if iname[0][:3] == 'TIC':
+                        itic = int(iname[0][3:])
+            if itic == 0:
+                assert ((xmatch['epic'] == ik2).sum() == 1) or \
+                       (ik2 in knownbadepic)
+                if ik2 in knownbadepic:
+                    itic = -1 * ik2
+                else:
+                    itic = int(xmatch.loc[xmatch['epic'] == ik2, 'tid'])
+        else:
+            itic = itics[0]
+            assert np.unique(itics).size == 1
         cat = Catalogs.query_criteria(catalog='tic', ID=itic)
         assert ((len(cat) == 1 and int(cat['ID'][0]) == itic) or
                 (itic in knownbadtic))
         if len(cat) == 0:
             k2dists.append(np.nan)
+            k2tics.append(itic)
         else:
             k2dists.append(cat['d'][0])
+            k2tics.append(itic)
         if (ii % 100) == 0:
             print(ii, uepics.size)
 
     k2dists = np.array(k2dists)
+    k2tics = np.array(k2tics)
 
-    np.savetxt('data/k2oi_distances.txt', np.vstack((uepics, k2dists)).T,
-               fmt='%d  %f')
+    outarr = np.vstack((uepics, k2tics, k2dists)).T
+    np.savetxt('data/k2oi_distances.txt', outarr, fmt='%d  %d  %f')
