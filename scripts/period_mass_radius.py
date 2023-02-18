@@ -2,19 +2,19 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from astropy import constants as const
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, Button, ColorPicker, CustomJS
-from bokeh.models import CustomJSTickFormatter, Div, Label, LassoSelectTool
-from bokeh.models import Legend, LegendItem, LogAxis, Range1d, RangeSlider
-from bokeh.models import TapTool, Toggle
+from bokeh.models import BoxSelectTool, Button, ColorPicker, CustomJS, Div
+from bokeh.models import Label, LassoSelectTool, Legend, LegendItem, LogAxis
+from bokeh.models import Range1d, RangeSlider, TapTool, Toggle
 from bokeh.themes import Theme
 
 from utils import change_color, csv_creation, deselect, get_update_time
-from utils import log_axis_labels, openurl, palette, playpause, reset
+from utils import openurl, palette, playpause, reset
 from utils import sliderselect, unselect, yearselect
 
 # get the exoplot theme
@@ -205,8 +205,8 @@ for ifig in np.arange(4):
     fig.x_range = Range1d(start=xstart, end=xend)
 
     # jupiter/earth radius ratio
-    radratio = 11.21
-    massratio = 317.83
+    radratio = (const.R_jup / const.R_earth).value
+    massratio = (const.M_jup / const.M_earth).value
 
     # set up the second axis with the proper scaling
     if ifig < 2:
@@ -217,16 +217,16 @@ for ifig in np.arange(4):
                                              end=yend/massratio)}
     fig.add_layout(LogAxis(y_range_name="jup"), 'right')
 
-    # add the first y-axis's label and use our custom log formatting for both
+    # add the first y-axis's label
     if ifig < 2:
         fig.yaxis.axis_label = r'\[\text{Radius} (\mathrm{R_\oplus})\]'
     else:
         fig.yaxis.axis_label = r'\[\text{Mass} (\mathrm{M_\oplus})\]'
-    fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
+    fig.yaxis.formatter.min_exponent = 3
 
-    # add the x-axis's label and use our custom log formatting
+    # add the x-axis's label
     fig.xaxis.axis_label = 'Period (days)'
-    fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
+    fig.xaxis.formatter.min_exponent = 3
 
     # add the second y-axis's label
     if ifig < 2:

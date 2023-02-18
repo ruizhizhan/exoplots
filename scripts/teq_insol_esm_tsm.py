@@ -5,15 +5,14 @@ from bokeh.embed import components
 from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, ColorPicker, CustomJS
-from bokeh.models import CustomJSTickFormatter, Div, Label, LassoSelectTool
-from bokeh.models import Legend, LegendItem, TapTool
+from bokeh.models import BoxSelectTool, ColorPicker, CustomJS, Div, Label
+from bokeh.models import LassoSelectTool, Legend, LegendItem, TapTool
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
 from utils import change_color, csv_creation, deselect
 from utils import get_equilibrium_temperature, get_esm, get_tsm
-from utils import get_update_time, log_axis_labels, openurl, palette, reset
+from utils import get_update_time, openurl, palette, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -225,41 +224,25 @@ for fn, ifig in enumerate(np.arange(len(refwavs))):
                 ystart = 0
                 yend = 3.6
 
-            # jupiter/earth radius ratio
-            radratio = 11.21
-
-            # set up the second axis with the proper scaling
-            """
-            if ifig == 0:
-                fig.extra_y_ranges = {"jup": Range1d(start=ystart/radratio,
-                                                     end=yend/radratio)}
-                fig.add_layout(LogAxis(y_range_name="jup"), 'right')
-            else:
-                fig.y_range.start = ystart
-                fig.y_range.end = yend
-                fig.x_range.start = 40000
-                fig.x_range.end = 0.1
-            """
             if ymax < 100:
                 fig.y_range.end = 110
             fig.y_range.start = 0.1
 
-            # add the first y-axis's label and use our custom log formatting
+            # add the first y-axis's label
             if imet == 'esm':
                 fig.yaxis.axis_label = f'\\[\\text{{ESM}} (\\mathrm{{' \
                                        f'{refwavs[ifig]} \\mu m}})\\]'
             else:
                 fig.yaxis.axis_label = 'TSM'
-            fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
+            fig.yaxis.formatter.min_exponent = 3
 
-            # add the x-axis's label and use our custom log formatting
+            # add the x-axis's label
             if ixx == 0:
                 fig.xaxis.axis_label = 'Equilibrium Temp (K)'
             else:
                 fig.xaxis.axis_label = r'\[\text{Instellation} (\mathrm' \
                                        r'{F_\oplus})\]'
-                ctf = CustomJSTickFormatter(code=log_axis_labels())
-                fig.xaxis.formatter = ctf
+                fig.xaxis.formatter.min_exponent = 3
             # make high teqs on the left
             fig.x_range.flipped = True
 

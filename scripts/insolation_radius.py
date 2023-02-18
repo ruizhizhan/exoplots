@@ -1,18 +1,19 @@
 import numpy as np
 import pandas as pd
+from astropy import constants as const
 from bokeh import plotting
 from bokeh.embed import components
 from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, ColorPicker, CustomJS
-from bokeh.models import CustomJSTickFormatter, Div, Label, LassoSelectTool
-from bokeh.models import Legend, LegendItem, LogAxis, Range1d, TapTool
+from bokeh.models import BoxSelectTool, ColorPicker, CustomJS, Div, Label
+from bokeh.models import LassoSelectTool, Legend, LegendItem, LogAxis, Range1d
+from bokeh.models import TapTool
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
 from utils import change_color, csv_creation, deselect, get_update_time
-from utils import log_axis_labels, openurl, palette, reset
+from utils import openurl, palette, reset
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -141,15 +142,17 @@ for ifig in np.arange(2):
 
     # figure out what the default axis limits are
     if ifig == 0:
+        ymax = min(ymax, 10. * (const.R_jup / const.R_earth).value)
         ydiff = np.log10(ymax) - np.log10(ymin)
         ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
-        yend = 10.**(np.log10(ymax) + 0.05*ydiff)
+        yend = 10.**(np.log10(ymax) + 0.01*ydiff)
+        fig.y_range = Range1d(start=ystart, end=yend)
     else:
         ystart = 0
         yend = 3.6
 
     # jupiter/earth radius ratio
-    radratio = 11.21
+    radratio = (const.R_jup / const.R_earth).value
 
     # set up the second axis with the proper scaling
     if ifig == 0:
@@ -162,14 +165,17 @@ for ifig in np.arange(2):
         fig.x_range.start = 40000
         fig.x_range.end = 0.1
 
-    # add the first y-axis's label and use our custom log formatting
+    # add the first y-axis's label
     fig.yaxis.axis_label = r'\[\text{Radius} (\mathrm{R_\oplus})\]'
     if ifig == 0:
-        fig.yaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
+        fig.yaxis.formatter.min_exponent = 3
 
-    # add the x-axis's label and use our custom log formatting
+    # add the x-axis's label
     fig.xaxis.axis_label = r'\[\text{Instellation} (\mathrm{F_\oplus})\]'
-    fig.xaxis.formatter = CustomJSTickFormatter(code=log_axis_labels())
+    if ifig == 0:
+        fig.xaxis.formatter.min_exponent = 2
+    else:
+        fig.xaxis.formatter.min_exponent = 3
     # make high insolations on the left
     fig.x_range.flipped = True
 

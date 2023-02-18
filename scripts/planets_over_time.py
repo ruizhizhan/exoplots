@@ -6,11 +6,10 @@ from bokeh import plotting
 from bokeh.embed import components
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import ColorPicker, CustomJSTickFormatter, Div, Label
-from bokeh.models import NumeralTickFormatter
+from bokeh.models import ColorPicker, Div, Label, NumeralTickFormatter
 from bokeh.themes import Theme
 
-from utils import change_color, get_update_time, log_axis_labels, palette
+from utils import change_color, get_update_time, palette
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -400,13 +399,11 @@ for xx in np.arange(4):
                                  source=cumul, legend_label=leglab,
                                  line_width=0)
 
-    # add the first y-axis's label and use our custom log formatting
-    # for both axes
+    # add the first y-axis's label
     fig2.yaxis.axis_label = 'Number'
-    ctf = CustomJSTickFormatter(code=log_axis_labels(max_tick=5.1))
-    fig2.yaxis.formatter = ctf
+    fig2.yaxis.formatter = NumeralTickFormatter(format='0,0')
 
-    # add the x-axis's label and use our custom log formatting
+    # add the x-axis's label
     if xx < 2:
         fig2.xaxis.axis_label = 'Year of Confirmation'
     else:

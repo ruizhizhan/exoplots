@@ -592,7 +592,7 @@ def load_data(updated_koi_params=True):
     # these were removed as FPs from the confirmed talbe, but not the KOI list
     newfps = ['Kepler-699 b', 'Kepler-840 b', 'Kepler-854 b', 'Kepler-486 b',
               'Kepler-492 b']
-    badrows = np.in1d(dfkoi['kepler_name'], newfps)
+    badrows = np.isin(dfkoi['kepler_name'], newfps)
     assert (dfkoi.loc[badrows, 'disposition'] == 'Confirmed').all()
     dfkoi.loc[badrows, 'disposition'] = 'False Positive'
 
@@ -770,6 +770,7 @@ def load_data(updated_koi_params=True):
                 dfkoi.at[index, 'rade'] = koiplanets.loc[fdp, 'prad']
                 dfkoi.at[index, 'radj'] = koiplanets.loc[fdp, 'prad'] / radratio
 
+        """
         # by definition these are missing from the Berger sample, but I'm
         # keeping this cross-match in case we need it later.
         missing = ['KOI-142 c', 'Kepler-78 b', 'Kepler-16 b', 'Kepler-34 b',
@@ -784,6 +785,7 @@ def load_data(updated_koi_params=True):
                     12351927, 9472174, 9632895, 8410697, 6504534, 5812701,
                     5446285, 10020423, 10748390, 11442793, 7906827, 9472174,
                     9472174, 1161345]
+        """
 
     koicon = dfkoi['disposition'] == 'Confirmed'
     koican = dfkoi['disposition'] == 'Candidate'
@@ -966,13 +968,13 @@ def load_data(updated_koi_params=True):
     k2can = dfk2['disposition'] == 'Candidate'
 
     # all K2 confirmed planets are already in the confirmed planets table
-    notfound = ~np.in1d(dfk2['name'][k2con], comp['name'])
+    notfound = ~np.isin(dfk2['name'][k2con], comp['name'])
     assert notfound.sum() == 0
 
     # anything with a planet name in the K2 table but still a candidate hasn't
     # already shown up in the confirmed planets table
     hasname = ~dfk2['name'][k2can].isna()
-    assert np.in1d(dfk2['name'][k2can][hasname], comp['name']).sum() == 0
+    assert np.isin(dfk2['name'][k2can][hasname], comp['name']).sum() == 0
 
     uobjs = np.unique(dfk2['name'])
     bad = []
@@ -1218,8 +1220,7 @@ def load_data(updated_koi_params=True):
     print('Handling TOIs.')
     # get easier to reference names for things in the ExoFOP listing
     renames = {'TFOPWG Disposition': 'disposition', 'TIC ID': 'IC',
-               'Period (days)': 'period',
-               'Planet Radius (R_Earth)': 'rade',
+               'Period (days)': 'period', 'Planet Radius (R_Earth)': 'rade',
                'Stellar Radius (R_Sun)': 'st_rad',
                'Stellar Eff Temp (K)': 'st_teff',
                'Stellar Distance (pc)': 'distance_pc',
@@ -1233,7 +1234,7 @@ def load_data(updated_koi_params=True):
     dftoi['hostname'] = 'TIC ' + dftoi['IC'].astype(str)
 
     # download TIC info for any new entries
-    if (fulltic is None) or (not np.in1d(dftoi['IC'], fulltic['ID']).all()):
+    if (fulltic is None) or (not np.isin(dftoi['IC'], fulltic['ID']).all()):
         from astroquery.mast import Catalogs
         for index, irow in dftoi.iterrows():
             if (fulltic is None) or (irow['IC'] not in fulltic['ID'].values):
@@ -1248,7 +1249,7 @@ def load_data(updated_koi_params=True):
                     off.write(istr + '\n')
                 fulltic = pd.read_csv(ticparams)
 
-    assert np.in1d(dftoi['IC'], fulltic['ID']).all()
+    assert np.isin(dftoi['IC'], fulltic['ID']).all()
 
     # by default, we assume new candidates aren't in Kepler/K2 data
     dftoi['flag_kepler'] = False
@@ -1291,8 +1292,7 @@ def load_data(updated_koi_params=True):
     dftoi['year_discovered'] = yrs
     assert (np.array(yrs) > 2017).all()
 
-    # these are WASP-30 and LP 261-75, brown dwarfs and not a real planet
-    # TOI-4571 is a demoted KOI
+    # these are brown dwarfs and not real planets (TOI-4571 is a demoted KOI)
     bds = ['TOI-239.01', 'TOI-1779.01', 'TOI-148.01', 'TOI-503.01',
            'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01',
            'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01', 'TOI-5081.01',
@@ -1301,19 +1301,6 @@ def load_data(updated_koi_params=True):
         bd = np.where(dftoi['name'] == ibd)[0][0]
         assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
         dftoi.loc[bd, 'disposition'] = 'False Positive'
-
-    # TOI-515 and 844.01 are also K2 planet candidates, so remove it from
-    # counting as a TESS planet. should I do anything else about this?
-    # TOI-1241 is KOI-5
-    prevs = ['TOI-515.01', 'TOI-1241.01']
-    for ipr in prevs:
-        pr = np.where(dftoi['name'] == ipr)[0][0]
-        assert dftoi.loc[pr, 'disposition'] == 'Candidate'
-        dftoi.loc[pr, 'disposition'] = 'False Positive'
-        if ipr == 'TOI-1241.01':
-            dftoi.loc[pr, 'flag_kepler'] = True
-        else:
-            dftoi.loc[pr, 'flag_k2'] = True
 
     # the TOI list from ExoFOP isn't always kept synced with the confirmed
     # planets table, so do some shifting of categories here.
@@ -1325,15 +1312,8 @@ def load_data(updated_koi_params=True):
     # to candidate
 
     # these we have an explanation for and know they're properly in the
-    # confirmed table.
-    # 1793, 1899, 2011, 2221 are single transits, so no period
-    # matching
-
-    # 1456 was a single obvious transit and the second hidden in scattered
-    # light causing SPOC to miss it and get the period wrong
+    # confirmed table. 2011, 2221 are single transits, so no period matching.
     # 351 TESS got the period wrong by 2x
-    # XXX: look if any TESS candidates are in systems with known planets.
-    # TOI-5980 should not be a candidate and needs to be removed.
     ignores = ['TOI-2011.01', 'TOI-2221.01', 'TOI-4581.02', 'TOI-5980.01',
                'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02']
     conname = ['HD 136352 b', 'AU Mic b', 'KOI-94 e', 'Kepler-37 d',
@@ -1406,12 +1386,12 @@ def load_data(updated_koi_params=True):
                 'TOI-4137.01', 'TOI-2076.02', 'TOI-2048.01', 'TOI-4306.01',
                 'TOI-1820.01', 'TOI-2158.01', 'TOI-2545.01', 'TOI-5174.01',
                 'TOI-5238.01', 'TOI-5398.01', 'TOI-411.01', 'TOI-411.02',
-                'TOI-5542.01', 'TOI-3884.01', 'TOI-1468.01',
+                'TOI-5542.01', 'TOI-3884.01', 'TOI-1468.01', 'TOI-515.01',
                 'TOI-1468.02', 'TOI-4270.01', 'TOI-5970.01', 'TOI-277.01',
                 'TOI-1288.01', 'TOI-1695.01', 'TOI-1097.02', 'TOI-4582.01',
                 'TOI-4342.01', 'TOI-4342.02', 'TOI-4562.01',
                 # KOIs
-                'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01',
+                'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
                 'TOI-2410.01', 'TOI-2425.01', 'TOI-2455.01', 'TOI-2639.01',
                 'TOI-4540.01', 'TOI-4549.01', 'TOI-4608.01', 'TOI-4611.01',
@@ -1465,7 +1445,7 @@ def load_data(updated_koi_params=True):
                     res = np.where(comp['name'] ==
                                    confmatch[nopermatch.index(ican['name'])])[0]
                     assert len(res) == 1
-                    # these two are single transits of confirmed planets
+                    # these are single transits of confirmed planets
                     dftoi.at[index, 'disposition'] = 'Confirmed'
                     singconf[nopermatch.index(ican['name'])] = True
                     # update and sync the discovery year in both tables
@@ -1516,6 +1496,9 @@ def load_data(updated_koi_params=True):
     # get the semi-major axes and insolations
     iau = (((dftoi['period'] / 365.25)**2) * dftoi['st_mass'])**(1./3.)
     iinsol = (10.**dftoi['st_log_lum']) * (iau**-2)
+    igd = np.isfinite(iinsol)
+    dftoi['semi_au'] = iau
+    dftoi.loc[igd, 'insol'] = iinsol[igd]
 
     # all TESS candidates transit
     dftoi['flag_tran'] = True
@@ -1536,16 +1519,14 @@ def load_data(updated_koi_params=True):
     dftoi.loc[getrad, 'rade'] = tranrad[getrad]
     dftoi.loc[getrad, 'radj'] = tranrad[getrad] / radratio
 
+    """
     # fix these by hand for now
     tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * sunearth)**2
     tranrat *= 1e6
     baddep = ((dftoi['tran_depth_ppm'] < tranrat/3) |
               (dftoi['tran_depth_ppm'] > tranrat*3)) & (dftoi['rade'] < 4)
     dftoi.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
-
-    igd = np.isfinite(iinsol)
-    dftoi['semi_au'] = iau
-    dftoi.loc[igd, 'insol'] = iinsol[igd]
+    """
 
     # these have not been confirmed
     dftoi['year_confirmed'] = np.nan
@@ -1685,56 +1666,6 @@ def load_data(updated_koi_params=True):
     # XXX: check that the planet is smaller than the star in all cases
 
     return dfcon, dfkoi, dfk2, dftoi, comp
-
-
-def log_axis_labels(min_tick=-2.001, max_tick=3.):
-    """
-    Bokeh can't do subscript or superscript text, which includes scientific
-    notation in axis labels. This is a hack script that uses unicode
-    superscript values and manually creates pseudo-scientific notation axis
-    labels. Any values within log10(min_tick) and log10(max_tick) will be
-    displayed as normal, while outside those bounds in either direction will
-    be converted to scientific notation.
-
-    Parameters
-    ----------
-    min_tick : float, optional
-        Maximum small log(10) value that will display in scientific notation
-        instead of the full decimal representation. The default is -2.001,
-        meaning axis labels will go from 9x10^-3 to 0.01.
-    max_tick : float, optional
-        Minimum large log(10) value that will display in scientific notation
-        instead of the full decimal representation. The default is 3, meaning
-        axis labels will go from 999 to 10^3.
-
-    Returns
-    -------
-    str:
-        JavaScript code function that generates the appropriate tick labels.
-
-    """
-    return f"""
-var logtick = Math.log10(tick);
-if ((logtick > {min_tick}) && (logtick < {max_tick})){{
-    return tick.toLocaleString();
-}} else {{
-    var power = Math.floor(logtick);
-    var retval = 10 + (power.toString()
-             .split('')
-             .map(function (d) {{ return d === '-' ? '⁻' : '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; }})
-             .join(''));
-    var front = (tick/Math.pow(10, power)).toPrecision(2).toString().slice(0,3);
-    
-    if (front == '1.0'){{
-        return retval
-    }}
-    else if (front.slice(1,3) == '.0'){{
-        return front[0] + 'x' + retval
-    }}
-    
-    return front + 'x' + retval
-}}
-    """
 
 
 """
