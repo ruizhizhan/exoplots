@@ -9,13 +9,14 @@ from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BoxSelectTool, Button, ColorPicker, CustomJS
-from bokeh.models import Div, Label, LassoSelectTool, Legend, LegendItem
-from bokeh.models import LogAxis, Range1d, RangeSlider, TapTool, Toggle
+from bokeh.models import Div, ImageURL, Label, LassoSelectTool, Legend
+from bokeh.models import LegendItem, LogAxis, Range1d, RangeSlider, TapTool
+from bokeh.models import Toggle
 from bokeh.themes import Theme
 
+from utils import SolarSystem, unselect, yearselect
 from utils import change_color, csv_creation, deselect, get_update_time
-from utils import openurl, palette, playpause, reset
-from utils import sliderselect, unselect, yearselect
+from utils import openurl, palette, playpause, reset, sliderselect
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -87,6 +88,16 @@ for ifig in np.arange(2):
     alphas = []
     legitems = []
     minyr = 2020
+
+    solarsys = SolarSystem()
+
+    solarsys.data['width'] = 15 * solarsys.width_mults
+    solarsys.data['height'] = 15 * solarsys.width_mults
+    source = plotting.ColumnDataSource(data=solarsys.data)
+    image1 = ImageURL(url="url", x="period", y="radius", w="width", h="height",
+                      anchor="center", w_units="screen", h_units="screen")
+    gg = fig.add_glyph(source, image1)
+    solarleg = LegendItem(label='Solar System', renderers=[gg])
 
     for ii, imiss in enumerate(missions):
         # select the appropriate set of planets for each mission
@@ -161,8 +172,10 @@ for ifig in np.arange(2):
         legitems.append(leg)
         minyr = min(minyr, source.data['year'].min())
 
+    # jupiter/earth radius ratio
+    radratio = (const.R_jup / const.R_earth).value
     # figure out what the default axis limits are
-    ymax = min(ymax, 10. * (const.R_jup/const.R_earth).value)
+    ymax = min(ymax, 10. * radratio)
     ydiff = np.log10(ymax) - np.log10(ymin)
     ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
     yend = 10.**(np.log10(ymax) + 0.01*ydiff)
@@ -173,9 +186,6 @@ for ifig in np.arange(2):
     xend = 10.**(np.log10(xmax) + 0.05*xdiff)
 
     fig.x_range = Range1d(start=xstart, end=xend)
-
-    # jupiter/earth radius ratio
-    radratio = (const.R_jup / const.R_earth).value
 
     # set up the second axis with the proper scaling
     fig.extra_y_ranges = {"jup": Range1d(start=ystart/radratio,
@@ -201,6 +211,7 @@ for ifig in np.arange(2):
     items1 = [legitems[missions.index(ii)] for ii in topleg]
     items2 = [legitems[missions.index(ii)] for ii in bottomleg]
     items3 = [legitems[missions.index(ii)] for ii in vbottomleg]
+    items3.append(solarleg)
 
     # create the two legends
     for ii in np.arange(3):

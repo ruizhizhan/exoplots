@@ -13,6 +13,33 @@ palette = {'C0': '#228833', 'C1': '#ee6677', 'C2': '#ccbb44', 'C3': '#aa3377',
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
 
 
+class SolarSystem:
+    def __init__(self):
+        """
+        Single location to store everything we need to put the Solar System into
+        all the plots if we want.
+        """
+        import numpy as np
+        from astropy import constants as const
+        self.planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn',
+                        'uranus', 'neptune']
+        self.periods = np.array([87.97, 224.70, 365.26, 686.98, 4332.8, 10755.7,
+                                 30687, 60190])
+        self.radii = np.array([0.383, 0.95, 1.0, 0.53, 10.86, 9.00, 3.97, 3.86])
+        # scale up Saturn so the actual planet is the same size as the rest
+        self.width_mults = np.array([1, 1, 1, 1, 1, 100. / 57, 1, 1])
+        self.urls = [f'https://raw.githubusercontent.com/ethankruse/exoplots/'
+                     f'master/icons/{ipl}.png' for ipl in self.planets]
+        # jupiter/earth radius ratio
+        radratio = (const.R_jup / const.R_earth).value
+
+        self.data = dict(planet=self.planets, period=self.periods,
+                         radius=self.radii, jupradius=self.radii / radratio,
+                         host=['Solar System'] * 8, discovery=['Earth'] * 8,
+                         status=['Confirmed'] * 8, url=self.urls,
+                         width_mult=self.width_mults, year=np.zeros(8))
+
+
 def change_color(picker: ColorPicker, glyphs: list):
     """
     Link up the color tool to the glyphs we want it to control.
