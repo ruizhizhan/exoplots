@@ -6,14 +6,14 @@ from bokeh.embed import components
 from bokeh.events import SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, ColorPicker, CustomJS, Div, Label
-from bokeh.models import LassoSelectTool, Legend, LegendItem, LogAxis, Range1d
-from bokeh.models import TapTool
+from bokeh.models import BoxSelectTool, ColorPicker, CustomJS, Div, ImageURL
+from bokeh.models import Label, LassoSelectTool, Legend, LegendItem, LogAxis
+from bokeh.models import Range1d, TapTool
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
 from utils import change_color, csv_creation, deselect, get_update_time
-from utils import openurl, palette, reset
+from utils import openurl, palette, reset, SolarSystem
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -60,6 +60,17 @@ glyphs = []
 counts = []
 sources = []
 alphas = []
+
+solarsys = SolarSystem()
+
+solarsys.data['width'] = 15 * solarsys.width_mults
+solarsys.data['height'] = 15 * solarsys.width_mults
+source = plotting.ColumnDataSource(data=solarsys.data)
+image1 = ImageURL(url="url", x="period", y="mass", w="width",
+                  h="height", anchor="center", w_units="screen",
+                  h_units="screen")
+gg = fig.add_glyph(source, image1)
+solarleg = LegendItem(label='Solar System', renderers=[gg])
 
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
@@ -139,6 +150,11 @@ fig.xaxis.formatter.min_exponent = 3
 fig.right[0].axis_label = r'\[\text{Mass} (\mathrm{M_J})\]'
 
 # set up all the legend objects
+legend = Legend(items=[solarleg], location="center")
+legend.label_text_align = 'left'
+legend.margin = 0
+legend.location = (-70, 5)
+fig.add_layout(legend, 'above')
 items = [LegendItem(label=ii + f' ({counts[methods.index(ii)]})',
                     renderers=[jj])
          for ii, jj in zip(methods, glyphs)]
@@ -146,7 +162,8 @@ items = [LegendItem(label=ii + f' ({counts[methods.index(ii)]})',
 legend = Legend(items=items, location="center")
 legend.title = 'Discovered via'
 legend.spacing = 10
-legend.margin = 8
+legend.location = (-70, 5)
+legend.margin = 0
 fig.add_layout(legend, 'above')
 
 # overall figure title

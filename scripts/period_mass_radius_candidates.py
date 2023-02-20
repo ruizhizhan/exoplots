@@ -9,13 +9,13 @@ from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BoxSelectTool, Button, ColorPicker, CustomJS, Div
-from bokeh.models import Label, LassoSelectTool, Legend, LegendItem, LogAxis
-from bokeh.models import Range1d, RangeSlider, TapTool, Toggle
+from bokeh.models import ImageURL, Label, LassoSelectTool, Legend, LegendItem
+from bokeh.models import LogAxis, Range1d, RangeSlider, TapTool, Toggle
 from bokeh.themes import Theme
 
 from utils import change_color, csv_creation, deselect, get_update_time
-from utils import openurl, palette, playpause, reset
-from utils import sliderselect, unselect, yearselect
+from utils import openurl, palette, playpause, reset, sliderselect, SolarSystem
+from utils import unselect, yearselect
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -92,6 +92,22 @@ for ifig in np.arange(4):
     alphas = []
     legitems = []
     minyr = 2020
+
+    solarsys = SolarSystem()
+
+    solarsys.data['width'] = 15 * solarsys.width_mults
+    solarsys.data['height'] = 15 * solarsys.width_mults
+    source = plotting.ColumnDataSource(data=solarsys.data)
+    if ifig < 2:
+        image1 = ImageURL(url="url", x="period", y="radius", w="width",
+                          h="height", anchor="center", w_units="screen",
+                          h_units="screen")
+    else:
+        image1 = ImageURL(url="url", x="period", y="mass", w="width",
+                          h="height", anchor="center", w_units="screen",
+                          h_units="screen")
+    gg = fig.add_glyph(source, image1)
+    solarleg = LegendItem(label='Solar System', renderers=[gg])
 
     for ii, imiss in enumerate(missions):
         # select the appropriate set of planets for each mission
@@ -281,18 +297,21 @@ for ifig in np.arange(4):
     items1 = [legitems[missions.index(ii)] for ii in topleg]
     items2 = [legitems[missions.index(ii)] for ii in bottomleg]
     items3 = [legitems[missions.index(ii)] for ii in vbottomleg]
+    items4 = [solarleg]
 
     # create the two legends
-    for ii in np.arange(3):
+    for ii in np.arange(4):
         if ii == 0:
-            items = items3
+            items = items4
         elif ii == 1:
+            items = items3
+        elif ii == 2:
             items = items2
         else:
             items = items1
         legend = Legend(items=items, location="center")
 
-        if ii == 2:
+        if ii == 3:
             legend.title = 'Discovered by and Status'
             legend.spacing = 10
         else:

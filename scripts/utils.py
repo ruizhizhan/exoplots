@@ -26,6 +26,12 @@ class SolarSystem:
         self.periods = np.array([87.97, 224.70, 365.26, 686.98, 4332.8, 10755.7,
                                  30687, 60190])
         self.radii = np.array([0.383, 0.95, 1.0, 0.53, 10.86, 9.00, 3.97, 3.86])
+        self.mass = np.array([0.055, 0.815, 1.0, 0.107, 317.8, 95.159, 14.536,
+                              17.147])
+        self.semimajor = np.array([0.387, 0.723, 1.0, 1.524, 5.203, 9.537,
+                                   19.19, 30.07])
+        self.insolation = self.semimajor**-2
+
         # scale up Saturn so the actual planet is the same size as the rest
         self.width_mults = np.array([1, 1, 1, 1, 1, 100. / 57, 1, 1])
         self.urls = [f'https://raw.githubusercontent.com/ethankruse/exoplots/'
@@ -37,7 +43,9 @@ class SolarSystem:
                          radius=self.radii, jupradius=self.radii / radratio,
                          host=['Solar System'] * 8, discovery=['Earth'] * 8,
                          status=['Confirmed'] * 8, url=self.urls,
-                         width_mult=self.width_mults, year=np.zeros(8))
+                         width_mult=self.width_mults, year=np.zeros(8),
+                         insolation=self.insolation, semimajor=self.semimajor,
+                         mass=self.mass)
 
 
 def change_color(picker: ColorPicker, glyphs: list):
