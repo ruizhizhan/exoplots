@@ -21,6 +21,8 @@ For more plots, choose your parameters:
 
 [Period vs Mass](./period-mass.md)
 
+[Mass vs Radius](./mass-radius.md)
+
 [Planet Discoveries Over Time](./planets-over-time.md)
 
 [Transiting Planet Distance vs Radius](./distance-radius.md)

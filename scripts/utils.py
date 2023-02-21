@@ -271,11 +271,12 @@ def load_data(updated_koi_params=True):
 
     # what columns do we want/need in the final dataframe
     cols = ['name', 'hostname', 'IC', 'disposition', 'period', 'rade', 'radj',
-            'masse', 'massj', 'tran_depth_ppm', 'tran_dur_hr', 'semi_au',
-            'eccen', 'insol', 'distance_pc', 'year_discovered',
-            'year_confirmed', 'discoverymethod', 'facility', 'st_mass',
-            'st_rad', 'st_teff', 'st_log_lum', 'Jmag', 'Kmag', 'ra', 'dec',
-            'flag_tran', 'flag_kepler', 'flag_k2', 'url']
+            'masse', 'masse_err1', 'masse_err2', 'massj', 'massj_err1',
+            'massj_err2', 'tran_depth_ppm', 'tran_dur_hr', 'semi_au', 'eccen',
+            'insol', 'distance_pc', 'year_discovered', 'year_confirmed',
+            'discoverymethod', 'facility', 'st_mass', 'st_rad', 'st_teff',
+            'st_log_lum', 'Jmag', 'Kmag', 'ra', 'dec', 'flag_tran',
+            'flag_kepler', 'flag_k2', 'url']
 
     #########################
     # CONFIRMED PLANET PREP #
@@ -286,11 +287,13 @@ def load_data(updated_koi_params=True):
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
                'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
                'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
-               'pl_bmassj': 'massj', 'sy_kmag': 'Kmag', 'sy_jmag': 'Jmag',
-               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
-               'pl_orbeccen': 'eccen', 'disc_facility': 'facility',
-               'tran_flag': 'flag_tran', 'sy_dist': 'distance_pc',
-               'disc_year': 'year_discovered'}
+               'pl_bmasseerr1': 'masse_err1', 'pl_bmasseerr2': 'masse_err2',
+               'pl_bmassj': 'massj', 'pl_bmassjerr1': 'massj_err1',
+               'pl_bmassjerr2': 'massj_err2', 'sy_kmag': 'Kmag',
+               'sy_jmag': 'Jmag', 'pl_trandep': 'tran_depth_ppm',
+               'pl_trandur': 'tran_dur_hr', 'pl_orbeccen': 'eccen',
+               'disc_facility': 'facility', 'tran_flag': 'flag_tran',
+               'sy_dist': 'distance_pc', 'disc_year': 'year_discovered'}
     dfcon.rename(columns=renames, inplace=True)
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
@@ -316,8 +319,10 @@ def load_data(updated_koi_params=True):
     # upper/lower limits are given values at that limit, and we need to remove
     # them for now
     dfcon.loc[dfcon['pl_orbperlim'] != 0, 'period'] = np.nan
-    dfcon.loc[dfcon['pl_radelim'] != 0, 'rade'] = np.nan
-    dfcon.loc[dfcon['pl_radjlim'] != 0, 'radj'] = np.nan
+    dfcon.loc[dfcon['pl_radelim'] != 0,
+              ['rade', 'rade_err1', 'rade_err2']] = np.nan
+    dfcon.loc[dfcon['pl_radjlim'] != 0,
+              ['radj', 'radj_err1', 'radj_err2']] = np.nan
     dfcon.loc[dfcon['st_radlim'] != 0, 'st_rad'] = np.nan
     dfcon.loc[dfcon['st_masslim'] != 0, 'st_mass'] = np.nan
     dfcon.loc[dfcon['st_lumlim'] != 0, 'st_log_lum'] = np.nan
@@ -343,18 +348,25 @@ def load_data(updated_koi_params=True):
     # both always exist or not together
     badm = (np.isfinite(dfcon['masse']) ^ np.isfinite(dfcon['massj']))
     assert badm.sum() == 0
+    badm = (np.isfinite(dfcon['masse_err1']) ^ np.isfinite(dfcon['massj_err1']))
+    assert badm.sum() == 0
+    badm = (np.isfinite(dfcon['masse_err2']) ^ np.isfinite(dfcon['massj_err2']))
+    assert badm.sum() == 0
 
     # remove calculated values from true masses. we'll make a calculated
     # column later
     badme = dfcon['pl_bmasse_reflink'].str.contains('Calculated')
     badmj = dfcon['pl_bmassj_reflink'].str.contains('Calculated')
     assert not (badme ^ badmj).any()
-    dfcon.loc[badme, ['masse', 'massj']] = np.nan
+    dfcon.loc[badme, ['masse', 'massj', 'rade_err1', 'rade_err2',
+                      'radj_err1', 'radj_err2']] = np.nan
 
     massrat = (const.M_jup/const.M_earth).value
     # because earth and jup masses don't always agree, make them
     # uniform and treat Earth as truth
     dfcon['massj'] = dfcon['masse'] / massrat
+    dfcon['massj_err1'] = dfcon['masse_err1'] / massrat
+    dfcon['massj_err2'] = dfcon['masse_err2'] / massrat
 
     # jupiter/earth radius ratio
     radratio = (const.R_jup/const.R_earth).value
@@ -496,7 +508,15 @@ def load_data(updated_koi_params=True):
     assert (~np.isfinite(dfcon['rade']) | (dfcon['rade'] > 0)).all()
     assert (~np.isfinite(dfcon['radj']) | (dfcon['radj'] > 0)).all()
     assert (~np.isfinite(dfcon['masse']) | (dfcon['masse'] > 0)).all()
+    assert (~np.isfinite(dfcon['masse_err1']) |
+            (dfcon['masse_err1'] >= 0)).all()
+    assert (~np.isfinite(dfcon['masse_err2']) |
+            (dfcon['masse_err2'] <= 0)).all()
     assert (~np.isfinite(dfcon['massj']) | (dfcon['massj'] > 0)).all()
+    assert (~np.isfinite(dfcon['massj_err1']) |
+            (dfcon['massj_err1'] >= 0)).all()
+    assert (~np.isfinite(dfcon['massj_err2']) |
+            (dfcon['massj_err2'] <= 0)).all()
     assert (~np.isfinite(dfcon['tran_depth_ppm']) |
             (dfcon['tran_depth_ppm'] > 0)).all()
     assert (~np.isfinite(dfcon['tran_dur_hr']) |
@@ -509,10 +529,19 @@ def load_data(updated_koi_params=True):
              (dfcon['rade'] / dfcon['radj'] < 1.01 * radratio))).all()
     assert np.allclose(np.isfinite(dfcon['massj']),
                        np.isfinite(dfcon['masse']))
+    assert np.allclose(np.isfinite(dfcon['massj_err1']),
+                       np.isfinite(dfcon['masse_err1']))
+    assert np.allclose(np.isfinite(dfcon['massj_err2']),
+                       np.isfinite(dfcon['masse_err2']))
     assert ((~np.isfinite(dfcon['masse'])) |
             ((dfcon['masse'] / dfcon['massj'] > 0.99 * massrat) &
              (dfcon['masse'] / dfcon['massj'] < 1.01 * massrat))).all()
-
+    assert ((~np.isfinite(dfcon['masse_err1'])) | (dfcon['masse_err1'] == 0) |
+            ((dfcon['masse_err1'] / dfcon['massj_err1'] > 0.99*massrat) &
+             (dfcon['masse_err1'] / dfcon['massj_err1'] < 1.01*massrat))).all()
+    assert ((~np.isfinite(dfcon['masse_err2'])) | (dfcon['masse_err2'] == 0) |
+            ((dfcon['masse_err2'] / dfcon['massj_err2'] > 0.99*massrat) &
+             (dfcon['masse_err2'] / dfcon['massj_err2'] < 1.01*massrat))).all()
     # these flags at least have the right number of good values
     assert dfcon['flag_kepler'].sum() > 2000
     assert dfcon['flag_k2'].sum() > 400
@@ -856,7 +885,11 @@ def load_data(updated_koi_params=True):
 
     # no masses
     dfkoi['masse'] = np.nan
+    dfkoi['masse_err1'] = np.nan
+    dfkoi['masse_err2'] = np.nan
     dfkoi['massj'] = np.nan
+    dfkoi['massj_err1'] = np.nan
+    dfkoi['massj_err2'] = np.nan
 
     # no eccentricity
     dfkoi['eccen'] = np.nan
@@ -902,7 +935,11 @@ def load_data(updated_koi_params=True):
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
+    assert (~np.isfinite(canonly['masse_err1'])).all()
+    assert (~np.isfinite(canonly['masse_err2'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
+    assert (~np.isfinite(canonly['massj_err1'])).all()
+    assert (~np.isfinite(canonly['massj_err2'])).all()
     assert (~np.isfinite(canonly['eccen'])).all()
     assert (~np.isfinite(canonly['tran_depth_ppm']) |
             (canonly['tran_depth_ppm'] >= 0)).all()
@@ -940,7 +977,10 @@ def load_data(updated_koi_params=True):
                'pl_name': 'name', 'pl_orbeccen': 'eccen',
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
                'sy_jmag': 'Jmag', 'disc_year': 'year_discovered',
-               'pl_masse': 'masse', 'pl_massj': 'massj', 'st_lum': 'st_log_lum'}
+               'pl_bmasse': 'masse', 'pl_bmasseerr1': 'masse_err1',
+               'pl_bmasseerr2': 'masse_err2', 'pl_bmassj': 'massj',
+               'pl_bmassjerr1': 'massj_err1', 'pl_bmassjerr2': 'massj_err2',
+               'st_lum': 'st_log_lum'}
     dfk2.rename(columns=renames, inplace=True)
 
     # upper/lower limits are given values at that limit, and we need to remove
@@ -1222,7 +1262,11 @@ def load_data(updated_koi_params=True):
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
+    assert (~np.isfinite(canonly['masse_err1'])).all()
+    assert (~np.isfinite(canonly['masse_err2'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
+    assert (~np.isfinite(canonly['massj_err1'])).all()
+    assert (~np.isfinite(canonly['massj_err2'])).all()
     assert (~np.isfinite(canonly['tran_depth_ppm']) |
             (canonly['tran_depth_ppm'] > 0)).all()
     assert (~np.isfinite(canonly['tran_dur_hr']) |
@@ -1569,6 +1613,10 @@ def load_data(updated_koi_params=True):
     # no masses
     dftoi['masse'] = np.nan
     dftoi['massj'] = np.nan
+    dftoi['masse_err1'] = np.nan
+    dftoi['massj_err1'] = np.nan
+    dftoi['masse_err2'] = np.nan
+    dftoi['massj_err2'] = np.nan
 
     dftoi['eccen'] = np.nan
 
@@ -2012,3 +2060,82 @@ else {
     cb_obj.label = "\u25b6 Play";
 }
 """
+
+singleslide = """
+const nglyphs = glyphs.length;
+var some = 0;
+var loop = 0;
+while (some == 0 && loop < 3){
+    for (let nn = 0; nn < nglyphs; nn++) {
+        var glyph = glyphs[nn];
+        var source = glyph.data_source;
+        var legend = legends[nn];
+
+        if (!glyph.visible){
+            source.selected.indices = [];
+        }
+
+        if (source.selected.indices.length == 0){
+            glyph.glyph.line_alpha = glyph.nonselection_glyph.line_alpha;
+            glyph.glyph.fill_alpha = glyph.nonselection_glyph.fill_alpha;
+            glyph.change.emit();
+        }
+        else {
+            glyph.glyph.line_alpha = alphas[nn];
+            glyph.glyph.fill_alpha = alphas[nn];
+            glyph.change.emit();
+            some = 1;
+        }
+        var newnum = source.selected.indices.length.toLocaleString('en-US');
+        newnum = '(' + newnum + ')';
+        var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
+        legend.label['value'] = newstr;
+    }
+    if (some == 0){
+        var maxerror = slider.value;
+        for (let nn = 0; nn < nglyphs; nn++) {
+            var glyph = glyphs[nn];
+            var source = glyph.data_source;
+            var selected = [];
+            for (let ii = 0; ii < source.data['planet'].length; ii++) {
+                if ((source.data['masserror'][ii] <= maxerror && 
+                        source.data['masserror'][ii] > 0) || maxerror == 100){
+                    selected.push(ii);
+                }
+            }
+            if (glyph.visible){
+                source.selected.indices = selected;
+            }
+            else {
+                source.selected.indices = [];
+            }
+            source.change.emit();
+        }
+    }
+    loop = loop + 1;
+}
+"""
+
+massselect = """
+const mglyphs = glyphs.length;
+var maxerror = slider.value;
+for (let nn = 0; nn < mglyphs; nn++) {
+    var glyph = glyphs[nn];
+    var source = glyph.data_source;
+    var selected = [];}
+    for (let ii = 0; ii < source.data['planet'].length; ii++) {
+        if ((source.data['masserror'][ii] <= maxerror && 
+                source.data['masserror'][ii] > 0) || maxerror == 100){
+            selected.push(ii);
+        }
+    }
+    if (glyph.visible){
+        source.selected.indices = selected;
+    }
+    else {
+        source.selected.indices = [];
+    }
+    source.change.emit();
+}
+
+""" + singleslide
