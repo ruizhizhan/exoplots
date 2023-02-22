@@ -170,11 +170,6 @@ fig.right[0].axis_label = r'\[\text{Radius} (\mathrm{R_J})\]'
 fig.above[0].axis_label = r'\[\text{Mass} (\mathrm{M_J})\]'
 
 # set up all the legend objects
-#legend = Legend(items=[solarleg], location="center")
-#legend.label_text_align = 'left'
-#legend.margin = 0
-#legend.location = (-70, 5)
-#fig.add_layout(legend, 'above')
 items = [LegendItem(label=ii + f' ({counts[methods.index(ii)]})',
                     renderers=[jj])
          for ii, jj in zip(methods, glyphs)]
