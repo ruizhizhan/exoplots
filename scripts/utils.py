@@ -212,7 +212,7 @@ def get_tsm(df, scale: float = 0.19, **kwargs):
     return num / denom
 
 
-def load_data(updated_koi_params=True):
+def load_data(updated_koi_params=True, only_candidates=True):
     """
     Load our data tables and perform some data cleansing/updating to make them
     ready for use in our interactive figures.
@@ -223,6 +223,10 @@ def load_data(updated_koi_params=True):
         If True, for all stars in the Kepler field, use the updated stellar and
         planet parameters from Berger 2023. Recalculate planet radii,
         insolations, etc. using these new Gaia assisted parameters.
+    only_candidates : bool
+        If True, don't update the confirmed planets with these KOI parameters.
+        While most Kepler planets are just validated, the ones with masses and
+        followup can have radii/densities messed up by mixing in these radii
 
     Returns
     -------
@@ -367,6 +371,9 @@ def load_data(updated_koi_params=True):
     dfcon['massj'] = dfcon['masse'] / massrat
     dfcon['massj_err1'] = dfcon['masse_err1'] / massrat
     dfcon['massj_err2'] = dfcon['masse_err2'] / massrat
+
+    # avoid a defrag warning without dealing with cleaning up the code
+    dfcon = dfcon.copy()
 
     # jupiter/earth radius ratio
     radratio = (const.R_jup/const.R_earth).value
@@ -794,7 +801,7 @@ def load_data(updated_koi_params=True):
             # at least update the distance with DR3/TIC values
             if len(fdp) != 1 or len(fds) != 1:
                 comp.at[res, 'distance_pc'] = icon['distance_pc']
-            else:
+            if not only_candidates:
                 # only care about updating the confirmed table
                 comp.at[res, 'st_mass'] = koistars.loc[fds, 'iso_mass']
                 comp.at[res, 'st_rad'] = koistars.loc[fds, 'iso_rad']
@@ -2062,7 +2069,7 @@ else {
 """
 
 singleslide = """
-const nglyphs = glyphs.length;
+var nglyphs = glyphs.length;
 var some = 0;
 var loop = 0;
 while (some == 0 && loop < 3){
@@ -2122,7 +2129,7 @@ var maxerror = slider.value;
 for (let nn = 0; nn < mglyphs; nn++) {
     var glyph = glyphs[nn];
     var source = glyph.data_source;
-    var selected = [];}
+    var selected = [];
     for (let ii = 0; ii < source.data['planet'].length; ii++) {
         if ((source.data['masserror'][ii] <= maxerror && 
                 source.data['masserror'][ii] > 0) || maxerror == 100){
@@ -2134,6 +2141,31 @@ for (let nn = 0; nn < mglyphs; nn++) {
     }
     else {
         source.selected.indices = [];
+    }
+    source.change.emit();
+}
+""" + singleslide
+
+sing_sliderselect = """
+const mglyphs = glyphs.length;
+var maxerror = slider.value;
+for (let nn = 0; nn < mglyphs; nn++) {
+    var glyph = glyphs[nn];
+    var source = glyph.data_source;
+    var legend = legends[nn];
+
+    if (!glyph.visible){
+        source.selected.indices = [];
+    }
+    else {
+        var selected = [];
+        for (let ii = 0; ii < source.selected.indices.length; ii++) {
+            var iyr = source.data['masserror'][source.selected.indices[ii]];
+            if ((iyr <= maxerror && iyr > 0) || maxerror == 100){
+                selected.push(source.selected.indices[ii]);
+            }
+        }
+        source.selected.indices = selected;
     }
     source.change.emit();
 }

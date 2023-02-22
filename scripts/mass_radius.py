@@ -3,7 +3,7 @@ import pandas as pd
 from astropy import constants as const
 from bokeh import plotting
 from bokeh.embed import components
-from bokeh.events import SelectionGeometry, Tap
+from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BoxSelectTool, ColorPicker, CustomJS, Div, ImageURL
@@ -12,8 +12,8 @@ from bokeh.models import Range1d, Slider, TapTool
 from bokeh.models.widgets import Button
 from bokeh.themes import Theme
 
-from utils import change_color, csv_creation, deselect, get_update_time
-from utils import massselect, openurl, palette, reset, SolarSystem
+from utils import change_color, csv_creation, get_update_time
+from utils import massselect, openurl, palette, sing_sliderselect, SolarSystem
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -119,7 +119,7 @@ for ii, imeth in enumerate(methods):
     # disappearing when you click on a data point ("select" it)
     glyph = fig.scatter('mass', 'radius', color=colors[ii], source=source,
                         size=8, alpha=alpha, marker=markers[ii],
-                        nonselection_alpha=0.07, selection_alpha=0.8,
+                        nonselection_alpha=0.0, selection_alpha=alpha,
                         nonselection_color=colors[ii])
     glyphs.append(glyph)
     # save the global min/max
@@ -272,7 +272,13 @@ jargs = dict(glyphs=glyphs, alphas=alphas, legends=items[:3],
 
 yrsel = CustomJS(args=jargs, code=massselect)
 mass_slider.js_on_change('value', yrsel)
-
+# even on a reset, reselect only the correct values rather than letting
+# everything get unselected
+rescode = "slider.value = slider.end;"
+fig.js_on_event('reset', CustomJS(args={'slider': mass_slider}, code=rescode))
+sls = CustomJS(args=jargs, code=sing_sliderselect)
+fig.js_on_event(SelectionGeometry, sls)
+fig.js_on_event(DoubleTap, yrsel)
 
 layout = column(optrow, row(mass_slider), fig)
 
