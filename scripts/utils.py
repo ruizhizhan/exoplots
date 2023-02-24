@@ -1324,7 +1324,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
         from astroquery.mast import Catalogs
         for index, irow in dftoi.iterrows():
             if (fulltic is None) or (irow['IC'] not in fulltic['ID'].values):
-                print('Getting TIC info', index, dftoi['IC'].size)
+                print('Getting TIC info', index, dftoi['IC'].size - 1)
                 cat = Catalogs.query_criteria(catalog='tic', ID=irow['IC'])
                 assert len(cat) == 1 and int(cat['ID'][0]) == irow['IC']
                 head, istr = cat.to_pandas().to_csv().split()
@@ -1475,7 +1475,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-5542.01', 'TOI-3884.01', 'TOI-1468.01', 'TOI-515.01',
                 'TOI-1468.02', 'TOI-4270.01', 'TOI-5970.01', 'TOI-277.01',
                 'TOI-1288.01', 'TOI-1695.01', 'TOI-1097.02', 'TOI-4582.01',
-                'TOI-4342.01', 'TOI-4342.02', 'TOI-4562.01',
+                'TOI-4342.01', 'TOI-4342.02', 'TOI-4562.01', 'TOI-2076.03',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
@@ -2171,3 +2171,15 @@ for (let nn = 0; nn < mglyphs; nn++) {
 }
 
 """ + singleslide
+
+whisker_select = """
+var isource = glyph.data_source;
+var selected = [];
+if (!glyph.visible){
+    return selected;
+}
+else {
+    return isource.selected.indices;
+
+}
+"""
