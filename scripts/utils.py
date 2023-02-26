@@ -2077,7 +2077,12 @@ while (some == 0 && loop < 3){
         var glyph = glyphs[nn];
         var source = glyph.data_source;
         var legend = legends[nn];
+        let whisker_s = whisker_sources[nn].data;
 
+        // Reset the whisker_source to empty
+        for (var ii in whisker_s) {
+            whisker_s[ii] = [];
+        }
         if (!glyph.visible){
             source.selected.indices = [];
         }
@@ -2092,11 +2097,19 @@ while (some == 0 && loop < 3){
             glyph.glyph.fill_alpha = alphas[nn];
             glyph.change.emit();
             some = 1;
+            for (var ii in source.selected.indices) {
+                // Iterate through all columns of the data and push to 
+                // whisker source
+                for (var jj in whisker_s) {
+                        whisker_s[jj].push(source.data[jj][ii]);
+                }
+            }
         }
         var newnum = source.selected.indices.length.toLocaleString('en-US');
         newnum = '(' + newnum + ')';
         var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
         legend.label['value'] = newstr;
+        whisker_sources[nn].change.emit();
     }
     if (some == 0){
         var maxerror = slider.value;
@@ -2104,6 +2117,12 @@ while (some == 0 && loop < 3){
             var glyph = glyphs[nn];
             var source = glyph.data_source;
             var selected = [];
+            let whisker_s = whisker_sources[nn].data;
+            // Reset the whisker_source to empty
+            for (var ii in whisker_s) {
+                whisker_s[ii] = [];
+            }
+            
             for (let ii = 0; ii < source.data['planet'].length; ii++) {
                 if ((source.data['masserror'][ii] <= maxerror && 
                         source.data['masserror'][ii] > 0) || maxerror == 100){
@@ -2112,11 +2131,19 @@ while (some == 0 && loop < 3){
             }
             if (glyph.visible){
                 source.selected.indices = selected;
+                for (var ii in source.selected.indices) {
+                    // Iterate through all columns of the data and push to 
+                    // whisker source
+                    for (var jj in whisker_s) {
+                            whisker_s[jj].push(source.data[jj][ii]);
+                    }
+                }
             }
             else {
                 source.selected.indices = [];
             }
             source.change.emit();
+            whisker_sources[nn].change.emit();
         }
     }
     loop = loop + 1;
@@ -2129,11 +2156,22 @@ var maxerror = slider.value;
 for (let nn = 0; nn < mglyphs; nn++) {
     var glyph = glyphs[nn];
     var source = glyph.data_source;
+    let whisker_s = whisker_sources[nn].data;
     var selected = [];
+    
+    // Reset the whisker_source to empty
+    for (var ii in whisker_s) {
+        whisker_s[ii] = [];
+    }
     for (let ii = 0; ii < source.data['planet'].length; ii++) {
         if ((source.data['masserror'][ii] <= maxerror && 
                 source.data['masserror'][ii] > 0) || maxerror == 100){
             selected.push(ii);
+            // Iterate through all columns of the data and push to 
+            // whisker source
+            for (var jj in whisker_s) {
+                    whisker_s[jj].push(source.data[jj][ii]);
+            }
         }
     }
     if (glyph.visible){
@@ -2143,6 +2181,7 @@ for (let nn = 0; nn < mglyphs; nn++) {
         source.selected.indices = [];
     }
     source.change.emit();
+    whisker_sources[nn].change.emit();
 }
 """ + singleslide
 
@@ -2153,7 +2192,13 @@ for (let nn = 0; nn < mglyphs; nn++) {
     var glyph = glyphs[nn];
     var source = glyph.data_source;
     var legend = legends[nn];
-
+    let whisker_s = whisker_sources[nn].data;
+    
+    // Reset the whisker_source to empty
+    for (var ii in whisker_s) {
+        whisker_s[ii] = [];
+    }
+    
     if (!glyph.visible){
         source.selected.indices = [];
     }
@@ -2163,23 +2208,17 @@ for (let nn = 0; nn < mglyphs; nn++) {
             var iyr = source.data['masserror'][source.selected.indices[ii]];
             if ((iyr <= maxerror && iyr > 0) || maxerror == 100){
                 selected.push(source.selected.indices[ii]);
+                // Iterate through all columns of the data and push to 
+                // whisker source
+                for (var jj in whisker_s) {
+                        whisker_s[jj].push(source.data[jj][ii]);
+                }
             }
         }
         source.selected.indices = selected;
     }
     source.change.emit();
+    whisker_sources[nn].change.emit();
 }
 
 """ + singleslide
-
-whisker_select = """
-var isource = glyph.data_source;
-var selected = [];
-if (!glyph.visible){
-    return selected;
-}
-else {
-    return isource.selected.indices;
-
-}
-"""

@@ -6,7 +6,7 @@ from bokeh.embed import components
 from bokeh.events import DoubleTap, SelectionGeometry, Tap
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BoxSelectTool, ColorPicker, CustomJS, CustomJSFilter
+from bokeh.models import BoxSelectTool, ColorPicker, CustomJS
 from bokeh.models import Div, ImageURL, Label, LassoSelectTool, Legend
 from bokeh.models import LegendItem, LogAxis, Range1d, Slider, TapTool, Whisker
 from bokeh.models.widgets import Button
@@ -14,7 +14,7 @@ from bokeh.themes import Theme
 
 from utils import change_color, csv_creation, get_update_time, massselect
 from utils import openurl, palette, sing_sliderselect, SolarSystem
-from utils import whisker_select
+
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
@@ -64,6 +64,8 @@ glyphs = []
 counts = []
 sources = []
 alphas = []
+whiskers = []
+whisker_sources = []
 
 solarsys = SolarSystem()
 
@@ -116,6 +118,11 @@ for ii, imeth in enumerate(methods):
     print(imeth, ': ', good.sum())
     counts.append(f'{good.sum():,}')
 
+    whisker_source = plotting.ColumnDataSource(data=dict(
+        radius=dfpl['rade'][good],
+        massup=dfpl['masse'][good] + dfpl['masse_err1'][good],
+        massdown=dfpl['masse'][good] + dfpl['masse_err2'][good]))
+
     # plot the planets
     # nonselection stuff is needed to prevent planets in that category from
     # disappearing when you click on a data point ("select" it)
@@ -124,15 +131,15 @@ for ii, imeth in enumerate(methods):
                         nonselection_alpha=0.0, selection_alpha=alpha,
                         nonselection_color=colors[ii])
 
-    wfilter = CustomJSFilter(args={'glyph': glyph}, code=whisker_select)
     error = Whisker(base="radius", upper="massup", lower="massdown",
-                    source=source, level="image", line_width=2,
-                    dimension='width', line_alpha=0.15, line_color=colors[ii],
-                    view=wfilter)
+                    source=whisker_source, level="image", line_width=2,
+                    dimension='width', line_alpha=0.15, line_color=colors[ii])
     error.lower_head.size = 0
     error.upper_head.size = 0
     fig.add_layout(error)
     glyphs.append(glyph)
+    whiskers.append(error)
+    whisker_sources.append(whisker_source)
     # save the global min/max
     ymin = min(ymin, source.data['radius'].min())
     ymax = max(ymax, source.data['radius'].max())
@@ -245,15 +252,6 @@ fig.add_tools(box)
 lasso = LassoSelectTool()
 fig.add_tools(lasso)
 
-"""des = CustomJS(args=dict(glyphs=glyphs, alphas=alphas, legends=items),
-               code=deselect)
-fig.js_on_event(SelectionGeometry, des)
-fig.js_on_event('reset', CustomJS(args=dict(glyphs=glyphs, alphas=alphas,
-                                            legends=items), code=reset))
-
-for iglyph in glyphs:
-    iglyph.js_on_change('visible', des)"""
-
 # allow the user to choose the colors
 titlecent = {'margin': 'auto -3px auto 5px'}
 keplerpar = Div(text='Transit:', styles=titlecent)
@@ -274,7 +272,7 @@ optrow = row(button, keplerpar, keplercolor, k2par, k2color, confpar,
 mass_slider = Slider(start=0, end=100, value=100, step=1,
                      title="Maximum Mass Error (%)")
 jargs = dict(glyphs=glyphs, alphas=alphas, legends=items[:3],
-             slider=mass_slider)
+             slider=mass_slider, whisker_sources=whisker_sources)
 
 yrsel = CustomJS(args=jargs, code=massselect)
 mass_slider.js_on_change('value', yrsel)
