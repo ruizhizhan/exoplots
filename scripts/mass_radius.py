@@ -283,6 +283,8 @@ fig.js_on_event('reset', CustomJS(args={'slider': mass_slider}, code=rescode))
 sls = CustomJS(args=jargs, code=sing_sliderselect)
 fig.js_on_event(SelectionGeometry, sls)
 fig.js_on_event(DoubleTap, yrsel)
+for iglyph in glyphs:
+    iglyph.js_on_change('visible', yrsel)
 
 layout = column(optrow, row(mass_slider), fig)
 

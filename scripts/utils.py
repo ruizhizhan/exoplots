@@ -2097,7 +2097,7 @@ while (some == 0 && loop < 3){
             glyph.glyph.fill_alpha = alphas[nn];
             glyph.change.emit();
             some = 1;
-            for (var ii in source.selected.indices) {
+            for (var ii of source.selected.indices) {
                 // Iterate through all columns of the data and push to 
                 // whisker source
                 for (var jj in whisker_s) {
@@ -2131,7 +2131,7 @@ while (some == 0 && loop < 3){
             }
             if (glyph.visible){
                 source.selected.indices = selected;
-                for (var ii in source.selected.indices) {
+                for (var ii of source.selected.indices) {
                     // Iterate through all columns of the data and push to 
                     // whisker source
                     for (var jj in whisker_s) {
