@@ -257,14 +257,14 @@ titlecent = {'margin': 'auto -3px auto 5px'}
 keplerpar = Div(text='Transit:', styles=titlecent)
 keplercolor = ColorPicker(color=colors[0], width=60, height=30,
                           styles=vertcent)
-change_color(keplercolor, [glyphs[0]])
+change_color(keplercolor, [glyphs[0], whiskers[0]])
 k2par = Div(text='RV:', styles=titlecent)
 k2color = ColorPicker(color=colors[1], width=60, height=30, styles=vertcent)
-change_color(k2color, [glyphs[1]])
+change_color(k2color, [glyphs[1], whiskers[1]])
 confpar = Div(text='Other:', styles=titlecent)
 confcolor = ColorPicker(color=colors[2], width=60, height=30,
                         styles=vertcent)
-change_color(confcolor, [glyphs[2]])
+change_color(confcolor, [glyphs[2], whiskers[2]])
 
 optrow = row(button, keplerpar, keplercolor, k2par, k2color, confpar,
              confcolor, styles={'margin': '3px'})

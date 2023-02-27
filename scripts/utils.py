@@ -72,6 +72,9 @@ def change_color(picker: ColorPicker, glyphs: list):
             for prop in allprops:
                 picker.js_link('color', vars(iglyph)['_property_values'][ag],
                                prop)
+        for prop in allprops:
+            if prop in vars(iglyph)['_property_values']:
+                picker.js_link('color', iglyph, prop)
 
 
 def get_update_time():
