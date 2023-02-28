@@ -47,6 +47,7 @@ TOOLTIPS = [
     ("Mass", "@mass{0,0[.][00]} Earth; @jupmass{0,0[.][0000]} Jup"),
     ("Mass Error", "@masserror{[0]}%"),
     ("Radius", "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup"),
+    ("Radius Error", "@radiuserror{[0]}%"),
     ("Discovered via", "@method")
 ]
 
@@ -64,8 +65,10 @@ glyphs = []
 counts = []
 sources = []
 alphas = []
-whiskers = []
-whisker_sources = []
+mass_whiskers = []
+mass_whisker_sources = []
+radius_whiskers = []
+radius_whisker_sources = []
 
 solarsys = SolarSystem()
 
@@ -82,7 +85,11 @@ solarleg = LegendItem(label='Solar System', renderers=[gg])
 masserror = (dfpl['masse_err1'] + np.abs(dfpl['masse_err2'])) / 2
 masserror /= dfpl['masse']
 
+radiuserror = (dfpl['rade_err1'] + np.abs(dfpl['rade_err2'])) / 2
+radiuserror /= dfpl['rade']
+
 dfpl['mass_error_pct'] = masserror * 100
+dfpl['radius_error_pct'] = radiuserror * 100
 
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
@@ -113,15 +120,23 @@ for ii, imeth in enumerate(methods):
             url=dfpl['url'][good],
             masserror=dfpl['mass_error_pct'][good],
             massup=dfpl['masse'][good] + dfpl['masse_err1'][good],
-            massdown=dfpl['masse'][good] + dfpl['masse_err2'][good]
+            massdown=dfpl['masse'][good] + dfpl['masse_err2'][good],
+            radiuserror=dfpl['radius_error_pct'][good],
+            radiusup=dfpl['rade'][good] + dfpl['rade_err1'][good],
+            radiusdown=dfpl['rade'][good] + dfpl['rade_err2'][good]
             ))
     print(imeth, ': ', good.sum())
     counts.append(f'{good.sum():,}')
 
-    whisker_source = plotting.ColumnDataSource(data=dict(
+    mass_whisker_source = plotting.ColumnDataSource(data=dict(
         radius=dfpl['rade'][good],
         massup=dfpl['masse'][good] + dfpl['masse_err1'][good],
         massdown=dfpl['masse'][good] + dfpl['masse_err2'][good]))
+
+    radius_whisker_source = plotting.ColumnDataSource(data=dict(
+        mass=dfpl['masse'][good],
+        radiusup=dfpl['rade'][good] + dfpl['rade_err1'][good],
+        radiusdown=dfpl['rade'][good] + dfpl['rade_err2'][good]))
 
     # plot the planets
     # nonselection stuff is needed to prevent planets in that category from
@@ -131,15 +146,27 @@ for ii, imeth in enumerate(methods):
                         nonselection_alpha=0.0, selection_alpha=alpha,
                         nonselection_color=colors[ii])
 
-    error = Whisker(base="radius", upper="massup", lower="massdown",
-                    source=whisker_source, level="image", line_width=2,
-                    dimension='width', line_alpha=0.15, line_color=colors[ii])
-    error.lower_head.size = 0
-    error.upper_head.size = 0
-    fig.add_layout(error)
+    mass_error = Whisker(base="radius", upper="massup", lower="massdown",
+                         source=mass_whisker_source, level="image",
+                         line_width=2, dimension='width', line_alpha=0.15,
+                         line_color=colors[ii])
+    radius_error = Whisker(base="mass", upper="radiusup", lower="radiusdown",
+                           source=radius_whisker_source, level="image",
+                           line_width=2, dimension='height', line_alpha=0.15,
+                           line_color=colors[ii])
+    mass_error.lower_head.size = 0
+    mass_error.upper_head.size = 0
+    fig.add_layout(mass_error)
+    mass_whiskers.append(mass_error)
+    mass_whisker_sources.append(mass_whisker_source)
+
+    radius_error.lower_head.size = 0
+    radius_error.upper_head.size = 0
+    fig.add_layout(radius_error)
+    radius_whiskers.append(radius_error)
+    radius_whisker_sources.append(radius_whisker_source)
+
     glyphs.append(glyph)
-    whiskers.append(error)
-    whisker_sources.append(whisker_source)
     # save the global min/max
     ymin = min(ymin, source.data['radius'].min())
     ymax = max(ymax, source.data['radius'].max())
@@ -257,14 +284,14 @@ titlecent = {'margin': 'auto -3px auto 5px'}
 keplerpar = Div(text='Transit:', styles=titlecent)
 keplercolor = ColorPicker(color=colors[0], width=60, height=30,
                           styles=vertcent)
-change_color(keplercolor, [glyphs[0], whiskers[0]])
+change_color(keplercolor, [glyphs[0], mass_whiskers[0], radius_whiskers[0]])
 k2par = Div(text='RV:', styles=titlecent)
 k2color = ColorPicker(color=colors[1], width=60, height=30, styles=vertcent)
-change_color(k2color, [glyphs[1], whiskers[1]])
+change_color(k2color, [glyphs[1], mass_whiskers[1], radius_whiskers[1]])
 confpar = Div(text='Other:', styles=titlecent)
 confcolor = ColorPicker(color=colors[2], width=60, height=30,
                         styles=vertcent)
-change_color(confcolor, [glyphs[2], whiskers[2]])
+change_color(confcolor, [glyphs[2], mass_whiskers[2], radius_whiskers[2]])
 
 optrow = row(button, keplerpar, keplercolor, k2par, k2color, confpar,
              confcolor, styles={'margin': '3px'})
@@ -272,7 +299,8 @@ optrow = row(button, keplerpar, keplercolor, k2par, k2color, confpar,
 mass_slider = Slider(start=0, end=100, value=100, step=1,
                      title="Maximum Mass Error (%)")
 jargs = dict(glyphs=glyphs, alphas=alphas, legends=items[:3],
-             slider=mass_slider, whisker_sources=whisker_sources)
+             slider=mass_slider, whisker_sources=mass_whisker_sources,
+             radius_sources=radius_whisker_sources)
 
 yrsel = CustomJS(args=jargs, code=massselect)
 mass_slider.js_on_change('value', yrsel)

@@ -2205,10 +2205,14 @@ while (some == 0 && loop < 3){
         var source = glyph.data_source;
         var legend = legends[nn];
         let whisker_s = whisker_sources[nn].data;
-
+        let radius_s = radius_sources[nn].data;
+        
         // Reset the whisker_source to empty
         for (var ii in whisker_s) {
             whisker_s[ii] = [];
+        }
+        for (var ii in radius_s) {
+            radius_s[ii] = [];
         }
         if (!glyph.visible){
             source.selected.indices = [];
@@ -2230,6 +2234,9 @@ while (some == 0 && loop < 3){
                 for (var jj in whisker_s) {
                         whisker_s[jj].push(source.data[jj][ii]);
                 }
+                for (var jj in radius_s) {
+                        radius_s[jj].push(source.data[jj][ii]);
+                }
             }
         }
         var newnum = source.selected.indices.length.toLocaleString('en-US');
@@ -2237,6 +2244,7 @@ while (some == 0 && loop < 3){
         var newstr = legend.label['value'].replace(/\([\d,]+\)/, newnum);
         legend.label['value'] = newstr;
         whisker_sources[nn].change.emit();
+        radius_sources[nn].change.emit();
     }
     if (some == 0){
         var maxerror = slider.value;
@@ -2245,9 +2253,13 @@ while (some == 0 && loop < 3){
             var source = glyph.data_source;
             var selected = [];
             let whisker_s = whisker_sources[nn].data;
+            let radius_s = radius_sources[nn].data;
             // Reset the whisker_source to empty
             for (var ii in whisker_s) {
                 whisker_s[ii] = [];
+            }
+            for (var ii in radius_s) {
+                radius_s[ii] = [];
             }
             
             for (let ii = 0; ii < source.data['planet'].length; ii++) {
@@ -2264,6 +2276,9 @@ while (some == 0 && loop < 3){
                     for (var jj in whisker_s) {
                             whisker_s[jj].push(source.data[jj][ii]);
                     }
+                    for (var jj in radius_s) {
+                            radius_s[jj].push(source.data[jj][ii]);
+                    }
                 }
             }
             else {
@@ -2271,6 +2286,7 @@ while (some == 0 && loop < 3){
             }
             source.change.emit();
             whisker_sources[nn].change.emit();
+            radius_sources[nn].change.emit();
         }
     }
     loop = loop + 1;
@@ -2284,11 +2300,15 @@ for (let nn = 0; nn < mglyphs; nn++) {
     var glyph = glyphs[nn];
     var source = glyph.data_source;
     let whisker_s = whisker_sources[nn].data;
+    let radius_s = radius_sources[nn].data;
     var selected = [];
     
     // Reset the whisker_source to empty
     for (var ii in whisker_s) {
         whisker_s[ii] = [];
+    }
+    for (var ii in radius_s) {
+        radius_s[ii] = [];
     }
     for (let ii = 0; ii < source.data['planet'].length; ii++) {
         if ((source.data['masserror'][ii] <= maxerror && 
@@ -2298,6 +2318,9 @@ for (let nn = 0; nn < mglyphs; nn++) {
             // whisker source
             for (var jj in whisker_s) {
                     whisker_s[jj].push(source.data[jj][ii]);
+            }
+            for (var jj in radius_s) {
+                    radius_s[jj].push(source.data[jj][ii]);
             }
         }
     }
@@ -2309,6 +2332,7 @@ for (let nn = 0; nn < mglyphs; nn++) {
     }
     source.change.emit();
     whisker_sources[nn].change.emit();
+    radius_sources[nn].change.emit();
 }
 """ + singleslide
 
@@ -2320,10 +2344,14 @@ for (let nn = 0; nn < mglyphs; nn++) {
     var source = glyph.data_source;
     var legend = legends[nn];
     let whisker_s = whisker_sources[nn].data;
+    let radius_s = radius_sources[nn].data;
     
     // Reset the whisker_source to empty
     for (var ii in whisker_s) {
         whisker_s[ii] = [];
+    }
+    for (var ii in radius_s) {
+        radius_s[ii] = [];
     }
     
     if (!glyph.visible){
@@ -2340,12 +2368,16 @@ for (let nn = 0; nn < mglyphs; nn++) {
                 for (var jj in whisker_s) {
                         whisker_s[jj].push(source.data[jj][ii]);
                 }
+                for (var jj in radius_s) {
+                        radius_s[jj].push(source.data[jj][ii]);
+                }
             }
         }
         source.selected.indices = selected;
     }
     source.change.emit();
     whisker_sources[nn].change.emit();
+    radius_sources[nn].change.emit();
 }
 
 """ + singleslide
