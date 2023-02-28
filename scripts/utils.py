@@ -277,7 +277,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
         fulltic = None
 
     # what columns do we want/need in the final dataframe
-    cols = ['name', 'hostname', 'IC', 'disposition', 'period', 'rade', 'radj',
+    cols = ['name', 'hostname', 'IC', 'disposition', 'period', 'rade',
+            'rade_err1', 'rade_err2', 'radj', 'radj_err1', 'radj_err2',
             'masse', 'masse_err1', 'masse_err2', 'massj', 'massj_err1',
             'massj_err2', 'tran_depth_ppm', 'tran_dur_hr', 'semi_au', 'eccen',
             'insol', 'distance_pc', 'year_discovered', 'year_confirmed',
@@ -292,15 +293,18 @@ def load_data(updated_koi_params=True, only_candidates=True):
     print('Handling confirmed planets.')
     # set our common names for all of these
     renames = {'pl_name': 'name', 'pl_orbper': 'period', 'pl_rade': 'rade',
-               'pl_radj': 'radj', 'st_lum': 'st_log_lum', 'pl_insol': 'insol',
-               'pl_orbsmax': 'semi_au', 'pl_bmasse': 'masse',
-               'pl_bmasseerr1': 'masse_err1', 'pl_bmasseerr2': 'masse_err2',
-               'pl_bmassj': 'massj', 'pl_bmassjerr1': 'massj_err1',
-               'pl_bmassjerr2': 'massj_err2', 'sy_kmag': 'Kmag',
-               'sy_jmag': 'Jmag', 'pl_trandep': 'tran_depth_ppm',
-               'pl_trandur': 'tran_dur_hr', 'pl_orbeccen': 'eccen',
-               'disc_facility': 'facility', 'tran_flag': 'flag_tran',
-               'sy_dist': 'distance_pc', 'disc_year': 'year_discovered'}
+               'pl_radeerr1': 'rade_err1', 'pl_radeerr2': 'rade_err2',
+               'pl_radj': 'radj', 'pl_radjerr1': 'radj_err1',
+               'pl_radjerr2': 'radj_err2', 'st_lum': 'st_log_lum',
+               'pl_insol': 'insol', 'pl_orbsmax': 'semi_au',
+               'pl_bmasse': 'masse', 'pl_bmasseerr1': 'masse_err1',
+               'pl_bmasseerr2': 'masse_err2', 'pl_bmassj': 'massj',
+               'pl_bmassjerr1': 'massj_err1', 'pl_bmassjerr2': 'massj_err2',
+               'sy_kmag': 'Kmag', 'sy_jmag': 'Jmag',
+               'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
+               'pl_orbeccen': 'eccen', 'disc_facility': 'facility',
+               'tran_flag': 'flag_tran', 'sy_dist': 'distance_pc',
+               'disc_year': 'year_discovered'}
     dfcon.rename(columns=renames, inplace=True)
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
@@ -337,8 +341,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dfcon.loc[dfcon['pl_insollim'] != 0, 'insol'] = np.nan
     dfcon.loc[dfcon['pl_orbsmaxlim'] != 0, 'semi_au'] = np.nan
     dfcon.loc[dfcon['pl_ratdorlim'] != 0, 'pl_ratdor'] = np.nan
-    dfcon.loc[dfcon['pl_bmasselim'] != 0, 'masse'] = np.nan
-    dfcon.loc[dfcon['pl_bmassjlim'] != 0, 'massj'] = np.nan
+    dfcon.loc[dfcon['pl_bmasselim'] != 0,
+              ['masse', 'masse_err1', 'masse_err2']] = np.nan
+    dfcon.loc[dfcon['pl_bmassjlim'] != 0,
+              ['massj', 'massj_err1', 'massj_err2']] = np.nan
     dfcon.loc[dfcon['pl_trandeplim'] != 0, 'tran_depth_ppm'] = np.nan
     dfcon.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
 
@@ -365,8 +371,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     badme = dfcon['pl_bmasse_reflink'].str.contains('Calculated')
     badmj = dfcon['pl_bmassj_reflink'].str.contains('Calculated')
     assert not (badme ^ badmj).any()
-    dfcon.loc[badme, ['masse', 'massj', 'rade_err1', 'rade_err2',
-                      'radj_err1', 'radj_err2']] = np.nan
+    dfcon.loc[badme, ['masse', 'massj', 'masse_err1', 'masse_err2',
+                      'massj_err1', 'massj_err2']] = np.nan
 
     massrat = (const.M_jup/const.M_earth).value
     # because earth and jup masses don't always agree, make them
@@ -383,18 +389,25 @@ def load_data(updated_koi_params=True, only_candidates=True):
     badrj = (np.isfinite(dfcon['radj']) ^ np.isfinite(dfcon['rade']))
     # XXX: this bad 1 needs to be fixed
     assert badrj.sum() == 1
-    dfcon.loc[badrj, 'radj'] = dfcon.loc[badrj, 'rade'] / radratio
-
+    badrj1 = (np.isfinite(dfcon['radj_err1']) ^ np.isfinite(dfcon['rade_err1']))
+    assert badrj1.sum() == 1
+    badrj2 = (np.isfinite(dfcon['radj_err2']) ^ np.isfinite(dfcon['rade_err2']))
+    assert badrj2.sum() == 1
+    assert np.allclose(badrj, badrj1) and np.allclose(badrj, badrj2)
+    dfcon.loc[badrj, ['radj']] = dfcon.loc[badrj, ['rade']] / radratio
     # remove calculated values from true radii. we'll make a calculated
     # column later
     badre = dfcon['pl_rade_reflink'].str.contains('Calculated')
     badrj = dfcon['pl_radj_reflink'].str.contains('Calculated')
     assert not (badre ^ badrj).any()
-    dfcon.loc[badre, ['rade', 'radj']] = np.nan
+    dfcon.loc[badre, ['rade', 'radj', 'rade_err1', 'rade_err2',
+                      'radj_err1', 'radj_err2']] = np.nan
 
     # because earth and jup radii use different sources, make them
     # uniform and treat Earth as truth
     dfcon['radj'] = dfcon['rade'] / radratio
+    dfcon['radj_err1'] = dfcon['rade_err1'] / radratio
+    dfcon['radj_err2'] = dfcon['rade_err2'] / radratio
 
     # convert their depth in % to depth in ppm
     dfcon['tran_depth_ppm'] *= 1e4
@@ -516,7 +529,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(dfcon['semi_au']) | (dfcon['semi_au'] > 0)).all()
     assert (~np.isfinite(dfcon['insol']) | (dfcon['insol'] > 0)).all()
     assert (~np.isfinite(dfcon['rade']) | (dfcon['rade'] > 0)).all()
+    assert (~np.isfinite(dfcon['rade_err1']) | (dfcon['rade_err1'] >= 0)).all()
+    assert (~np.isfinite(dfcon['rade_err2']) | (dfcon['rade_err2'] <= 0)).all()
     assert (~np.isfinite(dfcon['radj']) | (dfcon['radj'] > 0)).all()
+    assert (~np.isfinite(dfcon['radj_err1']) | (dfcon['radj_err1'] >= 0)).all()
+    assert (~np.isfinite(dfcon['radj_err2']) | (dfcon['radj_err2'] <= 0)).all()
     assert (~np.isfinite(dfcon['masse']) | (dfcon['masse'] > 0)).all()
     assert (~np.isfinite(dfcon['masse_err1']) |
             (dfcon['masse_err1'] >= 0)).all()
@@ -534,6 +551,16 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # Jup and Earth radii and masses are either defined or not together
     assert np.allclose(np.isfinite(dfcon['radj']), np.isfinite(dfcon['rade']))
+    assert np.allclose(np.isfinite(dfcon['radj_err1']),
+                       np.isfinite(dfcon['rade_err1']))
+    assert np.allclose(np.isfinite(dfcon['radj_err2']),
+                       np.isfinite(dfcon['rade_err2']))
+    assert ((~np.isfinite(dfcon['rade_err1'])) | (dfcon['rade_err1'] == 0) |
+            ((dfcon['rade_err1'] / dfcon['radj_err1'] > 0.99 * radratio) &
+             (dfcon['rade_err1'] / dfcon['radj_err1'] < 1.01 * radratio))).all()
+    assert ((~np.isfinite(dfcon['rade_err2'])) | (dfcon['rade_err2'] == 0) |
+            ((dfcon['rade_err2'] / dfcon['radj_err2'] > 0.99 * radratio) &
+             (dfcon['rade_err2'] / dfcon['radj_err2'] < 1.01 * radratio))).all()
     assert ((~np.isfinite(dfcon['rade'])) |
             ((dfcon['rade'] / dfcon['radj'] > 0.99 * radratio) &
              (dfcon['rade'] / dfcon['radj'] < 1.01 * radratio))).all()
@@ -584,8 +611,9 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert np.unique(dfkoi['disposition']).size == 3
 
     # set our common names for all of these
-    renames = {'koi_period': 'period', 'koi_prad': 'rade', 'kepid': 'IC',
-               'koi_insol': 'insol', 'koi_sma': 'semi_au',
+    renames = {'koi_period': 'period', 'koi_prad': 'rade',
+               'koi_prad_err1': 'rade_err1', 'koi_prad_err2': 'rade_err2',
+               'kepid': 'IC', 'koi_insol': 'insol', 'koi_sma': 'semi_au',
                'koi_smass': 'st_mass', 'koi_srad': 'st_rad',
                'koi_steff': 'st_teff', 'kepoi_name': 'name',
                'koi_kmag': 'Kmag', 'koi_depth': 'tran_depth_ppm',
@@ -648,6 +676,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # give KOIs units of Jupiter radii
     dfkoi['radj'] = dfkoi['rade'] / radratio
+    dfkoi['radj_err1'] = dfkoi['rade_err1'] / radratio
+    dfkoi['radj_err2'] = dfkoi['rade_err2'] / radratio
 
     # set the appropriate discovery facility for candidates
     dfkoi['facility'] = 'Kepler'
@@ -816,7 +846,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 comp.at[res, 'semi_au'] = koiplanets.loc[fdp, 'sma']
                 comp.at[res, 'insol'] = koiplanets.loc[fdp, 'insol']
                 comp.at[res, 'rade'] = koiplanets.loc[fdp, 'prad']
+                comp.at[res, 'rade_err1'] = koiplanets.loc[fdp, 'prad_err1']
+                comp.at[res, 'rade_err2'] = koiplanets.loc[fdp, 'prad_err2']
                 comp.at[res, 'radj'] = koiplanets.loc[fdp, 'prad'] / radratio
+                comp.at[res, 'radj_err1'] = comp.at[res, 'rade_err1'] / radratio
+                comp.at[res, 'radj_err2'] = comp.at[res, 'rade_err2'] / radratio
 
         # make sure all candidate KOIs have the new parameters
         for index, ican in dfkoi[koican].iterrows():
@@ -842,8 +876,13 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 dfkoi.at[index, 'semi_au'] = koiplanets.loc[fdp, 'sma']
                 dfkoi.at[index, 'insol'] = koiplanets.loc[fdp, 'insol']
                 dfkoi.at[index, 'rade'] = koiplanets.loc[fdp, 'prad']
+                dfkoi.at[index, 'rade_err1'] = koiplanets.loc[fdp, 'prad_err1']
+                dfkoi.at[index, 'rade_err2'] = koiplanets.loc[fdp, 'prad_err2']
                 dfkoi.at[index, 'radj'] = koiplanets.loc[fdp, 'prad'] / radratio
-
+                dfkoi.at[index, 'radj_err1'] = (dfkoi.at[index, 'rade_err1'] /
+                                                radratio)
+                dfkoi.at[index, 'radj_err2'] = (dfkoi.at[index, 'rade_err2'] /
+                                                radratio)
         """
         # by definition these are missing from the Berger sample, but I'm
         # keeping this cross-match in case we need it later.
@@ -943,7 +982,15 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(canonly['semi_au']) | (canonly['semi_au'] > 0)).all()
     assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
+    assert (~np.isfinite(canonly['rade_err1']) |
+            (canonly['rade_err1'] >= 0)).all()
+    assert (~np.isfinite(canonly['rade_err2']) |
+            (canonly['rade_err2'] <= 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
+    assert (~np.isfinite(canonly['radj_err1']) |
+            (canonly['radj_err1'] >= 0)).all()
+    assert (~np.isfinite(canonly['radj_err2']) |
+            (canonly['radj_err2'] <= 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['masse_err1'])).all()
     assert (~np.isfinite(canonly['masse_err2'])).all()
@@ -961,6 +1008,18 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert ((~np.isfinite(canonly['rade'])) |
             ((canonly['rade'] / canonly['radj'] > 0.99 * radratio) &
              (canonly['rade'] / canonly['radj'] < 1.01 * radratio))).all()
+    assert np.allclose(np.isfinite(canonly['radj_err1']),
+                       np.isfinite(canonly['rade_err1']))
+    assert ((~np.isfinite(canonly['rade_err1'])) | (canonly['rade_err1'] == 0) |
+            ((canonly['rade_err1'] / canonly['radj_err1'] > 0.99 * radratio) &
+             (canonly['rade_err1'] / canonly['radj_err1'] <
+              1.01 * radratio))).all()
+    assert np.allclose(np.isfinite(canonly['radj_err2']),
+                       np.isfinite(canonly['rade_err2']))
+    assert ((~np.isfinite(canonly['rade_err2'])) | (canonly['rade_err2'] == 0) |
+            ((canonly['rade_err2'] / canonly['radj_err2'] > 0.99 * radratio) &
+             (canonly['rade_err2'] / canonly['radj_err2'] <
+              1.01 * radratio))).all()
 
     # these flags at least have the right number of good values
     assert canonly['flag_kepler'].all()
@@ -982,9 +1041,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     print('Handling K2OIs.')
     # put these into our keywords
-    renames = {'pl_rade': 'rade', 'pl_orbsmax': 'semi_au', 'pl_insol': 'insol',
-               'pl_orbper': 'period', 'pl_radj': 'radj', 'sy_kmag': 'Kmag',
-               'pl_name': 'name', 'pl_orbeccen': 'eccen',
+    renames = {'pl_rade': 'rade', 'pl_rade_err1': 'rade_err1',
+               'pl_rade_err2': 'rade_err2', 'pl_orbsmax': 'semi_au',
+               'pl_insol': 'insol', 'pl_orbper': 'period', 'pl_radj': 'radj',
+               'pl_radj_err1': 'radj_err1', 'pl_radj_err2': 'radj_err2',
+               'sy_kmag': 'Kmag', 'pl_name': 'name', 'pl_orbeccen': 'eccen',
                'pl_trandep': 'tran_depth_ppm', 'pl_trandur': 'tran_dur_hr',
                'sy_jmag': 'Jmag', 'disc_year': 'year_discovered',
                'pl_bmasse': 'masse', 'pl_bmasseerr1': 'masse_err1',
@@ -996,8 +1057,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # upper/lower limits are given values at that limit, and we need to remove
     # them for now
     dfk2.loc[dfk2['pl_orbperlim'] != 0, 'period'] = np.nan
-    dfk2.loc[dfk2['pl_radelim'] != 0, 'rade'] = np.nan
-    dfk2.loc[dfk2['pl_radjlim'] != 0, 'radj'] = np.nan
+    dfk2.loc[dfk2['pl_radelim'] != 0,
+             ['rade', 'rade_err1', 'rade_err2']] = np.nan
+    dfk2.loc[dfk2['pl_radjlim'] != 0,
+             ['radj', 'radj_err1', 'radj_err2']] = np.nan
     dfk2.loc[dfk2['st_radlim'] != 0, 'st_rad'] = np.nan
     dfk2.loc[dfk2['st_tefflim'] != 0, 'st_teff'] = np.nan
     dfk2.loc[dfk2['pl_ratdorlim'] != 0, 'pl_ratdor'] = np.nan
@@ -1007,14 +1070,18 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # The K2 tables don't have both columns always filled in
     noearth = (~np.isfinite(dfk2['rade']) & np.isfinite(dfk2['radj']))
-    dfk2.loc[noearth, 'rade'] = dfk2.loc[noearth, 'radj'] * radratio
+    rees = ['rade', 'rade_err1', 'rade_err2']
+    rjjs = ['radj', 'radj_err1', 'radj_err2']
+    dfk2.loc[noearth, rees] = dfk2.loc[noearth, rjjs] * radratio
 
     nojup = (np.isfinite(dfk2['rade']) & (~np.isfinite(dfk2['radj'])))
-    dfk2.loc[nojup, 'radj'] = dfk2.loc[nojup, 'rade'] / radratio
+    dfk2.loc[nojup, rjjs] = dfk2.loc[nojup, rees] / radratio
 
     # because earth and jup radii don't always agree, make them
     # uniform and treat Earth as truth
     dfk2['radj'] = dfk2['rade'] / radratio
+    dfk2['radj_err1'] = dfk2['rade_err1'] / radratio
+    dfk2['radj_err2'] = dfk2['rade_err2'] / radratio
 
     # make these not all caps
     dfk2['disposition'] = dfk2['disposition'].str.title()
@@ -1208,8 +1275,9 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # go through the ones we're going to add to the table and fill in any
     # missing values if possible from other entries in the table
-    ichk = ['period', 'rade', 'radj', 'st_rad', 'st_teff', 'st_log_lum',
-            'st_mass', 'insol', 'semi_au', 'tran_depth_ppm', 'eccen']
+    ichk = ['period', 'rade', 'rade_err1', 'rade_err2', 'radj', 'radj_err1',
+            'radj_err2', 'st_rad', 'st_teff', 'st_log_lum', 'st_mass', 'insol',
+            'semi_au', 'tran_depth_ppm', 'eccen']
 
     for index, ican in dfk2[k2can].iterrows():
         srch = np.where((dfk2['name'] == ican['name']) &
@@ -1270,7 +1338,15 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(canonly['semi_au']) | (canonly['semi_au'] > 0)).all()
     assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
+    assert (~np.isfinite(canonly['rade_err1']) |
+            (canonly['rade_err1'] >= 0)).all()
+    assert (~np.isfinite(canonly['rade_err2']) |
+            (canonly['rade_err2'] <= 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
+    assert (~np.isfinite(canonly['radj_err1']) |
+            (canonly['radj_err1'] >= 0)).all()
+    assert (~np.isfinite(canonly['radj_err2']) |
+            (canonly['radj_err2'] <= 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['masse_err1'])).all()
     assert (~np.isfinite(canonly['masse_err2'])).all()
@@ -1288,6 +1364,18 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert ((~np.isfinite(canonly['rade'])) |
             ((canonly['rade'] / canonly['radj'] > 0.99 * radratio) &
              (canonly['rade'] / canonly['radj'] < 1.01 * radratio))).all()
+    assert np.allclose(np.isfinite(canonly['radj_err1']),
+                       np.isfinite(canonly['rade_err1']))
+    assert ((~np.isfinite(canonly['rade_err1'])) |
+            ((canonly['rade_err1'] / canonly['radj_err1'] > 0.99 * radratio) &
+             (canonly['rade_err1'] / canonly['radj_err1'] <
+              1.01 * radratio))).all()
+    assert np.allclose(np.isfinite(canonly['radj_err2']),
+                       np.isfinite(canonly['rade_err2']))
+    assert ((~np.isfinite(canonly['rade_err2'])) |
+            ((canonly['rade_err2'] / canonly['radj_err2'] > 0.99 * radratio) &
+             (canonly['rade_err2'] / canonly['radj_err2'] <
+              1.01 * radratio))).all()
 
     # these flags at least have the right number of good values
     assert not canonly['flag_kepler'].any()
@@ -1310,6 +1398,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # get easier to reference names for things in the ExoFOP listing
     renames = {'TFOPWG Disposition': 'disposition', 'TIC ID': 'IC',
                'Period (days)': 'period', 'Planet Radius (R_Earth)': 'rade',
+               'Planet Radius (R_Earth) err': 'rade_err1',
                'Stellar Radius (R_Sun)': 'st_rad',
                'Stellar Eff Temp (K)': 'st_teff',
                'Stellar Distance (pc)': 'distance_pc',
@@ -1364,8 +1453,12 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dftoi['ra'] = Angle(dftoi['RA'], unit='hourangle').degree
     dftoi['dec'] = Angle(dftoi['Dec'], unit='degree').degree
 
+    # assume symmetrical errors as they seem to do
+    dftoi['rade_err2'] = -1 * dftoi['rade_err1']
     # give TOIs units of Jupiter radii
     dftoi['radj'] = dftoi['rade'] / radratio
+    dftoi['radj_err1'] = dftoi['rade_err1'] / radratio
+    dftoi['radj_err2'] = dftoi['rade_err2'] / radratio
 
     # set the appropriate discovery facility for candidates
     dftoi['facility'] = 'TESS'
@@ -1557,6 +1650,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert newcon.sum() == (toicon.sum() + len(tobeconf) + len(nopermatch) -
                             len(waiting))
 
+    # XXX: is this still necessary?
     # replace everything with new TIC parameters because apparently some TOIs
     # were using TIC v7 and things aren't self-consistent
     dftoi['Kmag'] = np.nan
@@ -1573,7 +1667,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
             prev = dftoi.at[index, 'st_rad']
             dftoi.at[index, 'st_rad'] = fulltic['rad'][mt]
             dftoi.at[index, 'rade'] *= fulltic['rad'][mt]/prev
+            dftoi.at[index, 'rade_err1'] *= fulltic['rad'][mt] / prev
+            dftoi.at[index, 'rade_err2'] *= fulltic['rad'][mt] / prev
             dftoi.at[index, 'radj'] *= fulltic['rad'][mt]/prev
+            dftoi.at[index, 'radj_err1'] *= fulltic['rad'][mt] / prev
+            dftoi.at[index, 'radj_err2'] *= fulltic['rad'][mt] / prev
         dftoi.at[index, 'Kmag'] = fulltic['Kmag'][mt]
         dftoi.at[index, 'Jmag'] = fulltic['Jmag'][mt]
 
@@ -1672,7 +1770,15 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(canonly['semi_au']) | (canonly['semi_au'] > 0)).all()
     assert (~np.isfinite(canonly['insol']) | (canonly['insol'] > 0)).all()
     assert (~np.isfinite(canonly['rade']) | (canonly['rade'] > 0)).all()
+    assert (~np.isfinite(canonly['rade_err1']) |
+            (canonly['rade_err1'] >= 0)).all()
+    assert (~np.isfinite(canonly['rade_err2']) |
+            (canonly['rade_err2'] <= 0)).all()
     assert (~np.isfinite(canonly['radj']) | (canonly['radj'] > 0)).all()
+    assert (~np.isfinite(canonly['radj_err1']) |
+            (canonly['radj_err1'] >= 0)).all()
+    assert (~np.isfinite(canonly['radj_err2']) |
+            (canonly['radj_err2'] <= 0)).all()
     assert (~np.isfinite(canonly['masse'])).all()
     assert (~np.isfinite(canonly['massj'])).all()
     assert (~np.isfinite(canonly['eccen'])).all()
@@ -1686,6 +1792,18 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert ((~np.isfinite(canonly['rade'])) |
             ((canonly['rade'] / canonly['radj'] > 0.99 * radratio) &
              (canonly['rade'] / canonly['radj'] < 1.01 * radratio))).all()
+    assert np.allclose(np.isfinite(canonly['radj_err1']),
+                       np.isfinite(canonly['rade_err1']))
+    assert ((~np.isfinite(canonly['rade_err1'])) |
+            ((canonly['rade_err1'] / canonly['radj_err1'] > 0.99 * radratio) &
+             (canonly['rade_err1'] / canonly['radj_err1'] <
+              1.01 * radratio))).all()
+    assert np.allclose(np.isfinite(canonly['radj_err2']),
+                       np.isfinite(canonly['rade_err2']))
+    assert ((~np.isfinite(canonly['rade_err2'])) |
+            ((canonly['rade_err2'] / canonly['radj_err2'] > 0.99 * radratio) &
+             (canonly['rade_err2'] / canonly['radj_err2'] <
+              1.01 * radratio))).all()
 
     # these flags at least have the right number of good values
     assert not canonly['flag_kepler'].any()
@@ -1709,6 +1827,12 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert badm.sum() == 0
 
     badr = (np.isfinite(comp['rade']) ^ np.isfinite(comp['radj']))
+    assert badr.sum() == 0
+
+    badr = (np.isfinite(comp['rade_err1']) ^ np.isfinite(comp['radj_err1']))
+    assert badr.sum() == 0
+
+    badr = (np.isfinite(comp['rade_err2']) ^ np.isfinite(comp['radj_err2']))
     assert badr.sum() == 0
 
     getrad = np.isfinite(comp['masse']) & (~np.isfinite(comp['rade']))
