@@ -351,6 +351,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     ct = 0
     # 2 planets (OGLE-TR-111 b, Kepler-49 b) have different references
     # for the two masses
+    # XXX: notify archive
     for ii in np.arange(dfcon['masse'].size):
         r1 = dfcon.at[ii, 'pl_bmasse_reflink']
         r2 = dfcon.at[ii, 'pl_bmassj_reflink']
@@ -384,17 +385,24 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # avoid a defrag warning without dealing with cleaning up the code
     dfcon = dfcon.copy()
 
+    # XXX: notify archive
+    ct = 0
+    for ii in np.arange(dfcon['masse'].size):
+        r1 = dfcon.at[ii, 'pl_rade_reflink']
+        r2 = dfcon.at[ii, 'pl_radj_reflink']
+        if r1 != r2:
+            ct += 1
+    assert ct == 4
     # jupiter/earth radius ratio
     radratio = (const.R_jup/const.R_earth).value
     badrj = (np.isfinite(dfcon['radj']) ^ np.isfinite(dfcon['rade']))
-    # XXX: this bad 1 needs to be fixed
+    # XXX: notify archive
     assert badrj.sum() == 1
     badrj1 = (np.isfinite(dfcon['radj_err1']) ^ np.isfinite(dfcon['rade_err1']))
     assert badrj1.sum() == 1
     badrj2 = (np.isfinite(dfcon['radj_err2']) ^ np.isfinite(dfcon['rade_err2']))
     assert badrj2.sum() == 1
     assert np.allclose(badrj, badrj1) and np.allclose(badrj, badrj2)
-    dfcon.loc[badrj, ['radj']] = dfcon.loc[badrj, ['rade']] / radratio
     # remove calculated values from true radii. we'll make a calculated
     # column later
     badre = dfcon['pl_rade_reflink'].str.contains('Calculated')
@@ -411,7 +419,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # convert their depth in % to depth in ppm
     dfcon['tran_depth_ppm'] *= 1e4
-    # we should have transit depths for these
+    # we should have transit depths for these, the papers just reported
+    # only radii and not depths, so guesstimate
     getdep = (dfcon['flag_tran'] & (~np.isfinite(dfcon['tran_depth_ppm'])) &
               np.isfinite(dfcon['rade']) & np.isfinite(dfcon['st_rad']))
 
@@ -422,20 +431,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # for some reason these claim to have transits but either no
     # stellar or planet radius measurement
-    getdep = (dfcon['flag_tran'] & (~np.isfinite(dfcon['tran_depth_ppm'])) &
-              np.isfinite(dfcon['rade']) & np.isfinite(dfcon['st_rad']))
-    assert getdep.sum() == 0
-
     getrad = (dfcon['flag_tran'] & np.isfinite(dfcon['tran_depth_ppm']) &
-              (~np.isfinite(dfcon['rade'])) & np.isfinite(dfcon['st_rad']))
+              ((~np.isfinite(dfcon['rade'])) | (~np.isfinite(dfcon['st_rad']))))
     assert getrad.sum() == 0
 
-    """
-    # fix these inconsistencies by hand for now
-    baddep = ((dfcon['tran_depth_ppm'] < tranrat/3) |
-              (dfcon['tran_depth_ppm'] > tranrat*3)) & (dfcon['rade'] < 4)
-    dfcon.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
-    """
     # set whether these were observed by Kepler or K2
     dfcon['flag_kepler'] = False
     # these were labeled in the old table as being in the Kepler field
@@ -592,7 +591,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # HD 155918 b: -0.08
     # HD 217786 c: -0.52
     # HD 93351 b: -0.13
-    # XXX: These were fixed in publication, but archive hasn't updated
+    # XXX: notify archive. These were fixed in publication, but archive
+    #  hasn't updated
     goodecc = (~np.isfinite(dfcon['eccen']) |
                ((dfcon['eccen'] >= 0) & (dfcon['eccen'] < 1)))
     assert (~goodecc).sum() == 3
@@ -694,6 +694,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert len(dfkoi[dfkoi['name'] == 'KOI-1101.02']) == 0
 
     # these were removed as FPs from the confirmed talbe, but not the KOI list
+    # XXX: notify archive
     newfps = ['Kepler-699 b', 'Kepler-840 b', 'Kepler-854 b', 'Kepler-486 b',
               'Kepler-492 b']
     badrows = np.isin(dfkoi['kepler_name'], newfps)
@@ -705,7 +706,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     koicon = dfkoi['disposition'] == 'Confirmed'
     koican = dfkoi['disposition'] == 'Candidate'
 
-    # KOI-4441 and 5475 was a KOI at half the period of the confirmed planet
+    # KOI-4441, 4777, 5475 were KOIs at half the period of the confirmed planet
     # and 5568 a KOI at 1/3 the confirmed period. KOI-2174.03 confirmed at
     # double the period
     excluded = ['KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01', 'KOI-2174.03',
@@ -910,15 +911,6 @@ def load_data(updated_koi_params=True, only_candidates=True):
             np.isfinite(dfkoi['rade'])).sum()
     assert cons == 0
 
-    """
-    # fix these inconsistencies by hand for now
-    tranrat = dfkoi['rade']**2 / (dfkoi['st_rad'] * sunearth)**2
-    tranrat *= 1e6
-    baddep = ((dfkoi['tran_depth_ppm'] < tranrat/3) |
-              (dfkoi['tran_depth_ppm'] > tranrat*3)) & (dfkoi['rade'] < 4)
-    dfkoi.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
-    """
-
     # all KOIs transit
     dfkoi['flag_tran'] = True
 
@@ -1068,14 +1060,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dfk2.loc[dfcon['pl_trandurlim'] != 0, 'tran_dur_hr'] = np.nan
     dfk2.loc[dfcon['pl_ratrorlim'] != 0, 'pl_ratror'] = np.nan
 
-    # The K2 tables don't have both columns always filled in
+    # make sure we have both values defined
     noearth = (~np.isfinite(dfk2['rade']) & np.isfinite(dfk2['radj']))
-    rees = ['rade', 'rade_err1', 'rade_err2']
-    rjjs = ['radj', 'radj_err1', 'radj_err2']
-    dfk2.loc[noearth, rees] = dfk2.loc[noearth, rjjs] * radratio
-
+    assert noearth.sum() == 0
     nojup = (np.isfinite(dfk2['rade']) & (~np.isfinite(dfk2['radj'])))
-    dfk2.loc[nojup, rjjs] = dfk2.loc[nojup, rees] / radratio
+    assert nojup.sum() == 0
 
     # because earth and jup radii don't always agree, make them
     # uniform and treat Earth as truth
@@ -1087,6 +1076,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dfk2['disposition'] = dfk2['disposition'].str.title()
     assert np.unique(dfk2['disposition']).size == 3
 
+    # avoid a defrag warning without dealing with cleaning up the code
+    dfk2 = dfk2.copy()
     # set the appropriate discovery facility for candidates
     dfk2['facility'] = 'K2'
 
@@ -1136,8 +1127,6 @@ def load_data(updated_koi_params=True, only_candidates=True):
             bad.append(iobj)
         assert np.unique(dfk2['disposition'][vv]).size == 1
 
-    # also test explicitly by RA/Dec/Period
-
     # the Kruse sample got K2-19 and K2-24 periods wrong,
     # Crossfield got K2-22 wrong, Kruse/Mayo disagree on K2-189 by 2x
     # the rest are usually a NaN period
@@ -1175,6 +1164,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # these are confirmed planets that aren't listed as such, so match them up
     # and set them as confirmed
+    # XXX: notify archive
     k2known = ['EPIC 212555594.02', 'EPIC 201357835.01']
     plname = ['K2-192 b', 'K2-245 b']
     reknown = np.zeros(len(k2known), dtype=bool)
@@ -1230,17 +1220,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dfk2.loc[getrad, 'rade'] = tranrad[getrad]
     dfk2.loc[getrad, 'radj'] = tranrad[getrad] / radratio
 
-    """
-    # fix these inconsistencies by hand for now
-    tranrat = dfk2['rade']**2 / (dfk2['st_rad'] * sunearth)**2
-    tranrat *= 1e6
-    baddep = ((dfk2['tran_depth_ppm'] < tranrat/3) |
-              (dfk2['tran_depth_ppm'] > tranrat*3)) & (dfk2['rade'] < 4)
-    dfk2.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
-    """
-
     # fill in any missing luminosities with our own calculation
-    # (archive claims they already do this, but lots are missing)
     tmplums = (dfk2['st_rad']**2) * ((dfk2['st_teff'] / 5772)**4)
     toadd = (~np.isfinite(dfk2['st_log_lum'])) & np.isfinite(tmplums)
     dfk2.loc[toadd, 'st_log_lum'] = np.log10(tmplums[toadd])
@@ -1289,11 +1269,6 @@ def load_data(updated_koi_params=True, only_candidates=True):
                     np.isfinite(dfk2[icol][srch]).any()):
                 dfk2.at[index, icol] = np.nanmedian(dfk2[icol][srch])
 
-    # this EPIC doesn't really exist and thus doesn't have properties.
-    # at least give it a sky position from MAST
-    dfk2.loc[dfk2['IC'] == 229228348, 'ra'] = 289.5273417
-    dfk2.loc[dfk2['IC'] == 229228348, 'dec'] = -16.3430889
-
     # do all the tests to make sure things are working, only focusing on
     # candidates since that's all we're adding to output. FPs can be weird.
     canonly = dfk2[k2can]
@@ -1328,7 +1303,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(canonly['Jmag']) | (canonly['Jmag'] > 4)).all()
 
     # RA and Dec are both valid
-    # XXX: for now
+    # XXX: notify archive
     warnings.warn('put K2 ra dec test back when ready.')
     # assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
     # assert ((canonly['dec'] >= -90) & (canonly['dec'] <= 90.)).all()
@@ -1401,6 +1376,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'Planet Radius (R_Earth) err': 'rade_err1',
                'Stellar Radius (R_Sun)': 'st_rad',
                'Stellar Eff Temp (K)': 'st_teff',
+               'Stellar Mass (M_Sun)': 'st_mass',
                'Stellar Distance (pc)': 'distance_pc',
                'Planet Insolation (Earth Flux)': 'insol',
                'Depth (ppm)': 'tran_depth_ppm',
@@ -1650,28 +1626,33 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert newcon.sum() == (toicon.sum() + len(tobeconf) + len(nopermatch) -
                             len(waiting))
 
-    # XXX: is this still necessary?
-    # replace everything with new TIC parameters because apparently some TOIs
-    # were using TIC v7 and things aren't self-consistent
-    dftoi['Kmag'] = np.nan
-    dftoi['Jmag'] = np.nan
+    # replace everything with new TIC parameters because the TOI parameters
+    # rely on the TESS Project stellar parameters, which can sometimes be
+    # a bit outdated. almost always doesn't make much difference though.
+    dftoi[['Jmag', 'Kmag', 'st_log_lum']] = np.nan
     for index, itoi in dftoi.iterrows():
         mt = np.where(itoi['IC'] == fulltic['ID'])[0][0]
+        # update to the TIC Teff, since the TESS Project ones seem outdated
         if np.isfinite(fulltic['Teff'][mt]):
             dftoi.at[index, 'st_teff'] = fulltic['Teff'][mt]
         if np.isfinite(fulltic['mass'][mt]):
-            dftoi.at[index, 'st_mass'] = fulltic['mass'][mt]
+            prev = dftoi.at[index, 'st_mass']
+            # seems like the masses are always pulled straight from TIC 8.2
+            if (not np.allclose(prev, fulltic['mass'][mt]) and np.isfinite(prev)
+                    and itoi['disposition'] != 'False Positive'):
+                raise Exception('bad m')
         if np.isfinite(fulltic['lum'][mt]) and fulltic['lum'][mt] > 0:
             dftoi.at[index, 'st_log_lum'] = np.log10(fulltic['lum'][mt])
         if np.isfinite(fulltic['rad'][mt]):
             prev = dftoi.at[index, 'st_rad']
             dftoi.at[index, 'st_rad'] = fulltic['rad'][mt]
-            dftoi.at[index, 'rade'] *= fulltic['rad'][mt]/prev
-            dftoi.at[index, 'rade_err1'] *= fulltic['rad'][mt] / prev
-            dftoi.at[index, 'rade_err2'] *= fulltic['rad'][mt] / prev
-            dftoi.at[index, 'radj'] *= fulltic['rad'][mt]/prev
-            dftoi.at[index, 'radj_err1'] *= fulltic['rad'][mt] / prev
-            dftoi.at[index, 'radj_err2'] *= fulltic['rad'][mt] / prev
+            if np.isfinite(prev):
+                dftoi.at[index, 'rade'] *= fulltic['rad'][mt]/prev
+                dftoi.at[index, 'rade_err1'] *= fulltic['rad'][mt] / prev
+                dftoi.at[index, 'rade_err2'] *= fulltic['rad'][mt] / prev
+                dftoi.at[index, 'radj'] *= fulltic['rad'][mt]/prev
+                dftoi.at[index, 'radj_err1'] *= fulltic['rad'][mt] / prev
+                dftoi.at[index, 'radj_err2'] *= fulltic['rad'][mt] / prev
         dftoi.at[index, 'Kmag'] = fulltic['Kmag'][mt]
         dftoi.at[index, 'Jmag'] = fulltic['Jmag'][mt]
 
@@ -1695,8 +1676,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     getdep = (dftoi['flag_tran'] & (~np.isfinite(dftoi['tran_depth_ppm'])) &
               np.isfinite(dftoi['rade']) & np.isfinite(dftoi['st_rad']))
     assert getdep.sum() == 0
-    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * sunearth)**2
-    dftoi.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep] * 1e6
+    # tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * sunearth)**2
+    # dftoi.loc[getdep, 'tran_depth_ppm'] = tranrat[getdep] * 1e6
 
     # we should have a radius if they gave a depth
     getrad = (dftoi['flag_tran'] & np.isfinite(dftoi['tran_depth_ppm']) &
@@ -1705,15 +1686,6 @@ def load_data(updated_koi_params=True, only_candidates=True):
     tranrad *= sunearth
     dftoi.loc[getrad, 'rade'] = tranrad[getrad]
     dftoi.loc[getrad, 'radj'] = tranrad[getrad] / radratio
-
-    """
-    # fix these by hand for now
-    tranrat = dftoi['rade']**2 / (dftoi['st_rad'] * sunearth)**2
-    tranrat *= 1e6
-    baddep = ((dftoi['tran_depth_ppm'] < tranrat/3) |
-              (dftoi['tran_depth_ppm'] > tranrat*3)) & (dftoi['rade'] < 4)
-    dftoi.loc[baddep, 'tran_depth_ppm'] = tranrat[baddep]
-    """
 
     # these have not been confirmed
     dftoi['year_confirmed'] = np.nan
@@ -1879,8 +1851,6 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # save our final version of the data frame to use in making all the plots
     comp.to_csv('data/exoplots_data.csv', index=False)
-
-    # XXX: check that the planet is smaller than the star in all cases
 
     return dfcon, dfkoi, dfk2, dftoi, comp
 
