@@ -1304,7 +1304,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # RA and Dec are both valid
     # XXX: notify archive
-    warnings.warn('put K2 ra dec test back when ready.')
+    # warnings.warn('put K2 ra dec test back when ready.')
+    # for now this fails, set this up to trigger when it passes again
+    assert not ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
+    assert not ((canonly['dec'] >= -90) & (canonly['dec'] <= 90.)).all()
     # assert ((canonly['ra'] >= 0) & (canonly['ra'] <= 360.)).all()
     # assert ((canonly['dec'] >= -90) & (canonly['dec'] <= 90.)).all()
 
