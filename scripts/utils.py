@@ -1551,6 +1551,9 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-1468.02', 'TOI-4270.01', 'TOI-5970.01', 'TOI-277.01',
                 'TOI-1288.01', 'TOI-1695.01', 'TOI-1097.02', 'TOI-4582.01',
                 'TOI-4342.01', 'TOI-4342.02', 'TOI-4562.01', 'TOI-2076.03',
+                'TOI-544.01',
+                'TOI-6081.01', 'TOI-6088.01', 'TOI-6089.01',
+                'TOI-6090.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
@@ -1566,8 +1569,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = []
-    confmatch = []
+    nopermatch = ['TOI-6083.01', 'TOI-6087.01']
+    confmatch = ['Kepler-858 b', 'Kepler-134 b']
     singconf = np.zeros(len(nopermatch), dtype=bool)
     singcands = ['TOI-5523.01']
     singc = np.zeros(len(singcands), dtype=bool)
