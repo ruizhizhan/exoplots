@@ -392,17 +392,19 @@ def load_data(updated_koi_params=True, only_candidates=True):
         r2 = dfcon.at[ii, 'pl_radj_reflink']
         if r1 != r2:
             ct += 1
-    assert ct == 4
+    assert ct == 5
     # jupiter/earth radius ratio
     radratio = (const.R_jup/const.R_earth).value
     badrj = (np.isfinite(dfcon['radj']) ^ np.isfinite(dfcon['rade']))
     # XXX: notify archive
     assert badrj.sum() == 1
     badrj1 = (np.isfinite(dfcon['radj_err1']) ^ np.isfinite(dfcon['rade_err1']))
-    assert badrj1.sum() == 1
+    assert badrj1.sum() == 2
     badrj2 = (np.isfinite(dfcon['radj_err2']) ^ np.isfinite(dfcon['rade_err2']))
-    assert badrj2.sum() == 1
-    assert np.allclose(badrj, badrj1) and np.allclose(badrj, badrj2)
+    assert badrj2.sum() == 2
+    # XXX: notify archive 2. this has gotten worse and is no longer true.
+    # assert np.allclose(badrj, badrj1) and np.allclose(badrj, badrj2)
+
     # remove calculated values from true radii. we'll make a calculated
     # column later
     badre = dfcon['pl_rade_reflink'].str.contains('Calculated')
@@ -1130,12 +1132,13 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # the Kruse sample got K2-19 and K2-24 periods wrong,
     # Crossfield got K2-22 wrong, Kruse/Mayo disagree on K2-189 by 2x
     # the rest are usually a NaN period
+    # V1298 is a refined period from a single transit in K2 to another with TESS
     k2exclude = ['K2-19 c', 'K2-24 c', 'K2-22 b',
                  'K2-189 b', 'HIP 41378 d', 'WASP-47 b', 'WASP-47 c',
                  'K2-132 b', 'HD 3167 c', 'K2-97 b', 'HIP 41378 e',
                  'HIP 41378 f', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
                  'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
-                 'TRAPPIST-1 h', 'WASP-107 b']
+                 'TRAPPIST-1 h', 'WASP-107 b', 'V1298 Tau e']
     isexclude = np.zeros(len(k2exclude), dtype=bool)
 
     # make sure all confirmed K2 planets are in the confirmed table exactly once
@@ -1474,13 +1477,14 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # these we have an explanation for and know they're properly in the
     # confirmed table. 2011, 2221 are single transits, so no period matching.
-    # 351 TESS got the period wrong by 2x
+    # 351 TESS got the period wrong by 2x. TOI-561 was 2 transits of different
+    # planets.
     ignores = ['TOI-2011.01', 'TOI-2221.01', 'TOI-4581.02', 'TOI-5980.01',
                'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02',
-               'TOI-6083.01', 'TOI-6087.01']
+               'TOI-6083.01', 'TOI-6087.01', 'TOI-561.03']
     conname = ['HD 136352 b', 'AU Mic b', 'KOI-94 e', 'Kepler-37 d',
                'WASP-165 b', 'NGTS-11 b', 'HD 152843 c', 'TOI-216.02',
-               'Kepler-858 b', 'Kepler-134 b']
+               'Kepler-858 b', 'Kepler-134 b', 'TOI-561 d']
     # we know what these are, and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
@@ -1488,13 +1492,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
     waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01', 'TOI-626.01',
                'TOI-657.01', 'TOI-834.01', 'TOI-840.01', 'TOI-857.01',
                'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01', 'TOI-261.02',
-               'TOI-262.01', 'TOI-469.01', 'TOI-682.01',
-               'TOI-1054.01', 'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01',
-               'TOI-1774.01', 'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01',
-               'TOI-1811.01', 'TOI-2145.01', 'TOI-2152.01', 'TOI-2154.01',
-               'TOI-2497.01', 'TOI-5153.01', 'TOI-4406.01', 'TOI-5205.01',
-               'TOI-5812.01', 'TOI-1260.03', 'TOI-2338.01', 'TOI-2589.01',
-               'TOI-3984.01', 'TOI-5293.01']
+               'TOI-262.01', 'TOI-469.01', 'TOI-682.01', 'TOI-1054.01',
+               'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
+               'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
+               'TOI-4406.01', 'TOI-5812.01', 'TOI-1260.03', 'TOI-2338.01',
+               'TOI-2589.01', 'TOI-3984.01', 'TOI-5293.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1541,7 +1543,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert len(earlycps) == 0
 
     # these are now confirmed and need to be updated as such
-    tobeconf = ['TOI-515.01', 'TOI-544.01', 'TOI-1272.01',
+    tobeconf = ['TOI-515.01', 'TOI-1272.01', 'TOI-181.01',
                 'TOI-836.02', 'TOI-1937.01', 'TOI-2364.01', 'TOI-2525.01',
                 'TOI-2525.02', 'TOI-2583.01', 'TOI-2587.01', 'TOI-2796.01',
                 'TOI-2803.01', 'TOI-2818.01', 'TOI-2842.01', 'TOI-2977.01',
