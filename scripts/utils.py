@@ -392,7 +392,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
         r2 = dfcon.at[ii, 'pl_radj_reflink']
         if r1 != r2:
             ct += 1
-    assert ct == 5
+    assert ct == 4
     # jupiter/earth radius ratio
     radratio = (const.R_jup/const.R_earth).value
     badrj = (np.isfinite(dfcon['radj']) ^ np.isfinite(dfcon['rade']))
@@ -1140,7 +1140,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
                  'K2-132 b', 'HD 3167 c', 'K2-97 b', 'HIP 41378 e',
                  'HIP 41378 f', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
                  'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
-                 'TRAPPIST-1 h', 'WASP-107 b', 'V1298 Tau e']
+                 'TRAPPIST-1 h', 'WASP-107 b', 'V1298 Tau e', 'HD 3167 d',
+                 'HD 3167 e']
     isexclude = np.zeros(len(k2exclude), dtype=bool)
 
     # make sure all confirmed K2 planets are in the confirmed table exactly once
@@ -1500,7 +1501,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'TOI-5812.01', 'TOI-1260.03', 'TOI-2589.01', 'TOI-3984.01',
                'TOI-5293.01', 'TOI-244.01', 'TOI-6101.01', 'TOI-615.01',
                'TOI-622.01', 'TOI-2641.01', 'TOI-4127.01', 'TOI-6170.01',
-               'TOI-3785.01', 'TOI-733.01']
+               'TOI-3785.01', 'TOI-778.01', 'TOI-2095.01', 'TOI-2095.02']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
