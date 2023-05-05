@@ -16,27 +16,27 @@ tt = datetime.now().strftime('%H:%M:%S')
 print(f"{tt} Downloading all confirmed planets from NExSci...")
 df = pd.read_csv(NEW_API + 'select+*+from+pscomppars&format=csv',
                  low_memory=False)
-df.to_csv('data/confirmed-planets.csv')
+df.to_csv('data/confirmed-planets.csv', index=False)
 
 # full KOI table
 tt = datetime.now().strftime('%H:%M:%S')
 print(f'{tt} Downloading full KOI table from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*')
-df.to_csv('data/kepler-kois-full.csv')
+df.to_csv('data/kepler-kois-full.csv', index=False)
 
 # grab all the K2 candidates (or at least the ones they have put into this
 # not-quite-complete table)
 tt = datetime.now().strftime('%H:%M:%S')
 print(f'{tt} Downloading full K2 candidates table from NExSci...')
 df = pd.read_csv(NEW_API + 'select+*+from+k2pandc&format=csv', low_memory=False)
-df.to_csv('data/k2-candidates-table.csv')
+df.to_csv('data/k2-candidates-table.csv', index=False)
 
 # get the TOI list from ExoFOP-TESS.
 tt = datetime.now().strftime('%H:%M:%S')
 print(f'{tt} Downloading full TESS candidates table from ExoFOP...')
 df = pd.read_csv('https://exofop.ipac.caltech.edu/tess/download_toi.php?sort'
                  '=toi&output=csv')
-df.to_csv('data/tess-candidates.csv')
+df.to_csv('data/tess-candidates.csv', index=False)
 
 with open('data/last_update_time.txt', 'w') as ff:
     ff.write(str(datetime.now()))

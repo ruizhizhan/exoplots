@@ -1050,6 +1050,12 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'st_lum': 'st_log_lum'}
     dfk2.rename(columns=renames, inplace=True)
 
+    # ignore the microlensing one in the K2 table. it's handled in the confirmed
+    lens = dfk2['name'] == 'K2-2016-BLG-0005L b'
+    assert lens.sum() == 2
+    dfk2 = dfk2[~lens]
+    dfk2 = dfk2.reset_index(drop=True)
+
     # upper/lower limits are given values at that limit, and we need to remove
     # them for now
     dfk2.loc[dfk2['pl_orbperlim'] != 0, 'period'] = np.nan
@@ -1141,7 +1147,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                  'HIP 41378 f', 'TRAPPIST-1 b', 'TRAPPIST-1 c',
                  'TRAPPIST-1 d', 'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g',
                  'TRAPPIST-1 h', 'WASP-107 b', 'V1298 Tau e', 'HD 3167 d',
-                 'HD 3167 e']
+                 'HD 3167 e', 'K2-290 b', 'K2-290 c']
     isexclude = np.zeros(len(k2exclude), dtype=bool)
 
     # make sure all confirmed K2 planets are in the confirmed table exactly once
@@ -1501,7 +1507,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'TOI-5812.01', 'TOI-1260.03', 'TOI-2589.01', 'TOI-3984.01',
                'TOI-5293.01', 'TOI-244.01', 'TOI-6101.01', 'TOI-615.01',
                'TOI-622.01', 'TOI-2641.01', 'TOI-4127.01', 'TOI-6170.01',
-               'TOI-3785.01', 'TOI-778.01', 'TOI-2095.01', 'TOI-2095.02']
+               'TOI-3785.01', 'TOI-2095.01', 'TOI-2095.02']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
