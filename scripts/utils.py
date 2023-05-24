@@ -523,6 +523,9 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # RA and Dec are both valid
     # XXX: while the WISE planet is still broken
+    ll = len(dfcon)
+    assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).sum() == ll - 1
+    assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).sum() == ll - 1
     # assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
     # assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
 
@@ -1508,7 +1511,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'TOI-5812.01', 'TOI-1260.03', 'TOI-2589.01', 'TOI-3984.01',
                'TOI-5293.01', 'TOI-6101.01', 'TOI-615.01',
                'TOI-622.01', 'TOI-2641.01', 'TOI-4127.01', 'TOI-6170.01',
-               'TOI-3785.01', 'TOI-2095.01', 'TOI-2095.02', 'TOI-2548.02']
+               'TOI-3785.01', 'TOI-2095.01', 'TOI-2095.02', 'TOI-2548.02',
+               'TOI-1471.01', 'TOI-1471.02']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
