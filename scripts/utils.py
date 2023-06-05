@@ -522,12 +522,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(dfcon['Jmag']) | (dfcon['Jmag'] > -5)).all()
 
     # RA and Dec are both valid
-    # XXX: while the WISE planet is still broken
-    ll = len(dfcon)
-    assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).sum() == ll - 1
-    assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).sum() == ll - 1
-    # assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
-    # assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
+    assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
+    assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
 
     # planet parameters are either NaN or > 0
     assert (~np.isfinite(dfcon['period']) | (dfcon['period'] > 0)).all()
@@ -1567,6 +1563,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-3807.01', 'TOI-3819.01', 'TOI-3912.01', 'TOI-3976.01',
                 'TOI-4087.01', 'TOI-4145.01', 'TOI-4463.01', 'TOI-4791.01',
                 'TOI-2096.01', 'TOI-2096.02', 'TOI-5557.01', 'TOI-1221.01',
+                'TOI-139.01', 'TOI-672.01', 'TOI-715.01', 'TOI-913.01',
+                'TOI-1099.01', 'TOI-2194.01', 'TOI-2443.01', 'TOI-2459.01',
+                'TOI-2498.01', 'TOI-3082.01', 'TOI-4308.01', 'TOI-5704.01',
+                'TOI-5803.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
