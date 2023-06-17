@@ -50,7 +50,12 @@ if run:
     dfk2 = pd.read_csv(k2file, low_memory=False)
     epics = []
     for iep in dfk2['epic_hostname']:
-        epics.append(int(iep[4:]))
+        if type(iep) == str:
+            assert iep[:4] == 'EPIC'
+            epics.append(int(iep[4:]))
+        else:
+            assert np.isnan(iep)
+            epics.append(0)
     epics = np.array(epics)
     tics = []
     for itic in dfk2['tic_id']:
@@ -89,8 +94,8 @@ if run:
     xmatch = pd.read_csv('data/k2ticxmatch_20210831.csv')
 
     # these FPs don't match anything for some reason.
-    knownbadepic = [251809286, 251809628]
-    knownbadtic = [-251809286, -251809628]
+    knownbadepic = [251809286, 251809628, 0]
+    knownbadtic = [-251809286, -251809628, 0]
     k2dists = []
     k2tics = []
     for ii, ik2 in enumerate(uepics):

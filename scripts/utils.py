@@ -589,15 +589,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (dfcon['year_discovered'] >= 1989).all()
     assert np.allclose(dfcon['year_confirmed'], dfcon['year_discovered'])
 
-    # eccentricity check. ignore these 3 bad ones
-    # HD 155918 b: -0.08
-    # HD 217786 c: -0.52
-    # HD 93351 b: -0.13
-    # XXX: notify archive. These were fixed in publication, but archive
-    #  hasn't updated
-    goodecc = (~np.isfinite(dfcon['eccen']) |
-               ((dfcon['eccen'] >= 0) & (dfcon['eccen'] < 1)))
-    assert (~goodecc).sum() == 3
+    assert (~np.isfinite(dfcon['eccen']) |
+            ((dfcon['eccen'] >= 0) & (dfcon['eccen'] < 1))).all()
 
     # create the composite, single data frame for all the planets and
     # planet candidates
@@ -1506,9 +1499,9 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
                'TOI-5812.01', 'TOI-1260.03', 'TOI-2589.01', 'TOI-3984.01',
                'TOI-5293.01', 'TOI-6101.01', 'TOI-615.01',
-               'TOI-622.01', 'TOI-2641.01', 'TOI-4127.01', 'TOI-6170.01',
+               'TOI-622.01', 'TOI-2641.01', 'TOI-6170.01',
                'TOI-3785.01', 'TOI-2095.01', 'TOI-2095.02', 'TOI-2548.02',
-               'TOI-1471.01', 'TOI-1471.02', 'TOI-1859.01',
+               'TOI-1471.01', 'TOI-1471.02', 'TOI-1470.01', 'TOI-2018.01',
                'TOI-461.01', 'TOI-4010.01', 'TOI-4010.02', 'TOI-4010.03',
                'TOI-5678.01']
     earlycps = []
@@ -1568,7 +1561,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-139.01', 'TOI-672.01', 'TOI-715.01', 'TOI-913.01',
                 'TOI-1099.01', 'TOI-2194.01', 'TOI-2443.01', 'TOI-2459.01',
                 'TOI-2498.01', 'TOI-3082.01', 'TOI-4308.01', 'TOI-5704.01',
-                'TOI-5803.01',
+                'TOI-5803.01', 'TOI-1416.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
