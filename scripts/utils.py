@@ -528,7 +528,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # planet parameters are either NaN or > 0
     assert (~np.isfinite(dfcon['period']) | (dfcon['period'] > 0)).all()
     assert (~np.isfinite(dfcon['semi_au']) | (dfcon['semi_au'] > 0)).all()
-    assert (~np.isfinite(dfcon['insol']) | (dfcon['insol'] > 0)).all()
+    # XXX: while they're truncating at 2 decimal places, BD-21 397 c is broken
+    good = (~np.isfinite(dfcon['insol']) | (dfcon['insol'] > 0))
+    # assert (~np.isfinite(dfcon['insol']) | (dfcon['insol'] > 0)).all()
+    assert (~good).sum() == 1
     assert (~np.isfinite(dfcon['rade']) | (dfcon['rade'] > 0)).all()
     assert (~np.isfinite(dfcon['rade_err1']) | (dfcon['rade_err1'] >= 0)).all()
     assert (~np.isfinite(dfcon['rade_err2']) | (dfcon['rade_err2'] <= 0)).all()
@@ -1501,9 +1504,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'TOI-5293.01', 'TOI-6101.01', 'TOI-615.01',
                'TOI-622.01', 'TOI-2641.01', 'TOI-6170.01',
                'TOI-3785.01', 'TOI-2095.01', 'TOI-2095.02', 'TOI-2548.02',
-               'TOI-1471.01', 'TOI-1471.02', 'TOI-1470.01', 'TOI-2018.01',
-               'TOI-461.01', 'TOI-4010.01', 'TOI-4010.02', 'TOI-4010.03',
-               'TOI-5678.01']
+               'TOI-1471.02', 'TOI-1470.01', 'TOI-5678.01',
+               'TOI-696.03', 'TOI-784.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1561,7 +1563,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-139.01', 'TOI-672.01', 'TOI-715.01', 'TOI-913.01',
                 'TOI-1099.01', 'TOI-2194.01', 'TOI-2443.01', 'TOI-2459.01',
                 'TOI-2498.01', 'TOI-3082.01', 'TOI-4308.01', 'TOI-5704.01',
-                'TOI-5803.01', 'TOI-1416.01',
+                'TOI-5803.01', 'TOI-1416.01', 'TOI-2000.01', 'TOI-2000.02',
+                'TOI-6546.01', 'TOI-6547.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
