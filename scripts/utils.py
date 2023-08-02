@@ -522,10 +522,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(dfcon['Jmag']) | (dfcon['Jmag'] > -5)).all()
 
     # RA and Dec are both valid
-    tmp = (dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)
-    assert tmp.sum() == tmp.size - 1
-    # assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
-    # assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
+    assert ((dfcon['ra'] >= 0) & (dfcon['ra'] <= 360.)).all()
+    assert ((dfcon['dec'] >= -90) & (dfcon['dec'] <= 90.)).all()
 
     # planet parameters are either NaN or > 0
     assert (~np.isfinite(dfcon['period']) | (dfcon['period'] > 0)).all()
