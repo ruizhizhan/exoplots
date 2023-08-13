@@ -1143,7 +1143,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                  'K2-19 c', 'K2-22 b', 'K2-24 c', 'K2-290 b', 'K2-290 c',
                  'K2-97 b', 'TRAPPIST-1 b', 'TRAPPIST-1 c', 'TRAPPIST-1 d',
                  'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g', 'TRAPPIST-1 h',
-                 'V1298 Tau c', 'V1298 Tau e', 'WASP-107 b', 'WASP-47 b',
+                 'V1298 Tau e', 'WASP-107 b', 'WASP-47 b',
                  'WASP-47 c']
 
     isexclude = np.zeros(len(k2exclude), dtype=bool)
@@ -1499,13 +1499,12 @@ def load_data(updated_koi_params=True, only_candidates=True):
     waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01', 'TOI-626.01',
                'TOI-657.01', 'TOI-834.01', 'TOI-840.01', 'TOI-857.01',
                'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01', 'TOI-261.02',
-               'TOI-262.01', 'TOI-469.01', 'TOI-682.01', 'TOI-1054.01',
+               'TOI-469.01', 'TOI-682.01', 'TOI-1054.01',
                'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
                'TOI-5812.01', 'TOI-1260.03', 'TOI-6101.01', 'TOI-6170.01',
-               'TOI-2095.01', 'TOI-2095.02', 'TOI-1471.02', 'TOI-1470.01',
-               'TOI-5678.01', 'TOI-696.03', 'TOI-4201.01', 'TOI-1052.01',
-               'TOI-4860.01']
+               'TOI-2095.01', 'TOI-2095.02', 'TOI-1471.02',
+               'TOI-5678.01', 'TOI-696.03', 'TOI-4201.01', 'TOI-4860.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1565,6 +1564,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-2498.01', 'TOI-3082.01', 'TOI-4308.01', 'TOI-5704.01',
                 'TOI-5803.01', 'TOI-1416.01', 'TOI-2000.01', 'TOI-2000.02',
                 'TOI-908.01', 'TOI-1430.01', 'TOI-2084.01', 'TOI-4184.01',
+                'TOI-444.01', 'TOI-470.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
