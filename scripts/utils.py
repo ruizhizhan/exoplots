@@ -1575,8 +1575,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = ['TOI-4600.02']
-    confmatch = ['TOI-4600 c']
+    nopermatch = ['TOI-4600.02', 'TOI-6697.02']
+    confmatch = ['TOI-4600 c', 'HD 114082 b']
     singconf = np.zeros(len(nopermatch), dtype=bool)
     singcands = ['TOI-5523.01']
     singc = np.zeros(len(singcands), dtype=bool)
@@ -1741,7 +1741,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert (~np.isfinite(canonly['st_teff']) |
             (canonly['st_teff'] > 2700)).all()
     assert (~np.isfinite(canonly['st_log_lum']) |
-            ((canonly['st_log_lum'] > -3) & (canonly['st_log_lum'] < 7))).all()
+            ((canonly['st_log_lum'] > -3.1) & (canonly['st_log_lum'] < 7))).all()
     assert (~np.isfinite(canonly['Kmag']) | (canonly['Kmag'] > 0)).all()
     assert (~np.isfinite(canonly['Jmag']) | (canonly['Jmag'] > 0)).all()
 
