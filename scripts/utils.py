@@ -1494,7 +1494,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01', 'TOI-626.01',
                'TOI-657.01', 'TOI-834.01', 'TOI-840.01', 'TOI-857.01',
                'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01', 'TOI-261.02',
-               'TOI-682.01', 'TOI-1054.01', 'TOI-1408.01',
+               'TOI-682.01', 'TOI-1054.01',
                'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
                'TOI-5812.01', 'TOI-1260.03', 'TOI-6101.01', 'TOI-6170.01',
@@ -1559,7 +1559,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-5803.01', 'TOI-1416.01', 'TOI-2000.01', 'TOI-2000.02',
                 'TOI-908.01', 'TOI-1430.01', 'TOI-2084.01', 'TOI-4184.01',
                 'TOI-444.01', 'TOI-470.01', 'TOI-198.01', 'TOI-332.01',
-                'TOI-910.01', 'TOI-1853.01', 'TOI-4600.01',
+                'TOI-910.01', 'TOI-1853.01', 'TOI-4600.01', 'TOI-199.01',
+                'TOI-858.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
