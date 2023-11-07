@@ -1,5 +1,5 @@
 numpy
 pandas
-bokeh==3.2.1
+bokeh==3.3.0
 astropy
 astroquery
