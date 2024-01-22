@@ -1498,7 +1498,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
                'TOI-5812.01', 'TOI-1260.03', 'TOI-6101.01', 'TOI-6170.01',
-               'TOI-5678.01', 'TOI-696.03', 'TOI-4515.01']
+               'TOI-5678.01', 'TOI-696.03', 'TOI-4515.01', 'TOI-2529.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
