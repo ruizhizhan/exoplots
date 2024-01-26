@@ -1548,6 +1548,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     tobeconf = ['TOI-2096.01', 'TOI-2096.02', 'TOI-1194.01', 'TOI-1420.01',
                 'TOI-5344.01', 'TOI-5398.02', 'TOI-2134.01', 'TOI-2373.01',
                 'TOI-2416.01', 'TOI-2524.01', 'TOI-4481.01', 'TOI-4641.01',
+                'TOI-6877.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
