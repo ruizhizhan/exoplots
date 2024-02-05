@@ -1481,12 +1481,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # confirmed table. 2011, 2221 are single transits, so no period matching.
     # 351 TESS got the period wrong by 2x. TOI-561 was 2 transits of different
     # planets.
-    ignores = [# 'TOI-2011.03',
-               'TOI-2221.01', 'TOI-4581.02', 'TOI-5980.01',
+    ignores = ['TOI-2011.03','TOI-2221.01', 'TOI-4581.02', 'TOI-5980.01',
                'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02',
                'TOI-6083.01', 'TOI-6087.01', 'TOI-561.03']
-    conname = [# 'HD 136352 d',
-               'AU Mic b', 'KOI-94 e', 'Kepler-37 d',
+    conname = ['HD 136352 d', 'AU Mic b', 'KOI-94 e', 'Kepler-37 d',
                'WASP-165 b', 'NGTS-11 b', 'HD 152843 c', 'TOI-216.02',
                'Kepler-858 b', 'Kepler-134 b', 'TOI-561 d']
     # we know what these are, and they have paper trails of submitted papers
@@ -1550,7 +1548,6 @@ def load_data(updated_koi_params=True, only_candidates=True):
     tobeconf = ['TOI-2096.01', 'TOI-2096.02', 'TOI-1194.01', 'TOI-1420.01',
                 'TOI-5344.01', 'TOI-5398.02', 'TOI-2134.01', 'TOI-2373.01',
                 'TOI-2416.01', 'TOI-2524.01', 'TOI-4481.01', 'TOI-4641.01',
-                'TOI-755.02',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
@@ -1567,10 +1564,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
-    nopermatch = ['TOI-4600.02', 'TOI-6697.02', 'TOI-1835.02', 'TOI-2134.02',
-                  'TOI-2011.03']
-    confmatch = ['TOI-4600 c', 'HD 114082 b', 'HD 110067 d', 'TOI-2134 c',
-                 'HD 136352 d']
+    nopermatch = ['TOI-4600.02', 'TOI-6697.02', 'TOI-1835.02', 'TOI-2134.02']
+    confmatch = ['TOI-4600 c', 'HD 114082 b', 'HD 110067 d', 'TOI-2134 c']
     singconf = np.zeros(len(nopermatch), dtype=bool)
     singcands = ['TOI-5523.01']
     singc = np.zeros(len(singcands), dtype=bool)
