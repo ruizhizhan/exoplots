@@ -1483,10 +1483,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # planets.
     ignores = ['TOI-2011.03','TOI-2221.01', 'TOI-4581.02', 'TOI-5980.01',
                'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02',
-               'TOI-6083.01', 'TOI-6087.01', 'TOI-561.03']
+               'TOI-6083.01', 'TOI-6087.01', 'TOI-561.03', 'TOI-1386.01']
     conname = ['HD 136352 d', 'AU Mic b', 'KOI-94 e', 'Kepler-37 d',
                'WASP-165 b', 'NGTS-11 b', 'HD 152843 c', 'TOI-216.02',
-               'Kepler-858 b', 'Kepler-134 b', 'TOI-561 d']
+               'Kepler-858 b', 'Kepler-134 b', 'TOI-561 d', 'TOI-1386 b']
     # we know what these are, and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
@@ -1498,7 +1498,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
                'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
                'TOI-5812.01', 'TOI-1260.03', 'TOI-6101.01', 'TOI-6170.01',
-               'TOI-5678.01', 'TOI-696.03', 'TOI-4515.01', 'TOI-2529.01']
+               'TOI-5678.01', 'TOI-696.03', 'TOI-4515.01', 'TOI-2529.01',
+               'TOI-329.01', 'TOI-480.01', 'TOI-603.01', 'TOI-1105.01',
+               'TOI-1135.01', 'TOI-1199.01', 'TOI-1273.01', 'TOI-1294.01',
+               'TOI-1439.01', 'TOI-1605.01', 'TOI-1828.01', 'TOI-1836.01',
+               'TOI-1885.01', 'TOI-1898.01', 'TOI-2019.01', 'TOI-2215.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1546,8 +1550,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
 
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-2096.01', 'TOI-2096.02', 'TOI-1194.01', 'TOI-1420.01',
-                'TOI-5344.01', 'TOI-5398.02', 'TOI-2134.01', 'TOI-2373.01',
-                'TOI-2416.01', 'TOI-2524.01', 'TOI-4481.01', 'TOI-4641.01',
+                'TOI-5344.01', 'TOI-5398.02', 'TOI-2134.01', 'TOI-4481.01',
+                'TOI-4641.01', 'TOI-2266.01', 'TOI-5747.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
@@ -1560,7 +1564,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-5175.01', 'TOI-5176.01', 'TOI-5115.01', 'TOI-5480.01',
                 'TOI-5522.01', 'TOI-5538.01', 'TOI-5539.01', 'TOI-5544.01',
                 'TOI-5545.01', 'TOI-5561.01', 'TOI-6831.01', 'TOI-6832.01',
-                'TOI-6840.01']
+                'TOI-6840.01', 'TOI-6906.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
