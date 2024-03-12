@@ -1494,13 +1494,13 @@ def load_data(updated_koi_params=True, only_candidates=True):
     waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01', 'TOI-626.01',
                'TOI-657.01', 'TOI-834.01', 'TOI-840.01', 'TOI-857.01',
                'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01', 'TOI-261.02',
-               'TOI-682.01', 'TOI-1054.01', 'TOI-904.01', 'TOI-904.02',
+               'TOI-682.01', 'TOI-1054.01',
                'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
                'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
                'TOI-5812.01', 'TOI-1260.03', 'TOI-6101.01', 'TOI-6170.01',
                'TOI-5678.01', 'TOI-696.03', 'TOI-4515.01', 'TOI-2529.01',
                'TOI-329.01', 'TOI-480.01', 'TOI-603.01', 'TOI-1105.01',
-               'TOI-1135.01', 'TOI-1199.01', 'TOI-1273.01', 'TOI-1294.01',
+               'TOI-1294.01',
                'TOI-1439.01', 'TOI-1605.01', 'TOI-1828.01', 'TOI-1836.01',
                'TOI-1885.01', 'TOI-1898.01', 'TOI-2019.01', 'TOI-2215.01']
     earlycps = []
@@ -1551,7 +1551,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # these are now confirmed and need to be updated as such
     tobeconf = ['TOI-2096.01', 'TOI-2096.02', 'TOI-1194.01', 'TOI-1420.01',
                 'TOI-5344.01', 'TOI-5398.02', 'TOI-2134.01', 'TOI-4481.01',
-                'TOI-4641.01', 'TOI-2266.01', 'TOI-5747.01',
+                'TOI-4641.01', 'TOI-2266.01', 'TOI-5747.01', 'TOI-1347.01',
+                'TOI-1347.02',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
