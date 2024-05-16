@@ -694,7 +694,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # these were removed as FPs from the confirmed talbe, but not the KOI list
     # XXX: notify archive
     newfps = ['Kepler-699 b', 'Kepler-840 b', 'Kepler-854 b', 'Kepler-486 b',
-              'Kepler-492 b']
+              'Kepler-492 b', 'Kepler-706 b', 'Kepler-470 b', 'Kepler-494 b',
+              'Kepler-628 b', 'Kepler-807 b', 'KIC 5951458 b']
     badrows = np.isin(dfkoi['kepler_name'], newfps)
     assert (dfkoi.loc[badrows, 'disposition'] == 'Confirmed').all()
     dfkoi.loc[badrows, 'disposition'] = 'False Positive'
@@ -1144,7 +1145,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                  'K2-97 b', 'TRAPPIST-1 b', 'TRAPPIST-1 c', 'TRAPPIST-1 d',
                  'TRAPPIST-1 e', 'TRAPPIST-1 f', 'TRAPPIST-1 g', 'TRAPPIST-1 h',
                  'V1298 Tau e', 'WASP-107 b', 'WASP-47 b',
-                 'WASP-47 c']
+                 'WASP-47 c', 'K2-79 b']
 
     isexclude = np.zeros(len(k2exclude), dtype=bool)
 
@@ -1462,7 +1463,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     bds = ['TOI-239.01', 'TOI-1779.01', 'TOI-148.01', 'TOI-503.01',
            'TOI-569.01', 'TOI-629.01', 'TOI-1406.01', 'TOI-1417.01',
            'TOI-2119.01', 'TOI-1278.01', 'TOI-2543.01', 'TOI-5081.01',
-           'TOI-5090.01', 'TOI-4571.01']
+           'TOI-5090.01', 'TOI-4571.01', 'TOI-6970.01']
     for ibd in bds:
         bd = np.where(dftoi['name'] == ibd)[0][0]
         assert dftoi.loc[bd, 'disposition'] == 'Confirmed'
@@ -1482,11 +1483,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # 351 TESS got the period wrong by 2x. TOI-561 was 2 transits of different
     # planets.
     ignores = ['TOI-2011.03','TOI-2221.01', 'TOI-4581.02', 'TOI-5980.01',
-               'TOI-351.01', 'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02',
-               'TOI-6083.01', 'TOI-6087.01', 'TOI-561.03', 'TOI-1386.01']
+               'TOI-1847.01', 'TOI-2319.01', 'TOI-216.02', 'TOI-6083.01',
+               'TOI-6087.01', 'TOI-1386.01', 'TOI-4862.01', 'TOI-6962.01']
     conname = ['HD 136352 d', 'AU Mic b', 'KOI-94 e', 'Kepler-37 d',
-               'WASP-165 b', 'NGTS-11 b', 'HD 152843 c', 'TOI-216.02',
-               'Kepler-858 b', 'Kepler-134 b', 'TOI-561 d', 'TOI-1386 b']
+               'NGTS-11 b', 'HD 152843 c', 'TOI-216.02', 'Kepler-858 b',
+               'Kepler-134 b', 'TOI-1386 b', 'NGTS-30 b', 'K2-79 b']
     # we know what these are, and they have paper trails of submitted papers
     # though some were submitted way back in 2014 and still in limbo
     # some are newly submitted and waiting to be accepted but are
@@ -1494,15 +1495,14 @@ def load_data(updated_koi_params=True, only_candidates=True):
     waiting = ['TOI-126.01', 'TOI-143.01', 'TOI-295.01', 'TOI-626.01',
                'TOI-657.01', 'TOI-834.01', 'TOI-840.01', 'TOI-857.01',
                'TOI-1071.01', 'TOI-1603.01', 'TOI-2330.01', 'TOI-261.02',
-               'TOI-682.01', 'TOI-1054.01',
-               'TOI-1203.01', 'TOI-1230.01', 'TOI-1239.01', 'TOI-1774.01',
-               'TOI-263.01', 'TOI-3422.01', 'TOI-3666.01', 'TOI-5153.01',
-               'TOI-5812.01', 'TOI-1260.03', 'TOI-6101.01', 'TOI-6170.01',
-               'TOI-5678.01', 'TOI-696.03', 'TOI-4515.01', 'TOI-2529.01',
+               'TOI-682.01', 'TOI-1054.01', 'TOI-1203.01', 'TOI-1230.01',
+               'TOI-1239.01', 'TOI-1774.01', 'TOI-263.01', 'TOI-3422.01',
+               'TOI-3666.01', 'TOI-5153.01', 'TOI-5812.01', 'TOI-1260.03',
+               'TOI-6101.01', 'TOI-6170.01', 'TOI-5678.01', 'TOI-2529.01',
                'TOI-329.01', 'TOI-480.01', 'TOI-603.01', 'TOI-1105.01',
-               'TOI-1294.01',
-               'TOI-1439.01', 'TOI-1605.01', 'TOI-1828.01', 'TOI-1836.01',
-               'TOI-1885.01', 'TOI-1898.01', 'TOI-2019.01', 'TOI-2215.01']
+               'TOI-1294.01', 'TOI-1439.01', 'TOI-1605.01', 'TOI-1828.01',
+               'TOI-1836.01', 'TOI-1885.01', 'TOI-1898.01', 'TOI-2019.01',
+               'TOI-2215.01', 'TOI-1173.01', 'TOI-2447.01', 'TOI-4987.01']
     earlycps = []
 
     stillbad = np.zeros(len(ignores), dtype=bool)
@@ -1549,10 +1549,11 @@ def load_data(updated_koi_params=True, only_candidates=True):
     assert len(earlycps) == 0
 
     # these are now confirmed and need to be updated as such
-    tobeconf = ['TOI-2096.01', 'TOI-2096.02', 'TOI-1194.01', 'TOI-1420.01',
-                'TOI-5344.01', 'TOI-5398.02', 'TOI-2134.01', 'TOI-4481.01',
-                'TOI-4641.01', 'TOI-2266.01', 'TOI-5747.01', 'TOI-1347.01',
-                'TOI-1347.02',
+    tobeconf = ['TOI-1194.01', 'TOI-1420.01', 'TOI-5344.01', 'TOI-2134.01',
+                'TOI-4481.01', 'TOI-4641.01', 'TOI-2266.01', 'TOI-5747.01',
+                'TOI-1347.01', 'TOI-1347.02', 'TOI-771.01', 'TOI-871.01',
+                'TOI-1467.01', 'TOI-1739.01', 'TOI-1778.01', 'TOI-1994.01',
+                'TOI-2068.01', 'TOI-4559.01', 'TOI-5799.01',
                 # KOIs
                 'TOI-4444.01', 'TOI-4484.01', 'TOI-4588.01', 'TOI-1241.01',
                 # K2 candidates
@@ -1565,7 +1566,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
                 'TOI-5175.01', 'TOI-5176.01', 'TOI-5115.01', 'TOI-5480.01',
                 'TOI-5522.01', 'TOI-5538.01', 'TOI-5539.01', 'TOI-5544.01',
                 'TOI-5545.01', 'TOI-5561.01', 'TOI-6831.01', 'TOI-6832.01',
-                'TOI-6840.01', 'TOI-6906.01']
+                'TOI-6840.01', 'TOI-6906.01', 'TOI-6966.01']
     tobeadded = []
     tbc = np.zeros(len(tobeconf), dtype=bool)
     # single transits that should be set as confirmed
