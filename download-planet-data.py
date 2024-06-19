@@ -12,7 +12,7 @@ NEW_API = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query='
 # archive with parameters derived from a single, published reference
 
 # All confirmed planets
-tt = datetime.now().strftime('%H:%M:%S')
+'''tt = datetime.now().strftime('%H:%M:%S')
 print(f"{tt} Downloading all confirmed planets from NExSci...")
 df = pd.read_csv(NEW_API + 'select+*+from+pscomppars&format=csv',
                  low_memory=False)
@@ -39,7 +39,7 @@ df = pd.read_csv('https://exofop.ipac.caltech.edu/tess/download_toi.php?sort'
 df.to_csv('data/tess-candidates.csv', index=False)
 
 with open('data/last_update_time.txt', 'w') as ff:
-    ff.write(str(datetime.now()))
+    ff.write(str(datetime.now()))'''
 
 # create the master data frame used in all the plots
 tt = datetime.now().strftime('%H:%M:%S')

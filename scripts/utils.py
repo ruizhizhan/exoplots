@@ -308,12 +308,14 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dfcon.rename(columns=renames, inplace=True)
     # replace the long name with just TESS
     full = 'Transiting Exoplanet Survey Satellite (TESS)'
-    dfcon['facility'].replace(full, 'TESS', inplace=True)
+    # RUIZHI: update chained assignment
+    dfcon.loc[:, 'facility'] = dfcon['facility'].replace(full, 'TESS')
 
-    dfcon['pl_bmasse_reflink'].replace(np.nan, '', inplace=True)
-    dfcon['pl_bmassj_reflink'].replace(np.nan, '', inplace=True)
-    dfcon['pl_rade_reflink'].replace(np.nan, '', inplace=True)
-    dfcon['pl_radj_reflink'].replace(np.nan, '', inplace=True)
+    dfcon.loc[:, 'pl_bmasse_reflink'] = dfcon['pl_bmasse_reflink'].replace(np.nan, '')
+    dfcon.loc[:, 'pl_bmassj_reflink'] = dfcon['pl_bmassj_reflink'].replace(np.nan, '')
+    dfcon.loc[:, 'pl_rade_reflink'] = dfcon['pl_rade_reflink'].replace(np.nan, '')
+    dfcon.loc[:, 'pl_radj_reflink'] = dfcon['pl_radj_reflink'].replace(np.nan, '')
+
 
     # set all of these planets as confirmed
     dfcon['disposition'] = 'Confirmed'
@@ -619,8 +621,8 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dfkoi.rename(columns=renames, inplace=True)
 
     # make KOI strings into the format we expect
-    dfkoi['name'].replace(to_replace='K0+', value='KOI-', regex=True,
-                          inplace=True)
+    dfkoi['name'] = dfkoi['name'].replace(to_replace='K0+', value='KOI-', regex=True)
+
 
     assert (~np.isfinite(dfkoi['insol']) | (dfkoi['insol'] >= 0)).all()
     assert (~np.isfinite(dfkoi['semi_au']) | (dfkoi['semi_au'] > 0)).all()
@@ -653,8 +655,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     dfs = []
     for ifile in allkois:
         df = pd.read_csv(ifile)
-        df['kepoi_name'].replace(to_replace='K0+', value='KOI-',
-                                 regex=True, inplace=True)
+        df['kepoi_name'] = df['kepoi_name'].replace(to_replace='K0+', value='KOI-', regex=True)
         dfs.append(df)
 
     # find the first time a particular KOI number is mentioned and set its year
@@ -705,6 +706,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     koicon = dfkoi['disposition'] == 'Confirmed'
     koican = dfkoi['disposition'] == 'Candidate'
 
+    ### RUIZHI: update `excluded` and `real` lists to match the newest data
     # KOI-4441, 4777, 5475 were KOIs at half the period of the confirmed planet
     # and 5568 a KOI at 1/3 the confirmed period. KOI-2174.03 confirmed at
     # double the period
@@ -713,6 +715,10 @@ def load_data(updated_koi_params=True, only_candidates=True):
     # what the name is in the confirmed planets table
     real = ['Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1802 b',
             'KOI-4777.01']
+    #excluded = [, 'KOI-855.01', 'KOI-129.01','KOI-1288.01', 'KOI-219.01',
+    #            'KOI-2174.03','KOI-631.01']
+    # what the name is in the confirmed planets table
+    #real = ['Kepler-706 b','Kepler-470 b','Kepler-807 b'] 
     fixed = np.zeros(len(excluded), dtype=bool)
 
     # make sure all confirmed KOIs are in the confirmed table exactly once
@@ -724,9 +730,12 @@ def load_data(updated_koi_params=True, only_candidates=True):
         res = res[0]
         if len(res) != 1:
             # special cases I know about that we can match up manually
+            if not icon['name'] in excluded:
+                print(icon['name'])
             assert icon['name'] in excluded
             rname = real[excluded.index(icon['name'])]
             res = np.where(comp['name'] == rname)[0]
+            print(len(res))
             assert len(res) == 1
             fixed[excluded.index(icon['name'])] = True
         # update and sync the discovery year in both tables
@@ -1869,7 +1878,7 @@ def load_data(updated_koi_params=True, only_candidates=True):
     ----------
 
 """
-csv_creation = """
+csv_creation = r"""
     function makeCSV(sources, keys, header) {
         const nsources = sources.length;
         const ncolumns = keys.length;
@@ -1923,7 +1932,7 @@ csv_creation = """
     });
     """
 
-deselect = """
+deselect = r"""
 const nglyphs = glyphs.length;
 var some = 0;
 for (let nn = 0; nn < nglyphs; nn++) {
@@ -1969,7 +1978,7 @@ if (some == 0){
 }
 """
 
-openurl = """
+openurl = r"""
 const nsources = sources.length;
 const urls = [];
 for (let nn = 0; nn < nsources; nn++) {
@@ -1987,7 +1996,7 @@ if (urls.length == 1){
 }
 """
 
-sldeselect = """
+sldeselect = r"""
 const nglyphs = glyphs.length;
 var some = 0;
 var loop = 0;
@@ -2043,7 +2052,7 @@ while (some == 0 && loop < 3){
 }
 """
 
-reset = """
+reset = r"""
 const nglyphs = glyphs.length;
 for (let nn = 0; nn < nglyphs; nn++) {
     var glyph = glyphs[nn];
@@ -2061,7 +2070,7 @@ for (let nn = 0; nn < nglyphs; nn++) {
 }
 """
 
-yearselect = """
+yearselect = r"""
 const mglyphs = glyphs.length;
 var minyr = slider.value[0];
 var maxyr = slider.value[1];
@@ -2089,7 +2098,7 @@ label.change.emit();
 
 """ + sldeselect
 
-unselect = """
+unselect = r"""
 const mglyphs = glyphs.length;
 for (let nn = 0; nn < mglyphs; nn++) {
     var glyph = glyphs[nn];
@@ -2099,7 +2108,7 @@ for (let nn = 0; nn < mglyphs; nn++) {
 }
 """ + deselect
 
-sliderselect = """
+sliderselect = r"""
 const mglyphs = glyphs.length;
 var minyr = slider.value[0];
 var maxyr = slider.value[1];
@@ -2126,7 +2135,7 @@ for (let nn = 0; nn < mglyphs; nn++) {
 
 """ + sldeselect
 
-nowvis = """
+nowvis = r"""
 var tmp = [];
 for (var i=0;i<cb_obj.data_source.data['year'].length;i++) {
   tmp.push(i);
@@ -2135,7 +2144,7 @@ cb_obj.data_source.selected.indices=tmp;
 
 """ + sliderselect
 
-playpause = """
+playpause = r"""
 
 async function advance(slider, button) {
     var i = 0;
@@ -2172,7 +2181,7 @@ else {
 }
 """
 
-singleslide = """
+singleslide = r"""
 var nglyphs = glyphs.length;
 var some = 0;
 var loop = 0;
@@ -2270,7 +2279,7 @@ while (some == 0 && loop < 3){
 }
 """
 
-massselect = """
+massselect = r"""
 const mglyphs = glyphs.length;
 var maxerror = slider.value;
 for (let nn = 0; nn < mglyphs; nn++) {
@@ -2313,7 +2322,7 @@ for (let nn = 0; nn < mglyphs; nn++) {
 }
 """ + singleslide
 
-sing_sliderselect = """
+sing_sliderselect = r"""
 const mglyphs = glyphs.length;
 var maxerror = slider.value;
 for (let nn = 0; nn < mglyphs; nn++) {

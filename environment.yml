@@ -1,4 +1,4 @@
-name: condaenv
+name: exoplot
 channels:
   - conda-forge
 dependencies:
